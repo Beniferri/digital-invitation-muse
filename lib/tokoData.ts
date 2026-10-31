@@ -5,7 +5,7 @@
 // Nama fungsi di berkas ini dipertahankan, supaya halaman-halaman yang
 // sudah ada tidak perlu diubah.
 
-import { semuaBaris, type Baris } from "./db";
+import { satuBaris, semuaBaris, type Baris } from "./db";
 import { daftarPaketHarga, type PaketHarga } from "@/data/paketHarga";
 import { daftarTemplat, type ContohUndangan, type Templat } from "@/data/templat";
 
@@ -21,6 +21,29 @@ export interface UndanganAdmin {
   slugTemplat: string;
   status: StatusUndangan;
   dibuatPada: string;
+  kodeTamu: string;
+  penggunaId: string | null;
+}
+
+export type KehadiranRsvp = "Hadir" | "Tidak" | "Ragu";
+
+export interface Rsvp {
+  id: string;
+  undanganId: string;
+  nama: string;
+  kehadiran: KehadiranRsvp;
+  jumlahTamu: number;
+  pesan: string;
+  dibuatPada: string;
+}
+
+export interface RingkasanRsvp {
+  totalBalasan: number;
+  hadir: number;
+  tidak: number;
+  ragu: number;
+  totalTamuHadir: number;
+  totalTamuRagu: number;
 }
 
 export interface TokoData {
@@ -65,6 +88,23 @@ function petakanUndangan(baris: Baris): UndanganAdmin {
     lokasi: String(baris.lokasi),
     slugTemplat: String(baris.slug_templat),
     status: String(baris.status) as StatusUndangan,
+    dibuatPada: String(baris.dibuat_pada).slice(0, 10),
+    kodeTamu: String(baris.kode_tamu ?? ""),
+    penggunaId: (baris.pengguna_id as string | null) ?? null,
+  };
+}
+
+function petakanRsvp(baris: Baris): Rsvp {
+  const kehadiranMentah = String(baris.kehadiran);
+  const kehadiran: KehadiranRsvp =
+    kehadiranMentah === "Tidak" || kehadiranMentah === "Ragu" ? kehadiranMentah : "Hadir";
+  return {
+    id: String(baris.id),
+    undanganId: String(baris.undangan_id),
+    nama: String(baris.nama),
+    kehadiran,
+    jumlahTamu: Number(baris.jumlah_tamu),
+    pesan: String(baris.pesan ?? ""),
     dibuatPada: String(baris.dibuat_pada).slice(0, 10),
   };
 }
@@ -111,4 +151,86 @@ export async function bacaDaftarPaketHarga(): Promise<PaketHarga[]> {
 export async function bacaDaftarUndangan(): Promise<UndanganAdmin[]> {
   const toko = await bacaToko();
   return toko.undangan;
+}
+
+export async function cariUndanganOlehKode(kode: string): Promise<UndanganAdmin | null> {
+  try {
+    const baris = satuBaris<Baris>("SELECT * FROM undangan WHERE kode_tamu = ?", kode);
+    return baris ? petakanUndangan(baris) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function bacaDaftarUndanganOlehPengguna(penggunaId: string): Promise<UndanganAdmin[]> {
+  try {
+    const baris = semuaBaris("SELECT * FROM undangan WHERE pengguna_id = ? ORDER BY dibuat_pada DESC", penggunaId);
+    return baris.map(petakanUndangan);
+  } catch {
+    return [];
+  }
+}
+
+export async function cariUndanganOlehId(id: string): Promise<UndanganAdmin | null> {
+  try {
+    const baris = satuBaris<Baris>("SELECT * FROM undangan WHERE id = ?", id);
+    return baris ? petakanUndangan(baris) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function bacaDaftarRsvp(undanganId: string): Promise<Rsvp[]> {
+  try {
+    const baris = semuaBaris("SELECT * FROM rsvp WHERE undangan_id = ? ORDER BY dibuat_pada DESC", undanganId);
+    return baris.map(petakanRsvp);
+  } catch {
+    return [];
+  }
+}
+
+export interface RsvpTerbaru extends Rsvp {
+  namaUndangan: string;
+  undanganKodeTamu: string;
+}
+
+export async function bacaRsvpTerbaru(batas: number): Promise<RsvpTerbaru[]> {
+  try {
+    const baris = semuaBaris(
+      "SELECT r.*, u.nama_pertama AS undangan_nama_pertama, u.nama_kedua AS undangan_nama_kedua, u.kode_tamu AS undangan_kode_tamu FROM rsvp r JOIN undangan u ON u.id = r.undangan_id ORDER BY r.dibuat_pada DESC LIMIT ?",
+      batas,
+    );
+    return baris.map((item) => ({
+      ...petakanRsvp(item),
+      namaUndangan: String(item.undangan_nama_pertama) + (String(item.undangan_nama_kedua) ? ` dan ${String(item.undangan_nama_kedua)}` : ""),
+      undanganKodeTamu: String(item.undangan_kode_tamu ?? ""),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function bacaRingkasanRsvp(undanganId: string): Promise<RingkasanRsvp> {
+  const daftar = await bacaDaftarRsvp(undanganId);
+  const kosong: RingkasanRsvp = {
+    totalBalasan: 0,
+    hadir: 0,
+    tidak: 0,
+    ragu: 0,
+    totalTamuHadir: 0,
+    totalTamuRagu: 0,
+  };
+  return daftar.reduce((ringkasan, rsvp) => {
+    ringkasan.totalBalasan += 1;
+    if (rsvp.kehadiran === "Hadir") {
+      ringkasan.hadir += 1;
+      ringkasan.totalTamuHadir += rsvp.jumlahTamu;
+    } else if (rsvp.kehadiran === "Tidak") {
+      ringkasan.tidak += 1;
+    } else {
+      ringkasan.ragu += 1;
+      ringkasan.totalTamuRagu += rsvp.jumlahTamu;
+    }
+    return ringkasan;
+  }, kosong);
 }

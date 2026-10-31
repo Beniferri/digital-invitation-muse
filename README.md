@@ -25,6 +25,11 @@ data acara, dan membagikan undangan lewat WhatsApp dalam beberapa menit.
   aktifkan/nonaktifkan, hapus), kelola undangan (tambah, ubah status, hapus),
   dan ubah nominal harga. Perubahan admin tersimpan dan langsung tampil di
   situs publik setelah halaman diperbarui.
+- **Undangan tamu + RSVP** (`/u/[kode]`): halaman undangan asli dari
+  database yang dibagikan ke tamu lewat tautan pendek (mis. `/u/rms62hgm`),
+  lengkap dengan formulir konfirmasi kehadiran dan dinding ucapan/doa.
+- **Dasbor pengguna** (`/akun`): undangan milik pengguna sendiri, lengkap
+  dengan tautan tamu dan ringkasan RSVP per undangan.
 
 ## Fondasi (Tahap 2): database, auth, dan penyimpanan foto
 
@@ -68,10 +73,55 @@ npm run dev
 Akun admin yang dibuat lewat skrip di atas dipakai untuk masuk ke
 `/admin/login`. Kata sandi tidak pernah ditulis ke berkas proyek.
 
+## Undangan tamu + RSVP
+
+Setiap undangan punya `kode_tamu` pendek (8 karakter, dibuat otomatis saat
+undangan ditambahkan; undangan lama dari database sebelum fitur ini mendapat
+kode lewat migrasi otomatis di `lib/db.ts`). Tautan tamunya adalah
+`/u/[kode_tamu]` — tautan inilah yang dibagikan ke tamu, bukan id database
+yang panjang.
+
+- **Halaman tamu** (`/u/[kode]`): menampilkan kartu undangan asli (nama,
+  tanggal, lokasi, template yang dipilih) dengan gaya template yang sama
+  seperti halaman contoh, lalu formulir RSVP dan dinding ucapan/doa.
+- **Aturan status:** undangan `Aktif` menerima RSVP; `Draft` tidak
+  dipublikasikan (halaman tamu mengembalikan 404); `Selesai` masih bisa
+  dilihat tapi formulir RSVP-nya ditutup.
+- **Formulir RSVP:** nama tamu (wajib), kehadiran (Hadir / Masih ragu /
+  Tidak bisa hadir), jumlah tamu maksimal 10 orang, dan pesan/doa opsional
+  (maksimal 500 karakter). Tamu yang memilih tidak bisa hadir tidak
+  menyumbang hitungan tamu.
+- **Anti-ganda:** satu nama yang sama di undangan yang sama hanya punya
+  satu balasan — kirim ulang dengan nama yang sama memperbarui jawaban lama,
+  bukan menambah balasan baru, supaya hitungan tamu tidak mengganda.
+- **Admin** melihat ringkasan RSVP di daftar undangan dan dasbor, membuka
+  detail RSVP di `/admin/undangan/[id]` (ringkasan, tautan tamu, daftar
+  balasan lengkap), dan bisa menghapus balasan spam atau salah isi.
+- **Data RSVP** tersimpan di tabel `rsvp` (lihat `db/skema.sql`), dengan
+  foreign key ke undangan — menghapus undangan ikut menghapus balasan RSVP-nya.
+
+## Dasbor admin dan dasbor pengguna
+
+- **Dasbor admin** (`/admin`): metrik gabungan (template aktif, undangan
+  aktif, harga mulai, total balasan RSVP, total tamu konfirmasi hadir),
+  status undangan (aktif/draft/selesai), RSVP terbaru, RSVP per undangan,
+  undangan terbaru, dan daftar template. Semua angka dibaca segar dari
+  database setiap kali halaman dibuka.
+- **Dasbor pengguna** (`/akun`): hanya undangan yang dibuat pengguna itu
+  sendiri. Pengguna bisa membuat undangan baru dari `/akun/undangan/baru`
+  (hanya template aktif yang bisa dipilih), mengubah status, menghapus,
+  dan membuka detail RSVP miliknya di `/akun/undangan/[id]` (hanya baca;
+  hapus balasan dilakukan admin). Kepemilikan diperiksa di server di setiap
+  aksi dan halaman detail: membuka detail undangan orang lain diarahkan
+  kembali ke `/akun`, dan undangan admin lama (tanpa pemilik) tidak muncul
+  di dasbor pengguna. Admin yang masuk tetap mengelola semua undangan dari
+  `/admin`.
+
 ## Yang sengaja tidak ada di MVP
 
-Pembayaran sungguhan, unggah foto ke server, dan CMS. Data publik sekarang
-berasal dari toko admin di atas, bukan lagi dari data statis semata.
+Pembayaran sungguhan dan CMS. Editor (`/editor`) masih berupa pratinjau
+lokal yang tidak tersimpan — undangan yang tersimpan dibuat lewat dasbor
+admin atau dasbor pengguna di atas.
 
 ## Teknologi
 
@@ -85,7 +135,6 @@ berasal dari toko admin di atas, bukan lagi dari data statis semata.
 
 ```bash
 npm install
-npm run db:migrate
 npm run db:seed
 npm run buat-admin -- admin@contoh.id kata-sandi-minimal-8-karakter
 npm run dev
@@ -108,11 +157,15 @@ app/
   katalog/page.tsx          # Katalog template (membaca toko admin)
   editor/page.tsx           # Editor (bungkus Suspense untuk parameter tautan)
   undangan/[slug]/page.tsx  # Contoh undangan dinamis (membaca toko admin)
+  u/[kode]/page.tsx         # Halaman tamu + formulir RSVP + dinding ucapan
   admin/                    # Dasbor admin: ringkasan, template, undangan, harga
   admin/login/page.tsx      # Halaman masuk admin (akun database)
+  admin/undangan/[id]/page.tsx  # Detail RSVP satu undangan (admin)
   masuk/page.tsx            # Masuk pengguna biasa
   daftar/page.tsx           # Daftar pengguna biasa
-  akun/page.tsx             # Halaman akun pengguna
+  akun/page.tsx             # Dasbor pengguna: undangan milik sendiri + RSVP
+  akun/undangan/baru/page.tsx   # Tambah undangan milik pengguna
+  akun/undangan/[id]/page.tsx   # Detail RSVP milik pengguna (hanya baca)
   layout.tsx                # Tata letak, huruf, navigasi, dan kaki halaman
   globals.css               # Gaya dasar, kartu kaca, dan aturan reduced-motion
 data/
@@ -136,14 +189,16 @@ komponen/
   DaftarPertanyaan.tsx      # FAQ akordeon
   TombolWhatsApp.tsx        # Tombol berbagi WhatsApp dengan pesan terisi
 db/
-  skema.sql                 # Skema database: Pengguna, Sesi, Templat, Undangan, PaketHarga
+  skema.sql                 # Skema database: Pengguna, Sesi, Templat, Undangan, PaketHarga, Rsvp
 scripts/
   seed.ts                   # Pindahkan data/toko.json ke database
   buat-admin.ts             # Buat akun admin di database
 lib/
   format.ts                 # Format tanggal Indonesia dan tautan WhatsApp
   tokoData.ts               # Baca data dari database (SQLite) untuk publik dan admin
-  aksiAdmin.ts              # Server action admin: CRUD template/undangan/harga
+  aksiAdmin.ts              # Server action admin: CRUD template/undangan/harga + hapus RSVP
+  aksiPengguna.ts           # Server action pengguna: undangan milik sendiri (cek kepemilikan)
+  aksiRsvp.ts               # Server action RSVP tamu (publik, anti-ganda per nama)
   aksiOtentikasi.ts         # Server action masuk/daftar/keluar
   sesi.ts                   # Sesi database + cookie httpOnly, wajibAdmin()
   kataSandi.ts              # Hash scrypt untuk kata sandi

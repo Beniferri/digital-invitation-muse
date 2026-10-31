@@ -1,14 +1,24 @@
 import { tambahUndangan } from "@/lib/aksiAdmin";
 import type { Templat } from "@/data/templat";
 
-// Formulir tambah undangan yang dikelola admin.
+// Formulir tambah undangan. Dipakai admin dan pengguna dengan aksi yang
+// berbeda: admin memakai tambahUndangan (tanpa pemilik), pengguna memakai
+// tambahUndanganPengguna (undangan tercatat atas id mereka sendiri).
 const gayaInput =
   "mt-2 min-h-[48px] w-full rounded-2xl border border-tanah-900/15 bg-white/80 px-4 py-3 text-[15px]";
 const gayaLabel = "text-sm font-bold";
 
-export default function FormulirUndangan({ daftarTemplat, galat }: { daftarTemplat: Templat[]; galat?: boolean }) {
+export default function FormulirUndangan({
+  daftarTemplat,
+  galat,
+  aksi = tambahUndangan,
+}: {
+  daftarTemplat: Templat[];
+  galat?: boolean;
+  aksi?: (formulir: FormData) => Promise<void>;
+}) {
   return (
-    <form action={tambahUndangan} className="kartu-kaca rounded-[2rem] p-5 sm:p-7">
+    <form action={aksi} className="kartu-kaca rounded-[2rem] p-5 sm:p-7">
       {galat && (
         <p role="alert" className="mb-5 rounded-2xl bg-terakota-100 px-4 py-3 text-sm font-bold text-tanah-700">
           Gagal menambah undangan. Nama pertama wajib diisi.

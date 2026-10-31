@@ -11,7 +11,7 @@
 
 import { DatabaseSync } from "node:sqlite";
 import path from "path";
-import { randomUUID } from "crypto";
+import { randomBytes, randomUUID } from "crypto";
 
 export type Baris = Record<string, unknown>;
 
@@ -62,7 +62,8 @@ CREATE TABLE IF NOT EXISTS undangan (
   slug_templat TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'Draft',
   dibuat_pada TEXT NOT NULL,
-  pengguna_id TEXT REFERENCES pengguna(id) ON DELETE SET NULL
+  pengguna_id TEXT REFERENCES pengguna(id) ON DELETE SET NULL,
+  kode_tamu TEXT
 );
 CREATE TABLE IF NOT EXISTS paket_harga (
   id TEXT PRIMARY KEY,
@@ -74,7 +75,47 @@ CREATE TABLE IF NOT EXISTS paket_harga (
   fitur_json TEXT NOT NULL,
   urutan INTEGER NOT NULL DEFAULT 0
 );
+CREATE TABLE IF NOT EXISTS rsvp (
+  id TEXT PRIMARY KEY,
+  undangan_id TEXT NOT NULL REFERENCES undangan(id) ON DELETE CASCADE,
+  nama TEXT NOT NULL,
+  kehadiran TEXT NOT NULL DEFAULT 'Hadir',
+  jumlah_tamu INTEGER NOT NULL DEFAULT 1,
+  pesan TEXT NOT NULL DEFAULT '',
+  dibuat_pada TEXT NOT NULL,
+  diubah_pada TEXT NOT NULL
+);
 `;
+
+/** Kode tamu pendek (8 karakter) untuk tautan yang dibagikan ke tamu, mis. /u/k4m9x2pq. */
+export function buatKodeTamu(): string {
+  const abjad = "abcdefghjkmnpqrstuvwxyz23456789";
+  const acak = randomBytes(8);
+  let kode = "";
+  for (let i = 0; i < acak.length; i += 1) kode += abjad[acak[i] % abjad.length];
+  return kode;
+}
+
+/**
+ * Migrasi ringan untuk database yang dibuat sebelum kolom kode_tamu ada:
+ * tambah kolomnya kalau belum ada, lalu isi kode untuk undangan lama yang
+ * masih kosong. Database baru langsung punya kolom ini dari skema, jadi
+ * migrasi ini hanya mengisi yang kosong (biasanya tidak ada).
+ */
+function migrasiKodeTamu(db: DatabaseSync): void {
+  const kolom = db.prepare("PRAGMA table_info(undangan)").all() as Array<{ name: string }>;
+  if (!kolom.some((c) => c.name === "kode_tamu")) {
+    db.exec("ALTER TABLE undangan ADD COLUMN kode_tamu TEXT");
+  }
+  const tanpaKode = db.prepare("SELECT id FROM undangan WHERE kode_tamu IS NULL OR kode_tamu = ''").all() as Array<{ id: string }>;
+  for (const baris of tanpaKode) {
+    let kode = buatKodeTamu();
+    while (db.prepare("SELECT id FROM undangan WHERE kode_tamu = ?").get(kode)) {
+      kode = buatKodeTamu();
+    }
+    db.prepare("UPDATE undangan SET kode_tamu = ? WHERE id = ?").run(kode, baris.id);
+  }
+}
 
 const globalUntukDb = globalThis as unknown as { db?: DatabaseSync };
 
@@ -83,6 +124,7 @@ function bukaDatabase(): DatabaseSync {
     const db = new DatabaseSync(jalurDatabase());
     db.exec("PRAGMA foreign_keys = ON");
     db.exec(SKEMA);
+    migrasiKodeTamu(db);
     globalUntukDb.db = db;
   }
   return globalUntukDb.db;

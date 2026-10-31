@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { hapusUndangan, ubahStatusUndangan } from "@/lib/aksiAdmin";
-import { bacaDaftarUndangan } from "@/lib/tokoData";
+import { bacaDaftarUndangan, bacaRingkasanRsvp } from "@/lib/tokoData";
 import { formatTanggalIndonesia } from "@/lib/format";
 import { wajibAdmin } from "@/lib/sesi";
 
@@ -12,7 +12,13 @@ const daftarStatus = ["Draft", "Aktif", "Selesai"] as const;
 // tanpa membuka halaman ubah terpisah.
 export default async function DaftarUndanganAdmin() {
   await wajibAdmin();
-  const daftar = await bacaDaftarUndangan();
+  const daftarDasar = await bacaDaftarUndangan();
+  const daftar = await Promise.all(
+    daftarDasar.map(async (undangan) => ({
+      ...undangan,
+      ringkasan: await bacaRingkasanRsvp(undangan.id),
+    })),
+  );
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -43,6 +49,9 @@ export default async function DaftarUndanganAdmin() {
                 <p className="mt-1 text-sm text-tintaLembut">
                   Template: {undangan.slugTemplat} · Dibuat: {undangan.dibuatPada}
                 </p>
+                <p className="mt-1 text-sm text-tintaLembut">
+                  RSVP: {undangan.ringkasan.totalBalasan} balasan · {undangan.ringkasan.hadir} hadir ({undangan.ringkasan.totalTamuHadir} tamu) · Tautan tamu: /u/{undangan.kodeTamu}
+                </p>
               </div>
               <span className="shrink-0 rounded-full bg-daun-100 px-3 py-1 text-xs font-bold text-daun-700">
                 {undangan.status}
@@ -72,6 +81,12 @@ export default async function DaftarUndanganAdmin() {
                   Hapus
                 </button>
               </form>
+              <Link href={`/admin/undangan/${undangan.id}`} className="min-h-[44px] text-sm font-bold text-tanah-600 underline underline-offset-4">
+                Lihat RSVP
+              </Link>
+              <Link href={`/u/${undangan.kodeTamu}`} className="min-h-[44px] text-sm font-bold text-tanah-600 underline underline-offset-4">
+                Halaman tamu
+              </Link>
               <Link href={`/undangan/${undangan.slugTemplat}`} className="min-h-[44px] text-sm font-bold text-tanah-600 underline underline-offset-4">
                 Lihat template-nya
               </Link>

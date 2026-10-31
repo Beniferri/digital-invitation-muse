@@ -18,8 +18,9 @@ export default function KakiHalaman() {
           <Link href="/editor" className="hover:text-white">Editor</Link>
         </div>
         <p className="mt-8 border-t border-white/15 pt-6 text-xs text-krem-200">
-          Prototipe demo (MVP). Belum ada pembayaran sungguhan, akun pengguna,
-          atau penyimpanan foto ke server. Data editor hanya pratinjau lokal.
+          Prototipe demo (MVP). Belum ada pembayaran sungguhan. Data editor
+          hanya pratinjau lokal; undangan yang tersimpan dibuat lewat dasbor
+          admin atau dasbor pengguna.
         </p>
       </div>
     </footer>

@@ -8,7 +8,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { idBaru, jalankan, satuBaris, sekarangIso, semuaBaris, type Baris } from "./db";
+import { buatKodeTamu, idBaru, jalankan, satuBaris, sekarangIso, semuaBaris, type Baris } from "./db";
 import { wajibAdmin } from "./sesi";
 import { simpanFoto } from "./penyimpananFoto";
 import type { StatusUndangan } from "./tokoData";
@@ -174,8 +174,12 @@ export async function tambahUndangan(formulir: FormData) {
   await wajibAdmin();
   const namaPertama = teks(formulir, "namaPertama");
   if (!namaPertama) redirect("/admin/undangan/baru?galat=1");
+  let kodeTamu = buatKodeTamu();
+  while (satuBaris<Baris>("SELECT id FROM undangan WHERE kode_tamu = ?", kodeTamu)) {
+    kodeTamu = buatKodeTamu();
+  }
   jalankan(
-    "INSERT INTO undangan (id, nama_pertama, nama_kedua, jenis_acara, tanggal, lokasi, slug_templat, status, dibuat_pada) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    "INSERT INTO undangan (id, nama_pertama, nama_kedua, jenis_acara, tanggal, lokasi, slug_templat, status, dibuat_pada, kode_tamu) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     idBaru(),
     namaPertama,
     teks(formulir, "namaKedua"),
@@ -185,9 +189,19 @@ export async function tambahUndangan(formulir: FormData) {
     teks(formulir, "slugTemplat"),
     (teks(formulir, "status") as StatusUndangan) || "Draft",
     sekarangIso(),
+    kodeTamu,
   );
   await perbaruiSemuaJalur();
   redirect("/admin/undangan");
+}
+
+export async function hapusRsvp(formulir: FormData) {
+  await wajibAdmin();
+  const id = teks(formulir, "id");
+  const baris = satuBaris<Baris>("SELECT undangan_id FROM rsvp WHERE id = ?", id);
+  jalankan("DELETE FROM rsvp WHERE id = ?", id);
+  await perbaruiSemuaJalur();
+  redirect(baris ? `/admin/undangan/${String(baris.undangan_id)}` : "/admin/undangan");
 }
 
 export async function ubahStatusUndangan(formulir: FormData) {
