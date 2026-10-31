@@ -5,6 +5,9 @@
     "react-dom": "18.3.1"
   },
   "description": "Prototipe SaaS undangan digital untuk berbagai acara di Indonesia.",
+  "engines": {
+    "node": ">=24"
+  },
   "devDependencies": {
     "@types/node": "^24.19.2",
     "@types/react": "18.3.3",

@@ -73,6 +73,46 @@ npm run dev
 Akun admin yang dibuat lewat skrip di atas dipakai untuk masuk ke
 `/admin/login`. Kata sandi tidak pernah ditulis ke berkas proyek.
 
+## Deploy di Coolify (Railpack)
+
+Repo ini bisa di-deploy Railpack apa adanya (build `npm install` +
+`npm run build`, jalan `npm run start`). Yang perlu diperhatikan hanyalah
+database-nya, karena database **tidak ikut di dalam repo**.
+
+- **Kenapa situs deploy pertama tampil kosong:** `dev.db` masuk
+  `.gitignore` dan tidak di-push ke GitHub. Saat container pertama dibuka,
+  kode membuat tabel kosong otomatis, jadi landing menampilkan "Belum ada
+  template aktif" dan katalog menampilkan 0 template. Itu bukan gagal
+  build — datanya memang belum pernah diisi di container itu.
+- **Isi database sekali, di container Coolify:** buka Terminal container
+  di Coolify, lalu jalankan (di folder kerja aplikasi):
+  ```bash
+  npm run db:seed
+  npm run buat-admin -- email-kamu kata-sandi-minimal-8-karakter
+  ```
+  Seed mengisi 3 template, 3 paket, dan 2 undangan contoh. Seed tidak
+  membuat akun admin, jadi dua perintah itu harus dua-duanya. Setelah itu
+  refresh situs dan masuk ke `/admin/login` dengan akun yang baru dibuat.
+- **Supaya data tidak hilang saat redeploy:** pasang volume persisten di
+  Coolify untuk lokasi database, lalu set environment variable
+  `DATABASE_URL` ke berkas di dalam volume itu, misalnya
+  `DATABASE_URL="file:/data/dev.db"` dengan volume yang dipasang di `/data`.
+  Kode sudah membuat folder induk database otomatis kalau belum ada, jadi
+  path volume apa pun langsung jalan. Urutan yang benar: pasang volume +
+  set `DATABASE_URL` dulu, redeploy, baru jalankan seed + buat-admin di
+  container yang baru — setelah itu redeploy berikutnya tidak perlu seed
+  ulang karena datanya tinggal di volume.
+- **Jangan jalankan seed di setiap start:** skrip seed menimpa template
+  dan paket dari `data/toko.json`, jadi kalau dijalankan tiap container
+  mulai, edit template/paket yang dilakukan lewat dasbor admin akan
+  tertimpa kembali ke data contoh. Seed hanya untuk pengisian pertama
+  saat database masih kosong.
+- **Jangan mem-push `dev.db` ke GitHub** sebagai jalan pintas: selain
+  berisi hash akun, tiap redeploy akan mengembalikan database ke versi di
+  repo dan menghapus RSVP serta undangan yang sudah masuk.
+- **Versi Node:** proyek ini butuh Node 24 (`engines` di `package.json`),
+  karena `node:sqlite` tidak jalan di Node 20.
+
 ## Undangan tamu + RSVP
 
 Setiap undangan punya `kode_tamu` pendek (8 karakter, dibuat otomatis saat

@@ -10,6 +10,7 @@
 // di bawah (baris, semuaBaris, jalankan) dan bentuk barisnya.
 
 import { DatabaseSync } from "node:sqlite";
+import { mkdirSync } from "fs";
 import path from "path";
 import { randomBytes, randomUUID } from "crypto";
 
@@ -121,7 +122,15 @@ const globalUntukDb = globalThis as unknown as { db?: DatabaseSync };
 
 function bukaDatabase(): DatabaseSync {
   if (!globalUntukDb.db) {
-    const db = new DatabaseSync(jalurDatabase());
+    const jalur = jalurDatabase();
+    // Penting untuk deploy dengan volume (mis. Coolify): kalau DATABASE_URL
+    // menunjuk ke folder volume yang belum ada di image (mis. /data/dev.db
+    // atau ./data/dev.db), buat foldernya dulu — SQLite hanya membuat
+    // berkasnya, bukan folder induknya, dan akan gagal kalau foldernya
+    // belum ada. Untuk jalur lokal biasa, foldernya sudah ada jadi
+    // pemanggilan ini tidak mengubah apa-apa.
+    mkdirSync(path.dirname(jalur), { recursive: true });
+    const db = new DatabaseSync(jalur);
     db.exec("PRAGMA foreign_keys = ON");
     db.exec(SKEMA);
     migrasiKodeTamu(db);
