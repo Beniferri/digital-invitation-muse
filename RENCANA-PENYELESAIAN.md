@@ -474,3 +474,51 @@ terbaca di 390px); teks timeline sempat tampak samar sesaat saat
 fade-in (normal, bukan rusak). Catatan: browser uji tidak bisa
 mengatur viewport 390px persis — cek perangkat sungguhan tetap
 disarankan sebelum meniru layout mentah-mentah.
+
+## Zamrud v2: kolom form lengkap (31 Okt 2026, sudah di-push — lihat catatan sinkronisasi)
+
+Menutup 4 gap vs referensi yang dicatat saat evaluasi live 31 Okt 18:09 WIB
+(undangan uji Seruni xhmh87d9 + katalog 4 template pasca-redeploy):
+kisah perjalanan, tanda kasih, acara kedua, galeri multi-foto.
+Semuanya hanya untuk templat halaman penuh (Zamrud); templat lama tidak
+berubah, dan undangan lama tanpa data baru tetap tampil seperti v1
+(seksi tersembunyi + menu drawer ikut menyaring tautan seksi yang tidak
+dirender — perbaikan dari temuan tes: menu sempat membocorkan label
+"Kisah Kami"/"Tanda Kasih" ke undangan lama).
+
+Perubahan data: 10 kolom baru di undangan (kisah_json JSON array maks 3
+babak judul+cerita, video_kisah, rekening_bank/nomor/nama, alamat_kirim,
+acara_waktu, acara_kedua_judul/waktu/lokasi — semua opsional dengan
+default, jadi migrasi ringan di lib/db.ts + skema.sql) + tabel baru
+foto_galeri (FK CASCADE ke undangan, urutan unggah). Migrasi jalan saat
+aplikasi membuka database, jadi database produksi lama ikut ter-upgrade
+saat redeploy tanpa langkah manual.
+
+Editor: seksi Waktu & acara kedua, Galeri foto tambahan (input multiple,
+maks 6 foto @5 MB, aturan sama dengan foto utama), Kisah perjalanan
+(3 babak + tautan video YouTube), Tanda kasih — semuanya di belakang
+`templatTerpilih.halamanPenuh`, ikut draf localStorage (foto tidak ikut,
+seperti foto utama), dan kode galat baru galeri-besar/galeri-tipe/
+galeri-gagal di halaman editor. Aksi simpan: proses foto galeri SEBELUM
+insert (seperti foto utama), insert foto_galeri per jalur dengan urutan.
+
+Halaman tamu: kisah dirender sebagai timeline + embed YouTube
+(youtube-nocookie; hanya watch/youtu.be/shorts/embed yang lolos, tautan
+lain tidak di-iframe); acara dirender 1–2 kartu (kartu kedua kalau judul
+atau waktunya diisi, lokasi kosong = lokasi utama; tombol Calendar hanya
+di kartu utama); tanda kasih dirender kalau rekening atau alamat diisi,
+dengan tombol salin masing-masing; galeri = foto utama + foto_galeri +
+4 aset statis (dedup). Yang masih belum ada (bukan kolom form): ganti
+tema dan like pada ucapan.
+
+Tes: tsc + build lolos; server DB uji (salinan zamrud.db): migrasi
+menambah 10 kolom + tabel foto_galeri; undangan uji v2 Aktif
+(v2uji001, semua field terisi) menampilkan SEMUA penanda (2 babak kisah,
+embed youtube-nocookie, rekening, alamat, 2 kartu acara, 2 foto galeri,
+tombol salin); undangan lama zamr2027 tetap 200 dengan seksi baru
+tersembunyi dan menu bersih; editor Zamrud menampilkan 16 input baru,
+editor Seruni tidak membocorkan satu pun; beranda/katalog/sehat 200.
+Belum bisa dites dari sandbox (batas lama): klik Simpan editor di
+peramban sungguhan (POST server action) — verifikasi di produksi setelah
+deploy: buat undangan Zamrud, isi field baru, simpan, aktifkan, buka
+tautan tamu. dev.db lokal tidak tersentuh (69.632 byte, mtime 13:09).

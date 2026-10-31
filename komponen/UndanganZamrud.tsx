@@ -7,14 +7,14 @@
 // Struktur (mengikuti referensi, tanpa menyalin foto, musik, teks kisah,
 // maupun data pribadi referensi):
 // sampul pembuka + musik -> hero (panel kiri tetap di desktop) ->
-// mempelai -> ayat & doa -> acara (+ Maps & Google Calendar) ->
-// hitung mundur live -> busana -> galeri (+ lightbox) -> RSVP ->
-// ucapan & doa -> penutup + bagikan.
-// Yang SENGAJA belum ada di v1 karena butuh kolom data baru di undangan:
-// kisah perjalanan (butuh data kisah per undangan) dan tanda kasih
-// (butuh data rekening) — keduanya dicatat sebagai lanjutan, bukan
-// diisi teks karangan. Nama orang tua sudah didukung (kolom
-// orang_tua_pertama/kedua, diisi lewat editor).
+// mempelai -> ayat & doa -> kisah perjalanan (v2) -> acara
+// (+ Maps & Google Calendar, bisa dua kartu) -> hitung mundur live ->
+// busana -> galeri (+ lightbox) -> RSVP -> ucapan & doa ->
+// tanda kasih (v2) -> penutup + bagikan.
+// Seksi v2 (kisah, tanda kasih, acara kedua, galeri tambahan) hanya
+// tampil kalau datanya diisi lewat editor; undangan lama tanpa data itu
+// tetap tampil seperti v1. Yang masih belum ada: ganti tema dan like
+// pada ucapan (bukan kolom form, dicatat sebagai lanjutan).
 // Musik hanya tampil kalau berkasnya ada (halaman tamu memeriksa
 // public/musik/zamrud.mp3); tanpa berkas, tombol musik tidak dirender.
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -45,12 +45,14 @@ const MENU = [
   { href: "#beranda", label: "Beranda" },
   { href: "#mempelai", label: "Mempelai" },
   { href: "#ayat", label: "Ayat & Doa" },
+  { href: "#kisah", label: "Kisah Kami" },
   { href: "#acara", label: "Acara" },
   { href: "#hitung-mundur", label: "Hitung Mundur" },
   { href: "#busana", label: "Busana" },
   { href: "#galeri", label: "Galeri" },
   { href: "#rsvp", label: "Konfirmasi Kehadiran" },
   { href: "#ucapan", label: "Ucapan & Doa" },
+  { href: "#tanda-kasih", label: "Tanda Kasih" },
   { href: "#penutup", label: "Penutup" },
 ];
 
@@ -80,6 +82,18 @@ export interface DataZamrud {
   musikSrc: string | null;
   ringkasan: RingkasanRsvp;
   ucapan: Rsvp[];
+  // Zamrud v2 — kolom form lengkap (kosong = seksi tersembunyi).
+  kisah: { judul: string; cerita: string }[];
+  videoKisah: string;
+  rekeningBank: string;
+  rekeningNomor: string;
+  rekeningNama: string;
+  alamatKirim: string;
+  acaraWaktu: string;
+  acaraKeduaJudul: string;
+  acaraKeduaWaktu: string;
+  acaraKeduaLokasi: string;
+  galeriTambahan: string[];
 }
 
 function inisial(nama: string): string {
@@ -121,6 +135,26 @@ function useHitungMundur(tanggalIso: string) {
   };
 }
 
+// Mengubah tautan YouTube (watch, youtu.be, shorts) menjadi URL embed.
+// Tautan lain -> null, jadi tidak ada iframe dari sumber sembarangan.
+function embedYoutube(tautan: string): string | null {
+  try {
+    const url = new URL(tautan.trim());
+    let id = "";
+    if (url.hostname === "youtu.be") {
+      id = url.pathname.replace("/", "");
+    } else if (url.hostname.endsWith("youtube.com")) {
+      if (url.pathname === "/watch") id = url.searchParams.get("v") ?? "";
+      else if (url.pathname.startsWith("/shorts/")) id = url.pathname.replace("/shorts/", "");
+      else if (url.pathname.startsWith("/embed/")) id = url.pathname.replace("/embed/", "");
+    }
+    if (!/^[A-Za-z0-9_-]{6,}$/.test(id)) return null;
+    return `https://www.youtube-nocookie.com/embed/${id}`;
+  } catch {
+    return null;
+  }
+}
+
 function tautanKalender(data: DataZamrud): string {
   const [tahun, bulan, hari] = data.tanggal.split("-");
   if (!tahun || !bulan || !hari) return "https://calendar.google.com/calendar";
@@ -149,15 +183,52 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
   const [menuTerbuka, setMenuTerbuka] = useState(false);
   const [fotoAktif, setFotoAktif] = useState<number | null>(null);
   const [tersalin, setTersalin] = useState(false);
+  const [tersalinRekening, setTersalinRekening] = useState(false);
+  const [tersalinAlamat, setTersalinAlamat] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const tutupSampulRef = useRef<number | null>(null);
 
   const hitungMundur = useHitungMundur(data.tanggal);
 
   const galeri = useMemo(() => {
-    const daftar = data.fotoUndangan ? [data.fotoUndangan, ...ASET_GALERI] : ASET_GALERI;
+    const daftar = [
+      ...(data.fotoUndangan ? [data.fotoUndangan] : []),
+      ...data.galeriTambahan,
+      ...ASET_GALERI,
+    ];
     return daftar.filter((item, indeks) => daftar.indexOf(item) === indeks);
-  }, [data.fotoUndangan]);
+  }, [data.fotoUndangan, data.galeriTambahan]);
+
+  // Daftar acara: selalu satu kartu utama; kartu kedua hanya kalau
+  // judul atau waktunya diisi (lokasi kedua kosong = lokasi utama).
+  const daftarAcara = useMemo(() => {
+    const utama = { judul: data.jenisAcara, waktu: data.acaraWaktu, lokasi: data.lokasi };
+    if (data.acaraKeduaJudul.trim() === "" && data.acaraKeduaWaktu.trim() === "") return [utama];
+    return [
+      utama,
+      {
+        judul: data.acaraKeduaJudul.trim() || "Acara Kedua",
+        waktu: data.acaraKeduaWaktu,
+        lokasi: data.acaraKeduaLokasi.trim() || data.lokasi,
+      },
+    ];
+  }, [data]);
+
+  const videoEmbed = useMemo(() => embedYoutube(data.videoKisah), [data.videoKisah]);
+  const adaKisah = data.kisah.length > 0 || videoEmbed !== null;
+  const adaTandaKasih = data.rekeningNomor.trim() !== "" || data.alamatKirim.trim() !== "";
+  // Menu drawer hanya menautkan seksi yang benar-benar dirender — kalau
+  // tidak, tamu mengetuk tautan ke jangkar yang tidak ada (terutama
+  // undangan lama tanpa data v2).
+  const menuTampil = useMemo(
+    () =>
+      MENU.filter((item) => {
+        if (item.href === "#kisah") return adaKisah;
+        if (item.href === "#tanda-kasih") return adaTandaKasih;
+        return true;
+      }),
+    [adaKisah, adaTandaKasih],
+  );
 
   const fotoHero = data.fotoUndangan ?? data.fotoSampul ?? ASET_GALERI[0];
 
@@ -248,6 +319,16 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
       window.setTimeout(() => setTersalin(false), 2000);
     } catch {
       setTersalin(false);
+    }
+  }
+
+  async function salinTeks(teks: string, tandai: (nilai: boolean) => void) {
+    try {
+      await navigator.clipboard.writeText(teks);
+      tandai(true);
+      window.setTimeout(() => tandai(false), 2000);
+    } catch {
+      tandai(false);
     }
   }
 
@@ -437,33 +518,78 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
           </blockquote>
         </section>
 
-        {/* Acara */}
+        {/* Kisah perjalanan (v2): hanya tampil kalau ada babak atau video. */}
+        {adaKisah && (
+          <section id="kisah" data-tampil className="tampil scroll-mt-28 bg-emerald-950 px-6 py-16 text-krem-50">
+            <p className="text-center text-xs font-bold uppercase tracking-[0.35em] text-emas-300">
+              Kisah Kami
+            </p>
+            <h2 className="mt-3 text-center font-serif text-3xl font-bold">
+              Perjalanan Kami Sampai Hari Ini
+            </h2>
+            {videoEmbed && (
+              <div className="mx-auto mt-10 aspect-video max-w-2xl overflow-hidden rounded-[1.75rem] shadow-kacaLembut">
+                <iframe
+                  src={videoEmbed}
+                  title="Video kisah kami"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="h-full w-full"
+                />
+              </div>
+            )}
+            <ol className="mx-auto mt-10 max-w-xl space-y-8">
+              {data.kisah.map((babak, indeks) => (
+                <li key={`${babak.judul}-${indeks}`} className="relative border-l-2 border-emas-300/40 pl-6">
+                  <span className="absolute -left-[7px] top-1 h-3 w-3 rounded-full bg-emas-300" />
+                  {babak.judul && (
+                    <h3 className="font-serif text-2xl font-bold">{babak.judul}</h3>
+                  )}
+                  {babak.cerita && (
+                    <p className="mt-2 text-[15px] leading-relaxed text-krem-100/85">{babak.cerita}</p>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+
+        {/* Acara: satu kartu utama, ditambah kartu kedua kalau diisi. */}
         <section id="acara" data-tampil className="tampil scroll-mt-28 bg-emerald-950 px-6 py-16 text-krem-50">
           <p className="text-center text-xs font-bold uppercase tracking-[0.35em] text-emas-300">
             Acara {data.jenisAcara}
           </p>
-          <div className="mx-auto mt-10 max-w-xl rounded-[2rem] border border-emas-300/30 bg-emerald-900/60 p-6 text-center sm:p-8">
-            <h2 className="font-serif text-3xl font-bold">{data.jenisAcara}</h2>
-            <p className="mt-4 font-bold">{formatTanggalIndonesia(data.tanggal)}</p>
-            <p className="mt-2 text-[15px] leading-relaxed text-krem-100/85">{data.lokasi}</p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.lokasi)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex min-h-[48px] items-center rounded-full bg-krem-50 px-6 text-sm font-bold text-emerald-950 hover:bg-krem-100"
-              >
-                Google Maps
-              </a>
-              <a
-                href={tautanKalender(data)}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex min-h-[48px] items-center rounded-full border-2 border-emas-300 px-6 text-sm font-bold text-emas-300 hover:bg-emas-300/10"
-              >
-                Simpan ke Google Calendar
-              </a>
-            </div>
+          <div className={`mx-auto mt-10 grid max-w-3xl gap-6 ${daftarAcara.length > 1 ? "sm:grid-cols-2" : "max-w-xl"}`}>
+            {daftarAcara.map((acaraItem, indeks) => (
+              <div key={`${acaraItem.judul}-${indeks}`} className="rounded-[2rem] border border-emas-300/30 bg-emerald-900/60 p-6 text-center sm:p-8">
+                <h2 className="font-serif text-3xl font-bold">{acaraItem.judul}</h2>
+                <p className="mt-4 font-bold">{formatTanggalIndonesia(data.tanggal)}</p>
+                {acaraItem.waktu.trim() !== "" && (
+                  <p className="mt-1 font-bold text-emas-300">{acaraItem.waktu}</p>
+                )}
+                <p className="mt-2 text-[15px] leading-relaxed text-krem-100/85">{acaraItem.lokasi}</p>
+                <div className="mt-6 flex flex-wrap justify-center gap-3">
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(acaraItem.lokasi)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex min-h-[48px] items-center rounded-full bg-krem-50 px-6 text-sm font-bold text-emerald-950 hover:bg-krem-100"
+                  >
+                    Google Maps
+                  </a>
+                  {indeks === 0 && (
+                    <a
+                      href={tautanKalender(data)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex min-h-[48px] items-center rounded-full border-2 border-emas-300 px-6 text-sm font-bold text-emas-300 hover:bg-emas-300/10"
+                    >
+                      Simpan ke Google Calendar
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -672,6 +798,56 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
           </section>
         )}
 
+        {/* Tanda kasih (v2): hanya tampil kalau rekening atau alamat diisi. */}
+        {adaTandaKasih && (
+          <section id="tanda-kasih" data-tampil className="tampil scroll-mt-28 bg-krem-50 px-6 py-16">
+            <p className="text-center text-xs font-bold uppercase tracking-[0.35em] text-emerald-800">
+              Tanda Kasih
+            </p>
+            <h2 className="mt-3 text-center font-serif text-3xl font-bold text-emerald-950">
+              Kirim Tanda Kasih
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-center text-[15px] leading-relaxed text-tintaLembut">
+              Kehadiranmu sudah jadi hadiah. Kalau mau memberi tanda kasih,
+              silakan lewat rekening atau alamat di bawah ini.
+            </p>
+            <div className="mx-auto mt-8 grid max-w-2xl gap-4 sm:grid-cols-2">
+              {data.rekeningNomor.trim() !== "" && (
+                <div className="rounded-[1.75rem] border border-emas-300/40 bg-white/80 p-6 text-center">
+                  <p className="text-xs font-bold uppercase tracking-widest text-emas-600">Transfer</p>
+                  {data.rekeningBank.trim() !== "" && (
+                    <p className="mt-3 font-serif text-2xl font-bold text-emerald-950">{data.rekeningBank}</p>
+                  )}
+                  <p className="mt-2 font-mono text-lg font-bold tracking-wide text-tinta">{data.rekeningNomor}</p>
+                  {data.rekeningNama.trim() !== "" && (
+                    <p className="mt-1 text-sm text-tintaLembut">{data.rekeningNama}</p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => salinTeks(data.rekeningNomor, setTersalinRekening)}
+                    className="mt-4 inline-flex min-h-[44px] items-center rounded-full bg-emerald-800 px-5 text-sm font-bold text-white hover:bg-emerald-900"
+                  >
+                    {tersalinRekening ? "Nomor tersalin!" : "Salin Nomor"}
+                  </button>
+                </div>
+              )}
+              {data.alamatKirim.trim() !== "" && (
+                <div className="rounded-[1.75rem] border border-emas-300/40 bg-white/80 p-6 text-center">
+                  <p className="text-xs font-bold uppercase tracking-widest text-emas-600">Kirim Hadiah</p>
+                  <p className="mt-3 text-[15px] leading-relaxed text-tinta">{data.alamatKirim}</p>
+                  <button
+                    type="button"
+                    onClick={() => salinTeks(data.alamatKirim, setTersalinAlamat)}
+                    className="mt-4 inline-flex min-h-[44px] items-center rounded-full bg-emerald-800 px-5 text-sm font-bold text-white hover:bg-emerald-900"
+                  >
+                    {tersalinAlamat ? "Alamat tersalin!" : "Salin Alamat"}
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
         {/* Penutup + bagikan */}
         <section id="penutup" data-tampil className="tampil scroll-mt-28 bg-emerald-950 px-6 py-16 text-center text-krem-50">
           <p className="font-script text-5xl leading-tight">{namaTampil(data)}</p>
@@ -755,7 +931,7 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
         </div>
         <nav aria-label="Menu undangan" className="flex-1 overflow-y-auto px-3 pb-4">
           <ul className="space-y-1">
-            {MENU.map((item) => (
+            {menuTampil.map((item) => (
               <li key={item.href}>
                 <a
                   href={item.href}

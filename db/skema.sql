@@ -47,8 +47,26 @@ CREATE TABLE IF NOT EXISTS undangan (
   status TEXT NOT NULL DEFAULT 'Draft',
   dibuat_pada TEXT NOT NULL,
   pengguna_id TEXT REFERENCES pengguna(id) ON DELETE SET NULL,
+  kode_tamu TEXT,
+  foto_undangan TEXT,
   orang_tua_pertama TEXT NOT NULL DEFAULT '',
-  orang_tua_kedua TEXT NOT NULL DEFAULT ''
+  orang_tua_kedua TEXT NOT NULL DEFAULT '',
+  kisah_json TEXT NOT NULL DEFAULT '[]',
+  video_kisah TEXT NOT NULL DEFAULT '',
+  rekening_bank TEXT NOT NULL DEFAULT '',
+  rekening_nomor TEXT NOT NULL DEFAULT '',
+  rekening_nama TEXT NOT NULL DEFAULT '',
+  alamat_kirim TEXT NOT NULL DEFAULT '',
+  acara_waktu TEXT NOT NULL DEFAULT '',
+  acara_kedua_judul TEXT NOT NULL DEFAULT '',
+  acara_kedua_waktu TEXT NOT NULL DEFAULT '',
+  acara_kedua_lokasi TEXT NOT NULL DEFAULT ''
+);
+CREATE TABLE IF NOT EXISTS foto_galeri (
+  id TEXT PRIMARY KEY,
+  undangan_id TEXT NOT NULL REFERENCES undangan(id) ON DELETE CASCADE,
+  jalur TEXT NOT NULL,
+  urutan INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS paket_harga (
   id TEXT PRIMARY KEY,

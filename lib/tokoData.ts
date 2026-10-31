@@ -11,6 +11,11 @@ import { daftarTemplat, type ContohUndangan, type Templat } from "@/data/templat
 
 export type StatusUndangan = "Draft" | "Aktif" | "Selesai";
 
+export interface BabakKisah {
+  judul: string;
+  cerita: string;
+}
+
 export interface UndanganAdmin {
   id: string;
   namaPertama: string;
@@ -26,6 +31,33 @@ export interface UndanganAdmin {
   fotoUndangan: string | null;
   orangTuaPertama: string;
   orangTuaKedua: string;
+  // Zamrud v2 — kolom form lengkap (opsional; kosong = seksi tersembunyi).
+  kisah: BabakKisah[];
+  videoKisah: string;
+  rekeningBank: string;
+  rekeningNomor: string;
+  rekeningNama: string;
+  alamatKirim: string;
+  acaraWaktu: string;
+  acaraKeduaJudul: string;
+  acaraKeduaWaktu: string;
+  acaraKeduaLokasi: string;
+}
+
+/** Parse kisah_json dengan aman: data rusak atau bukan array -> []. */
+function parseKisah(nilai: unknown): BabakKisah[] {
+  try {
+    const mentah = JSON.parse(String(nilai ?? "[]")) as unknown;
+    if (!Array.isArray(mentah)) return [];
+    return mentah
+      .map((item) => ({
+        judul: String((item as { judul?: unknown }).judul ?? "").trim(),
+        cerita: String((item as { cerita?: unknown }).cerita ?? "").trim(),
+      }))
+      .filter((item) => item.judul !== "" || item.cerita !== "");
+  } catch {
+    return [];
+  }
 }
 
 export type KehadiranRsvp = "Hadir" | "Tidak" | "Ragu";
@@ -98,7 +130,34 @@ function petakanUndangan(baris: Baris): UndanganAdmin {
     fotoUndangan: (baris.foto_undangan as string | null) ?? null,
     orangTuaPertama: String(baris.orang_tua_pertama ?? ""),
     orangTuaKedua: String(baris.orang_tua_kedua ?? ""),
+    kisah: parseKisah(baris.kisah_json),
+    videoKisah: String(baris.video_kisah ?? ""),
+    rekeningBank: String(baris.rekening_bank ?? ""),
+    rekeningNomor: String(baris.rekening_nomor ?? ""),
+    rekeningNama: String(baris.rekening_nama ?? ""),
+    alamatKirim: String(baris.alamat_kirim ?? ""),
+    acaraWaktu: String(baris.acara_waktu ?? ""),
+    acaraKeduaJudul: String(baris.acara_kedua_judul ?? ""),
+    acaraKeduaWaktu: String(baris.acara_kedua_waktu ?? ""),
+    acaraKeduaLokasi: String(baris.acara_kedua_lokasi ?? ""),
   };
+}
+
+/**
+ * Jalur foto galeri tambahan milik satu undangan, urut sesuai urutan
+ * unggah. Dipakai halaman tamu Zamrud (galeri = foto utama + daftar
+ * ini + aset statis). Kosong kalau tidak ada — bukan galat.
+ */
+export async function bacaGaleriUndangan(undanganId: string): Promise<string[]> {
+  try {
+    const baris = await semuaBaris(
+      "SELECT jalur FROM foto_galeri WHERE undangan_id = ? ORDER BY urutan ASC",
+      undanganId,
+    );
+    return baris.map((item) => String(item.jalur)).filter((jalur) => jalur !== "");
+  } catch {
+    return [];
+  }
 }
 
 function petakanRsvp(baris: Baris): Rsvp {

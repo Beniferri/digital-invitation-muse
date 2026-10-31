@@ -101,13 +101,43 @@ export async function tambahUndanganDariEditor(formulir: FormData) {
     if (!fotoUndangan) redirect("/editor?galat=foto-gagal");
   }
 
+  // Zamrud v2 — galeri tambahan: maksimal 6 foto, masing-masing ikut
+  // aturan yang sama dengan foto utama (5 MB, JPG/PNG/WebP). Diproses
+  // SEBELUM insert supaya galat foto tidak menyisakan undangan tanpa
+  // galeri; berkas yang sudah tersimpan sebelum galat tidak dihapus
+  // (sama seperti foto utama) — tidak dirujuk undangan mana pun.
+  const berkasGaleri = formulir
+    .getAll("galeri")
+    .filter((item): item is File => item instanceof File && item.size > 0)
+    .slice(0, 6);
+  const jalurGaleri: string[] = [];
+  for (const berkas of berkasGaleri) {
+    if (berkas.size > 5 * 1024 * 1024) redirect("/editor?galat=galeri-besar");
+    if (!["image/jpeg", "image/png", "image/webp"].includes(berkas.type)) {
+      redirect("/editor?galat=galeri-tipe");
+    }
+    const jalur = await simpanFoto(berkas);
+    if (!jalur) redirect("/editor?galat=galeri-gagal");
+    jalurGaleri.push(jalur);
+  }
+
+  // Zamrud v2 — kisah perjalanan: 3 babak opsional (judul + cerita).
+  // Hanya babak yang judul atau ceritanya terisi yang disimpan.
+  const kisah = [1, 2, 3]
+    .map((nomor) => ({
+      judul: teks(formulir, `kisahJudul${nomor}`).slice(0, 100),
+      cerita: teks(formulir, `kisahCerita${nomor}`).slice(0, 2000),
+    }))
+    .filter((babak) => babak.judul !== "" || babak.cerita !== "");
+
   let kodeTamu = buatKodeTamu();
   while (await satuBaris<Baris>("SELECT id FROM undangan WHERE kode_tamu = ?", kodeTamu)) {
     kodeTamu = buatKodeTamu();
   }
+  const idUndangan = idBaru();
   await jalankan(
-    "INSERT INTO undangan (id, nama_pertama, nama_kedua, jenis_acara, tanggal, lokasi, slug_templat, status, dibuat_pada, pengguna_id, kode_tamu, foto_undangan, orang_tua_pertama, orang_tua_kedua) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    idBaru(),
+    "INSERT INTO undangan (id, nama_pertama, nama_kedua, jenis_acara, tanggal, lokasi, slug_templat, status, dibuat_pada, pengguna_id, kode_tamu, foto_undangan, orang_tua_pertama, orang_tua_kedua, kisah_json, video_kisah, rekening_bank, rekening_nomor, rekening_nama, alamat_kirim, acara_waktu, acara_kedua_judul, acara_kedua_waktu, acara_kedua_lokasi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    idUndangan,
     namaPertama,
     teks(formulir, "namaKedua"),
     String(templat.jenis_acara),
@@ -121,7 +151,26 @@ export async function tambahUndanganDariEditor(formulir: FormData) {
     fotoUndangan,
     teks(formulir, "orangTuaPertama"),
     teks(formulir, "orangTuaKedua"),
+    JSON.stringify(kisah),
+    teks(formulir, "videoKisah").slice(0, 500),
+    teks(formulir, "rekeningBank").slice(0, 100),
+    teks(formulir, "rekeningNomor").slice(0, 100),
+    teks(formulir, "rekeningNama").slice(0, 100),
+    teks(formulir, "alamatKirim").slice(0, 500),
+    teks(formulir, "acaraWaktu").slice(0, 100),
+    teks(formulir, "acaraKeduaJudul").slice(0, 100),
+    teks(formulir, "acaraKeduaWaktu").slice(0, 100),
+    teks(formulir, "acaraKeduaLokasi").slice(0, 200),
   );
+  for (let i = 0; i < jalurGaleri.length; i += 1) {
+    await jalankan(
+      "INSERT INTO foto_galeri (id, undangan_id, jalur, urutan) VALUES (?, ?, ?, ?)",
+      idBaru(),
+      idUndangan,
+      jalurGaleri[i],
+      i,
+    );
+  }
   revalidatePath("/akun", "page");
   redirect("/akun?dari=editor");
 }

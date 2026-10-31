@@ -86,7 +86,25 @@ CREATE TABLE IF NOT EXISTS undangan (
   dibuat_pada TEXT NOT NULL,
   pengguna_id TEXT REFERENCES pengguna(id) ON DELETE SET NULL,
   kode_tamu TEXT,
-  foto_undangan TEXT
+  foto_undangan TEXT,
+  orang_tua_pertama TEXT NOT NULL DEFAULT '',
+  orang_tua_kedua TEXT NOT NULL DEFAULT '',
+  kisah_json TEXT NOT NULL DEFAULT '[]',
+  video_kisah TEXT NOT NULL DEFAULT '',
+  rekening_bank TEXT NOT NULL DEFAULT '',
+  rekening_nomor TEXT NOT NULL DEFAULT '',
+  rekening_nama TEXT NOT NULL DEFAULT '',
+  alamat_kirim TEXT NOT NULL DEFAULT '',
+  acara_waktu TEXT NOT NULL DEFAULT '',
+  acara_kedua_judul TEXT NOT NULL DEFAULT '',
+  acara_kedua_waktu TEXT NOT NULL DEFAULT '',
+  acara_kedua_lokasi TEXT NOT NULL DEFAULT ''
+);
+CREATE TABLE IF NOT EXISTS foto_galeri (
+  id TEXT PRIMARY KEY,
+  undangan_id TEXT NOT NULL REFERENCES undangan(id) ON DELETE CASCADE,
+  jalur TEXT NOT NULL,
+  urutan INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS paket_harga (
   id TEXT PRIMARY KEY,
@@ -335,6 +353,32 @@ async function migrasiUndangan(backend: Backend): Promise<void> {
   if (!(await backend.kolomAda("undangan", "orang_tua_kedua"))) {
     await backend.tulis("ALTER TABLE undangan ADD COLUMN orang_tua_kedua TEXT NOT NULL DEFAULT ''", []);
   }
+  // Zamrud v2 — kolom form yang kurang (semuanya opsional, jadi undangan
+  // lama tetap jalan dan seksi-seksi baru tersembunyi kalau kosong):
+  // kisah perjalanan (JSON), video kisah, tanda kasih, waktu acara, dan
+  // acara kedua. Tabel foto_galeri menampung foto galeri tambahan
+  // (di luar foto_undangan utama), dihapus otomatis bersama undangannya.
+  const kolomBaru: Array<[string, string]> = [
+    ["kisah_json", "ALTER TABLE undangan ADD COLUMN kisah_json TEXT NOT NULL DEFAULT '[]'"],
+    ["video_kisah", "ALTER TABLE undangan ADD COLUMN video_kisah TEXT NOT NULL DEFAULT ''"],
+    ["rekening_bank", "ALTER TABLE undangan ADD COLUMN rekening_bank TEXT NOT NULL DEFAULT ''"],
+    ["rekening_nomor", "ALTER TABLE undangan ADD COLUMN rekening_nomor TEXT NOT NULL DEFAULT ''"],
+    ["rekening_nama", "ALTER TABLE undangan ADD COLUMN rekening_nama TEXT NOT NULL DEFAULT ''"],
+    ["alamat_kirim", "ALTER TABLE undangan ADD COLUMN alamat_kirim TEXT NOT NULL DEFAULT ''"],
+    ["acara_waktu", "ALTER TABLE undangan ADD COLUMN acara_waktu TEXT NOT NULL DEFAULT ''"],
+    ["acara_kedua_judul", "ALTER TABLE undangan ADD COLUMN acara_kedua_judul TEXT NOT NULL DEFAULT ''"],
+    ["acara_kedua_waktu", "ALTER TABLE undangan ADD COLUMN acara_kedua_waktu TEXT NOT NULL DEFAULT ''"],
+    ["acara_kedua_lokasi", "ALTER TABLE undangan ADD COLUMN acara_kedua_lokasi TEXT NOT NULL DEFAULT ''"],
+  ];
+  for (const [kolom, sql] of kolomBaru) {
+    if (!(await backend.kolomAda("undangan", kolom))) {
+      await backend.tulis(sql, []);
+    }
+  }
+  await backend.tulis(
+    "CREATE TABLE IF NOT EXISTS foto_galeri (id TEXT PRIMARY KEY, undangan_id TEXT NOT NULL REFERENCES undangan(id) ON DELETE CASCADE, jalur TEXT NOT NULL, urutan INTEGER NOT NULL DEFAULT 0)",
+    [],
+  );
   const tanpaKode = await backend.semua(
     "SELECT id FROM undangan WHERE kode_tamu IS NULL OR kode_tamu = ''",
     [],

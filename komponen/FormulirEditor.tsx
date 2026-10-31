@@ -34,6 +34,19 @@ interface DrafEditor {
   // Nama orang tua hanya dipakai templat halaman penuh (Zamrud).
   orangTuaPertama?: string;
   orangTuaKedua?: string;
+  // Zamrud v2 — kolom form lengkap, juga hanya templat halaman penuh.
+  // Foto galeri tidak ikut draf (seperti foto utama).
+  acaraWaktu?: string;
+  acaraKeduaJudul?: string;
+  acaraKeduaWaktu?: string;
+  acaraKeduaLokasi?: string;
+  kisahJudul?: string[];
+  kisahCerita?: string[];
+  videoKisah?: string;
+  rekeningBank?: string;
+  rekeningNomor?: string;
+  rekeningNama?: string;
+  alamatKirim?: string;
 }
 
 export default function FormulirEditor({
@@ -59,6 +72,19 @@ export default function FormulirEditor({
   const [lokasi, setLokasi] = useState(templatAwal?.contoh.lokasi ?? "");
   const [fotoUrl, setFotoUrl] = useState(templatAwal?.fotoSampul ?? "https://picsum.photos/seed/undangan-editor/800/1000");
   const [namaBerkasFoto, setNamaBerkasFoto] = useState("");
+  // Zamrud v2 — kolom form lengkap (hanya dipakai templat halaman penuh).
+  const [acaraWaktu, setAcaraWaktu] = useState("");
+  const [acaraKeduaJudul, setAcaraKeduaJudul] = useState("");
+  const [acaraKeduaWaktu, setAcaraKeduaWaktu] = useState("");
+  const [acaraKeduaLokasi, setAcaraKeduaLokasi] = useState("");
+  const [kisahJudul, setKisahJudul] = useState<string[]>(["", "", ""]);
+  const [kisahCerita, setKisahCerita] = useState<string[]>(["", "", ""]);
+  const [videoKisah, setVideoKisah] = useState("");
+  const [rekeningBank, setRekeningBank] = useState("");
+  const [rekeningNomor, setRekeningNomor] = useState("");
+  const [rekeningNama, setRekeningNama] = useState("");
+  const [alamatKirim, setAlamatKirim] = useState("");
+  const [namaBerkasGaleri, setNamaBerkasGaleri] = useState<string[]>([]);
   const [sudahDimuat, setSudahDimuat] = useState(false);
   const [drafDipulihkan, setDrafDipulihkan] = useState(false);
   // Menyimpan apakah URL foto dibuat dari berkas lokal, supaya bisa dibersihkan.
@@ -86,6 +112,17 @@ export default function FormulirEditor({
             setLokasi(lokasiDraf);
             setOrangTuaPertama(draf.orangTuaPertama ?? "");
             setOrangTuaKedua(draf.orangTuaKedua ?? "");
+            setAcaraWaktu(draf.acaraWaktu ?? "");
+            setAcaraKeduaJudul(draf.acaraKeduaJudul ?? "");
+            setAcaraKeduaWaktu(draf.acaraKeduaWaktu ?? "");
+            setAcaraKeduaLokasi(draf.acaraKeduaLokasi ?? "");
+            setKisahJudul(Array.isArray(draf.kisahJudul) && draf.kisahJudul.length === 3 ? draf.kisahJudul : ["", "", ""]);
+            setKisahCerita(Array.isArray(draf.kisahCerita) && draf.kisahCerita.length === 3 ? draf.kisahCerita : ["", "", ""]);
+            setVideoKisah(draf.videoKisah ?? "");
+            setRekeningBank(draf.rekeningBank ?? "");
+            setRekeningNomor(draf.rekeningNomor ?? "");
+            setRekeningNama(draf.rekeningNama ?? "");
+            setAlamatKirim(draf.alamatKirim ?? "");
             setFotoUrl(templatDraf.fotoSampul ?? "https://picsum.photos/seed/undangan-editor/800/1000");
             // Catatan hanya tampil kalau draf benar-benar berbeda dari contoh,
             // supaya kunjungan pertama (draf berisi nilai contoh) tidak
@@ -94,7 +131,20 @@ export default function FormulirEditor({
               namaPertamaDraf !== templatDraf.contoh.namaPertama ||
               namaKeduaDraf !== templatDraf.contoh.namaKedua ||
               tanggalDraf !== templatDraf.contoh.tanggal ||
-              lokasiDraf !== templatDraf.contoh.lokasi
+              lokasiDraf !== templatDraf.contoh.lokasi ||
+              (draf.orangTuaPertama ?? "") !== "" ||
+              (draf.orangTuaKedua ?? "") !== "" ||
+              (draf.acaraWaktu ?? "") !== "" ||
+              (draf.acaraKeduaJudul ?? "") !== "" ||
+              (draf.acaraKeduaWaktu ?? "") !== "" ||
+              (draf.acaraKeduaLokasi ?? "") !== "" ||
+              (draf.kisahJudul ?? []).some((nilai) => nilai !== "") ||
+              (draf.kisahCerita ?? []).some((nilai) => nilai !== "") ||
+              (draf.videoKisah ?? "") !== "" ||
+              (draf.rekeningBank ?? "") !== "" ||
+              (draf.rekeningNomor ?? "") !== "" ||
+              (draf.rekeningNama ?? "") !== "" ||
+              (draf.alamatKirim ?? "") !== ""
             ) {
               setDrafDipulihkan(true);
             }
@@ -120,12 +170,23 @@ export default function FormulirEditor({
         lokasi,
         orangTuaPertama,
         orangTuaKedua,
+        acaraWaktu,
+        acaraKeduaJudul,
+        acaraKeduaWaktu,
+        acaraKeduaLokasi,
+        kisahJudul,
+        kisahCerita,
+        videoKisah,
+        rekeningBank,
+        rekeningNomor,
+        rekeningNama,
+        alamatKirim,
       };
       window.localStorage.setItem(KUNCI_DRAF, JSON.stringify(draf));
     } catch {
       // Penyimpanan perangkat penuh atau diblokir: editor tetap jalan.
     }
-  }, [sudahDimuat, templatTerpilih, namaPertama, namaKedua, tanggal, lokasi, orangTuaPertama, orangTuaKedua]);
+  }, [sudahDimuat, templatTerpilih, namaPertama, namaKedua, tanggal, lokasi, orangTuaPertama, orangTuaKedua, acaraWaktu, acaraKeduaJudul, acaraKeduaWaktu, acaraKeduaLokasi, kisahJudul, kisahCerita, videoKisah, rekeningBank, rekeningNomor, rekeningNama, alamatKirim]);
 
   // Bersihkan object URL saat komponen dilepas, supaya tidak membebani peramban.
   useEffect(() => {
@@ -144,10 +205,30 @@ export default function FormulirEditor({
     setLokasi(templat.contoh.lokasi);
     setOrangTuaPertama("");
     setOrangTuaKedua("");
+    setAcaraWaktu("");
+    setAcaraKeduaJudul("");
+    setAcaraKeduaWaktu("");
+    setAcaraKeduaLokasi("");
+    setKisahJudul(["", "", ""]);
+    setKisahCerita(["", "", ""]);
+    setVideoKisah("");
+    setRekeningBank("");
+    setRekeningNomor("");
+    setRekeningNama("");
+    setAlamatKirim("");
+    setNamaBerkasGaleri([]);
     if (fotoLokalRef.current) URL.revokeObjectURL(fotoLokalRef.current);
     fotoLokalRef.current = null;
     setNamaBerkasFoto("");
     setFotoUrl(templat.fotoSampul ?? "https://picsum.photos/seed/undangan-editor/800/1000");
+  }
+
+  function aturKisahJudul(indeks: number, nilai: string) {
+    setKisahJudul((sebelum) => sebelum.map((item, i) => (i === indeks ? nilai : item)));
+  }
+
+  function aturKisahCerita(indeks: number, nilai: string) {
+    setKisahCerita((sebelum) => sebelum.map((item, i) => (i === indeks ? nilai : item)));
   }
 
   function unggahFoto(berkas: File | undefined) {
@@ -172,6 +253,18 @@ export default function FormulirEditor({
     setLokasi(templatTerpilih.contoh.lokasi);
     setOrangTuaPertama("");
     setOrangTuaKedua("");
+    setAcaraWaktu("");
+    setAcaraKeduaJudul("");
+    setAcaraKeduaWaktu("");
+    setAcaraKeduaLokasi("");
+    setKisahJudul(["", "", ""]);
+    setKisahCerita(["", "", ""]);
+    setVideoKisah("");
+    setRekeningBank("");
+    setRekeningNomor("");
+    setRekeningNama("");
+    setAlamatKirim("");
+    setNamaBerkasGaleri([]);
     setDrafDipulihkan(false);
   }
 
@@ -307,6 +400,70 @@ export default function FormulirEditor({
             </div>
           </div>
 
+          {templatTerpilih.halamanPenuh && (
+            <fieldset className="mt-6">
+              <legend className="text-sm font-bold">Waktu & acara kedua</legend>
+              <p className="mt-1 text-sm leading-relaxed text-tintaLembut">
+                Waktu tampil di kartu acara. Kosongkan acara kedua kalau hanya
+                ada satu acara.
+              </p>
+              <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="acara-waktu" className="text-sm font-bold">
+                    Waktu acara utama <span className="font-semibold text-tintaLembut">(opsional)</span>
+                  </label>
+                  <input
+                    id="acara-waktu"
+                    name="acaraWaktu"
+                    value={acaraWaktu}
+                    onChange={(acara) => setAcaraWaktu(acara.target.value)}
+                    placeholder="Contoh: 10.00 WIB"
+                    className={gayaInput}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="acara-kedua-judul" className="text-sm font-bold">
+                    Judul acara kedua <span className="font-semibold text-tintaLembut">(opsional)</span>
+                  </label>
+                  <input
+                    id="acara-kedua-judul"
+                    name="acaraKeduaJudul"
+                    value={acaraKeduaJudul}
+                    onChange={(acara) => setAcaraKeduaJudul(acara.target.value)}
+                    placeholder="Contoh: Resepsi"
+                    className={gayaInput}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="acara-kedua-waktu" className="text-sm font-bold">
+                    Waktu acara kedua <span className="font-semibold text-tintaLembut">(opsional)</span>
+                  </label>
+                  <input
+                    id="acara-kedua-waktu"
+                    name="acaraKeduaWaktu"
+                    value={acaraKeduaWaktu}
+                    onChange={(acara) => setAcaraKeduaWaktu(acara.target.value)}
+                    placeholder="Contoh: 13.00 WIB"
+                    className={gayaInput}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="acara-kedua-lokasi" className="text-sm font-bold">
+                    Lokasi acara kedua <span className="font-semibold text-tintaLembut">(opsional, kosong = lokasi yang sama)</span>
+                  </label>
+                  <input
+                    id="acara-kedua-lokasi"
+                    name="acaraKeduaLokasi"
+                    value={acaraKeduaLokasi}
+                    onChange={(acara) => setAcaraKeduaLokasi(acara.target.value)}
+                    placeholder="Contoh: Gedung Serbaguna"
+                    className={gayaInput}
+                  />
+                </div>
+              </div>
+            </fieldset>
+          )}
+
           <div className="mt-5">
             <label htmlFor="foto-acara" className="text-sm font-bold">
               Foto undangan
@@ -325,6 +482,143 @@ export default function FormulirEditor({
                 : "Belum ada foto dipilih, pratinjau memakai foto placeholder. Tanpa foto, undangan yang disimpan memakai foto sampul template."}
             </p>
           </div>
+
+          {templatTerpilih.halamanPenuh && (
+            <div className="mt-5">
+              <label htmlFor="galeri-acara" className="text-sm font-bold">
+                Galeri foto tambahan
+              </label>
+              <input
+                id="galeri-acara"
+                name="galeri"
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(acara) => setNamaBerkasGaleri(Array.from(acara.target.files ?? []).map((berkas) => berkas.name))}
+                className="mt-2 block w-full cursor-pointer rounded-2xl border border-dashed border-tanah-900/25 bg-white/70 px-4 py-3 text-sm file:mr-3 file:rounded-full file:border-0 file:bg-tanah-600 file:px-4 file:py-2 file:font-bold file:text-white"
+              />
+              <p className="mt-2 text-sm leading-relaxed text-tintaLembut">
+                {namaBerkasGaleri.length > 0
+                  ? `${namaBerkasGaleri.length} foto terpilih: ${namaBerkasGaleri.join(", ")}. Foto-foto ini tampil di galeri setelah foto utama, maksimal 6 foto, masing-masing 5 MB.`
+                  : "Belum ada foto galeri dipilih. Galeri memakai foto utama (kalau ada) ditambah foto bawaan template. Seperti foto utama, foto galeri tidak ikut tersimpan di draf — pilih ulang setelah kamu masuk."}
+              </p>
+            </div>
+          )}
+
+          {templatTerpilih.halamanPenuh && (
+            <fieldset className="mt-6">
+              <legend className="text-sm font-bold">Kisah perjalanan</legend>
+              <p className="mt-1 text-sm leading-relaxed text-tintaLembut">
+                Tiga babak opsional. Babak yang judul dan ceritanya kosong tidak
+                tampil. Video hanya tampil kalau tautannya video YouTube.
+              </p>
+              {[0, 1, 2].map((indeks) => (
+                <div key={indeks} className="mt-4">
+                  <label htmlFor={`kisah-judul-${indeks + 1}`} className="text-sm font-bold">
+                    Judul babak {indeks + 1} <span className="font-semibold text-tintaLembut">(opsional)</span>
+                  </label>
+                  <input
+                    id={`kisah-judul-${indeks + 1}`}
+                    name={`kisahJudul${indeks + 1}`}
+                    value={kisahJudul[indeks]}
+                    onChange={(acara) => aturKisahJudul(indeks, acara.target.value)}
+                    placeholder={`Contoh: Babak ${indeks + 1}`}
+                    className={gayaInput}
+                  />
+                  <label htmlFor={`kisah-cerita-${indeks + 1}`} className="mt-3 block text-sm font-bold">
+                    Cerita babak {indeks + 1} <span className="font-semibold text-tintaLembut">(opsional)</span>
+                  </label>
+                  <textarea
+                    id={`kisah-cerita-${indeks + 1}`}
+                    name={`kisahCerita${indeks + 1}`}
+                    value={kisahCerita[indeks]}
+                    onChange={(acara) => aturKisahCerita(indeks, acara.target.value)}
+                    rows={3}
+                    placeholder="Tulis cerita singkat babak ini"
+                    className={gayaInput}
+                  />
+                </div>
+              ))}
+              <div className="mt-4">
+                <label htmlFor="video-kisah" className="text-sm font-bold">
+                  Video kisah <span className="font-semibold text-tintaLembut">(tautan YouTube, opsional)</span>
+                </label>
+                <input
+                  id="video-kisah"
+                  name="videoKisah"
+                  value={videoKisah}
+                  onChange={(acara) => setVideoKisah(acara.target.value)}
+                  placeholder="Contoh: https://www.youtube.com/watch?v=..."
+                  className={gayaInput}
+                />
+              </div>
+            </fieldset>
+          )}
+
+          {templatTerpilih.halamanPenuh && (
+            <fieldset className="mt-6">
+              <legend className="text-sm font-bold">Tanda kasih</legend>
+              <p className="mt-1 text-sm leading-relaxed text-tintaLembut">
+                Kalau nomor rekening atau alamat diisi, undangan menampilkan
+                seksi Tanda Kasih dengan tombol salin.
+              </p>
+              <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="rekening-bank" className="text-sm font-bold">
+                    Bank <span className="font-semibold text-tintaLembut">(opsional)</span>
+                  </label>
+                  <input
+                    id="rekening-bank"
+                    name="rekeningBank"
+                    value={rekeningBank}
+                    onChange={(acara) => setRekeningBank(acara.target.value)}
+                    placeholder="Contoh: BCA"
+                    className={gayaInput}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="rekening-nomor" className="text-sm font-bold">
+                    Nomor rekening <span className="font-semibold text-tintaLembut">(opsional)</span>
+                  </label>
+                  <input
+                    id="rekening-nomor"
+                    name="rekeningNomor"
+                    value={rekeningNomor}
+                    onChange={(acara) => setRekeningNomor(acara.target.value)}
+                    placeholder="Contoh: 1234567890"
+                    className={gayaInput}
+                  />
+                </div>
+              </div>
+              <div className="mt-4">
+                <label htmlFor="rekening-nama" className="text-sm font-bold">
+                  Nama pemilik rekening <span className="font-semibold text-tintaLembut">(opsional)</span>
+                </label>
+                <input
+                  id="rekening-nama"
+                  name="rekeningNama"
+                  value={rekeningNama}
+                  onChange={(acara) => setRekeningNama(acara.target.value)}
+                  placeholder="Contoh: a.n. Nadia Ayu Prameswari"
+                  className={gayaInput}
+                />
+              </div>
+              <div className="mt-4">
+                <label htmlFor="alamat-kirim" className="text-sm font-bold">
+                  Alamat kirim hadiah <span className="font-semibold text-tintaLembut">(opsional)</span>
+                </label>
+                <textarea
+                  id="alamat-kirim"
+                  name="alamatKirim"
+                  value={alamatKirim}
+                  onChange={(acara) => setAlamatKirim(acara.target.value)}
+                  rows={2}
+                  placeholder="Contoh: Jl. Kenanga No. 12, Yogyakarta"
+                  className={gayaInput}
+                />
+              </div>
+            </fieldset>
+          )}
 
           {sudahMasuk ? (
             <>

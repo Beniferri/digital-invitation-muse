@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { existsSync } from "fs";
 import path from "path";
-import { bacaDaftarRsvp, bacaDaftarTemplat, bacaRingkasanRsvp, cariUndanganOlehKode } from "@/lib/tokoData";
+import { bacaDaftarRsvp, bacaDaftarTemplat, bacaGaleriUndangan, bacaRingkasanRsvp, cariUndanganOlehKode } from "@/lib/tokoData";
 import { periksaKedaluwarsaPengguna } from "@/lib/langganan";
 import { formatTanggalIndonesia } from "@/lib/format";
 import { urlAbsolut, urlSitus } from "@/lib/situs";
@@ -118,6 +118,7 @@ export default async function HalamanTamu({
   // kalau berkasnya benar-benar ada di public/musik.
   if (templat.halamanPenuh) {
     const musikAda = existsSync(path.join(process.cwd(), "public", "musik", "zamrud.mp3"));
+    const galeriTambahan = await bacaGaleriUndangan(undangan.id);
     return (
       <UndanganZamrud
         data={{
@@ -139,6 +140,17 @@ export default async function HalamanTamu({
           musikSrc: musikAda ? "/musik/zamrud.mp3" : null,
           ringkasan,
           ucapan,
+          kisah: undangan.kisah,
+          videoKisah: undangan.videoKisah,
+          rekeningBank: undangan.rekeningBank,
+          rekeningNomor: undangan.rekeningNomor,
+          rekeningNama: undangan.rekeningNama,
+          alamatKirim: undangan.alamatKirim,
+          acaraWaktu: undangan.acaraWaktu,
+          acaraKeduaJudul: undangan.acaraKeduaJudul,
+          acaraKeduaWaktu: undangan.acaraKeduaWaktu,
+          acaraKeduaLokasi: undangan.acaraKeduaLokasi,
+          galeriTambahan,
         }}
       />
     );

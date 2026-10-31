@@ -25,6 +25,9 @@ const pesanGalat: Record<string, string> = {
   "foto-besar": "Foto terlalu besar, maksimal 5 MB.",
   "foto-tipe": "Foto harus JPG, PNG, atau WebP.",
   "foto-gagal": "Foto gagal diunggah. Coba lagi dengan foto lain.",
+  "galeri-besar": "Satu foto galeri terlalu besar, maksimal 5 MB per foto.",
+  "galeri-tipe": "Foto galeri harus JPG, PNG, atau WebP.",
+  "galeri-gagal": "Satu foto galeri gagal diunggah. Coba lagi dengan foto lain.",
 };
 
 export default async function Editor({
