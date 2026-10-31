@@ -40,13 +40,13 @@ export default async function ContohUndangan({ params }: { params: { slug: strin
       </div>
 
       <div className="mt-6 space-y-3">
-        <TombolWhatsApp templat={templat} tautan={tautanContoh} />
         <Link
           href={`/editor?templat=${templat.slug}`}
-          className="tombol-utama w-full border-2 border-tanah-600 text-sm text-tanah-700 hover:bg-krem-100"
+          className="tombol-utama w-full bg-tanah-600 text-sm text-white hover:bg-tanah-700"
         >
           Buat Versi Saya dengan Template Ini
         </Link>
+        <TombolWhatsApp templat={templat} tautan={tautanContoh} />
         <Link
           href="/katalog"
           className="flex min-h-[48px] items-center justify-center text-sm font-bold text-tanah-600 underline underline-offset-4"

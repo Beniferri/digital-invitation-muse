@@ -9,7 +9,6 @@
 // Drawer ditutup lewat backdrop, tombol Escape, atau setelah memilih menu.
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 const MENU_PONSEL = [
   { href: "/editor", label: "Buat Undangan", utama: true },
@@ -22,7 +21,6 @@ const MENU_PONSEL = [
 ];
 
 export default function Navigasi() {
-  const pathname = usePathname();
   const [terbuka, setTerbuka] = useState(false);
 
   useEffect(() => {
@@ -33,15 +31,6 @@ export default function Navigasi() {
     document.addEventListener("keydown", tutupDenganEscape);
     return () => document.removeEventListener("keydown", tutupDenganEscape);
   }, [terbuka]);
-
-  // Halaman tamu (/u/...) adalah undangan untuk penerima, bukan etalase
-  // produk: navigasi platform (Beranda, Katalog, Editor, Admin, Masuk)
-  // disembunyikan supaya tamu fokus ke undangan dan tidak bingung dengan
-  // tautan yang bukan untuknya. Hook di atas tetap dipanggil dulu agar
-  // urutan hook tidak berubah saat berpindah rute. Header yang hilang
-  // juga menghilangkan keluhan lama: judul seksi sempat tertutup header
-  // lengket saat menggulir undangan.
-  if (pathname?.startsWith("/u/")) return null;
 
   return (
     <header className="sticky top-0 z-40">

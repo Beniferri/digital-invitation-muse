@@ -523,7 +523,7 @@ peramban sungguhan (POST server action) — verifikasi di produksi setelah
 deploy: buat undangan Zamrud, isi field baru, simpan, aktifkan, buka
 tautan tamu. dev.db lokal tidak tersentuh (69.632 byte, mtime 13:09).
 
-## Revisi halaman tamu (31 Okt 2026, belum di-push)
+## Revisi halaman tamu (31 Okt 2026, sudah di-push, head d7122fad)
 
 Berangkat dari undangan Zamrud live /u/nvjvq95c. Yang diubah (hanya
 jalur tamu; autentikasi, routing, dan halaman lain tidak disentuh):
@@ -554,6 +554,45 @@ jalur tamu; autentikasi, routing, dan halaman lain tidak disentuh):
   yatim. Perilaku ketuk tetap diverifikasi lewat browser pasca-deploy.
 - Dokumentasi: docs/halaman-tamu.md (komponen, props, status, cara uji).
 
-Belum di-push; setelah push + redeploy, verifikasi di HP sungguhan:
-bar konfirmasi, tombol hero, drawer menu, musik, scroll, dan halaman
-404 ramah untuk tautan Draft/hilang.
+Redeploy Coolify MENUNGGU user; setelah redeploy, verifikasi di HP
+sungguhan: bar konfirmasi, tombol hero, drawer menu, musik, scroll,
+dan halaman 404 ramah untuk tautan Draft/hilang.
+
+## Restruktur layout + audit UX (31 Okt 2026, belum di-push)
+
+Aturan baru, menggantikan gate pathname revisi tamu: header + footer
+situs hanya dipasang di tata letak grup (situs) — app/(situs)/layout.tsx
+— yang menaungi halaman website (landing, katalog, bantuan, syarat,
+privasi, daftar, masuk). Tata letak akar (app/layout.tsx) kini polos.
+Halaman aplikasi (admin, /akun, /editor, /u, /undangan) mewarisi tata
+letak polos sehingga tampil penuh tanpa chrome situs. Grup rute tidak
+mengubah URL. Gate usePathname di Navigasi/KakiHalaman DICABUT;
+KakiHalaman kembali jadi komponen server. Admin tetap memakai
+ShellAdmin-nya sendiri (sidebar + drawer).
+
+Audit + perbaikan UX (tanpa ubah logika bisnis/API/skema/auth):
+- Admin: label "MRR" -> "Pendapatan rutin / bulan", "Churn 30 hari" ->
+  "Berhenti langganan (30 hari)" (angka sama); label grafik 11px -> 12px;
+  drawer ponsel kini invisible saat tertutup (tidak bisa difokus keyboard).
+- Studio (/akun): urutan dibalik — Undangan Saya + tombol buat baru di
+  atas, baru langganan, angka, riwayat pembayaran. Label status polos
+  ("Draft — belum dibagikan" dst., nilai server tetap); lencana berwarna
+  per status; kartu Draft tidak lagi menampilkan tautan tamu (diganti
+  catatan "aktifkan dulu"); tautan tamu kini URL penuh + tombol salin
+  (komponen/TombolSalin.tsx); hapus undangan pakai dialog konfirmasi
+  (komponen/HapusUndangan.tsx, aksi server sama).
+- Editor: tautan kembali — "Kembali ke dasbor saya" kalau sudah masuk,
+  "Daftar / Masuk" kalau belum (sebelumnya tidak ada jalan kembali
+  setelah chrome situs hilang).
+- Pratinjau template (/undangan/[slug]): CTA "Buat Versi Saya" jadi
+  tombol utama solid dan pindah ke urutan pertama, di atas tombol WhatsApp.
+
+Verifikasi: tsc + build lolos; server fixture (tamu.db) — / ber-chrome,
+/u/tamuji01, /undangan/seruni-akad-nikah, /editor tanpa chrome dengan
+penanda konten masing-masing tampil.
+
+CATATAN PUSH: pemindahan 7 halaman marketing ke app/(situs)/ membuat
+berkas lama (app/page.tsx, app/katalog/page.tsx, dst.) harus DIHAPUS
+dari repo — push-files hanya upsert, jadi penghapusan dilakukan terpisah
+(delete_file per berkas). Kalau berkas lama tertinggal, build produksi
+gagal karena dua halaman berebut rute yang sama.

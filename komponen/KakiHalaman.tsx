@@ -1,20 +1,13 @@
-"use client";
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 // Kaki halaman yang singkat. Tautan legal (Tahap 5) mengarah ke halaman
 // yang benar-benar ada. Klaim "belum ada pembayaran sungguhan" dari era
 // MVP sudah dihapus — sejak Tahap 2, pembayaran lewat Midtrans sudah
 // menjadi bagian produk (aktivasi Production-nya ada di checklist
 // peluncuran, bukan di teks footer).
+// Komponen ini komponen server biasa: ia hanya dirender oleh tata letak
+// grup (situs), jadi tidak pernah muncul di halaman aplikasi/tamu.
 export default function KakiHalaman() {
-  const pathname = usePathname();
-  // Alasan sama dengan Navigasi: halaman tamu ditutup oleh penutup
-  // undangannya sendiri ("Dibuat dengan UndanganKita"), bukan footer
-  // situs yang berisi pemasaran dan tautan legal. Komponen ini dijadikan
-  // komponen klien hanya untuk membaca rute; halaman lain tidak berubah.
-  if (pathname?.startsWith("/u/")) return null;
   return (
     <footer className="relative mt-20 overflow-hidden bg-tanah-900 text-krem-100">
       <div className="cahaya-hangat -top-16 right-10 h-56 w-56 bg-emas-500/30" />

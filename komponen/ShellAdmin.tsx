@@ -60,7 +60,7 @@ export default function ShellAdmin({
       <aside
         aria-label="Navigasi admin"
         className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-tanah-900 text-krem-100 shadow-xl transition-transform duration-200 lg:translate-x-0 ${
-          terbuka ? "translate-x-0" : "-translate-x-full"
+          terbuka ? "translate-x-0 visible" : "-translate-x-full invisible lg:visible"
         }`}
       >
         <div className="border-b border-white/10 px-5 py-5">

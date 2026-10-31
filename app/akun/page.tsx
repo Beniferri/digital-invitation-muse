@@ -12,6 +12,9 @@ import {
 } from "@/lib/langganan";
 import { formatTanggalIndonesia } from "@/lib/format";
 import { formatRupiah } from "@/data/paketHarga";
+import { urlSitus } from "@/lib/situs";
+import TombolSalin from "@/komponen/TombolSalin";
+import HapusUndangan from "@/komponen/HapusUndangan";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +32,26 @@ const pesanGalat: Record<string, string> = {
 // Undangan admin lama (tanpa pemilik) tidak muncul di sini, dan undangan
 // pengguna lain tidak bisa dibuka, diubah, atau dihapus dari halaman ini
 // karena aksi pengguna selalu memeriksa kepemilikan di server.
+//
+// Susunan halaman sengaja menaruh pekerjaan utama di atas: daftar
+// undangan + tombol buat baru dulu, baru langganan, angka, dan riwayat
+// pembayaran. Pengguna awam datang ke sini untuk mengelola undangannya,
+// bukan untuk membaca laporan.
+// Nilai status TIDAK diubah (server tetap menerima Draft/Aktif/Selesai);
+// yang diubah hanya label yang dilihat pengguna dan warna lencananya,
+// supaya artinya langsung kebaca: Draft = belum dibagikan, Aktif = tamu
+// bisa buka, Selesai = ditutup.
 const daftarStatus = ["Draft", "Aktif", "Selesai"] as const;
+const labelStatus: Record<(typeof daftarStatus)[number], string> = {
+  Draft: "Draft — belum dibagikan",
+  Aktif: "Aktif — tamu bisa buka",
+  Selesai: "Selesai — ditutup",
+};
+const gayaLencana: Record<(typeof daftarStatus)[number], string> = {
+  Draft: "bg-krem-200 text-tinta",
+  Aktif: "bg-daun-100 text-daun-700",
+  Selesai: "bg-krem-100 text-tintaLembut",
+};
 
 export default async function Akun({
   searchParams,
@@ -96,7 +118,91 @@ export default async function Akun({
         </p>
       )}
 
-      <section className="kartu-kaca mt-8 rounded-[1.75rem] p-5 sm:p-6">
+      <div className="mt-10 flex flex-wrap items-center justify-between gap-4">
+        <h2 className="font-serif text-3xl font-bold">Undangan Saya</h2>
+        <Link href="/akun/undangan/baru" className="tombol-utama bg-tanah-600 text-sm text-white hover:bg-tanah-700">
+          Buat Undangan Baru
+        </Link>
+      </div>
+
+      <div className="mt-6 grid gap-4">
+        {daftar.map((undangan) => {
+          const namaTampil = undangan.namaKedua
+            ? `${undangan.namaPertama} dan ${undangan.namaKedua}`
+            : undangan.namaPertama;
+          const tautanTamu = `${urlSitus()}/u/${undangan.kodeTamu}`;
+          const bisaDibukaTamu = undangan.status === "Aktif" || undangan.status === "Selesai";
+          return (
+            <article key={undangan.id} className="kartu-kaca rounded-[1.75rem] p-5 sm:p-6">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 className="font-serif text-2xl font-bold">{namaTampil}</h3>
+                  <p className="mt-1 text-sm text-tintaLembut">
+                    {undangan.jenisAcara} · {formatTanggalIndonesia(undangan.tanggal)} · {undangan.lokasi}
+                  </p>
+                  <p className="mt-1 text-sm text-tintaLembut">
+                    RSVP: {undangan.ringkasan.totalBalasan} balasan · {undangan.ringkasan.hadir} hadir ({undangan.ringkasan.totalTamuHadir} tamu)
+                  </p>
+                  {bisaDibukaTamu ? (
+                    <p className="mt-1 break-words text-sm text-tintaLembut">
+                      Tautan tamu:{" "}
+                      <Link href={`/u/${undangan.kodeTamu}`} className="font-bold text-tanah-600 underline underline-offset-4">
+                        {tautanTamu}
+                      </Link>
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-sm text-tintaLembut">
+                      Tautan tamu baru bisa dibuka setelah undangan diaktifkan di bawah.
+                    </p>
+                  )}
+                </div>
+                <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${gayaLencana[undangan.status]}`}>
+                  {undangan.status}
+                </span>
+              </div>
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                {bisaDibukaTamu && (
+                  <>
+                    <Link href={`/u/${undangan.kodeTamu}`} className="min-h-[44px] text-sm font-bold text-tanah-600 underline underline-offset-4">
+                      Halaman tamu
+                    </Link>
+                    <TombolSalin teks={tautanTamu} />
+                  </>
+                )}
+                <Link href={`/akun/undangan/${undangan.id}`} className="min-h-[44px] text-sm font-bold text-tanah-600 underline underline-offset-4">
+                  Lihat RSVP
+                </Link>
+                <form action={ubahStatusUndanganPengguna} className="flex flex-wrap items-center gap-2">
+                  <input type="hidden" name="id" value={undangan.id} />
+                  <label htmlFor={`status-${undangan.id}`} className="text-sm font-bold">Ubah status:</label>
+                  <select
+                    id={`status-${undangan.id}`}
+                    name="status"
+                    defaultValue={undangan.status}
+                    className="min-h-[44px] rounded-full border border-tanah-900/15 bg-white/80 px-3 text-sm font-bold"
+                  >
+                    {daftarStatus.map((status) => (
+                      <option key={status} value={status}>{labelStatus[status]}</option>
+                    ))}
+                  </select>
+                  <button type="submit" className="min-h-[44px] rounded-full border-2 border-tanah-600 px-4 text-sm font-bold text-tanah-700">
+                    Simpan status
+                  </button>
+                </form>
+                <HapusUndangan aksi={hapusUndanganPengguna} id={undangan.id} nama={namaTampil} />
+              </div>
+            </article>
+          );
+        })}
+      </div>
+      {daftar.length === 0 && (
+        <p className="kartu-kaca mt-6 rounded-[2rem] p-6 text-center text-tintaLembut">
+          Belum ada undangan atas namamu. Buat yang pertama dari tombol di atas, lalu ubah statusnya
+          jadi Aktif supaya tamu bisa membuka tautan dan mengisi RSVP.
+        </p>
+      )}
+
+      <section className="kartu-kaca mt-10 rounded-[1.75rem] p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="font-serif text-2xl font-bold">Langganan Saya</h2>
@@ -119,7 +225,21 @@ export default async function Akun({
         </div>
       </section>
 
-      <section className="mt-8">
+      <div className="mt-8 grid gap-4 sm:grid-cols-3">
+        {[
+          { judul: "Undangan saya", nilai: String(daftar.length), keterangan: `${jumlahAktif} berstatus Aktif.` },
+          { judul: "Balasan RSVP", nilai: String(totalBalasan), keterangan: "Dari semua undangan saya." },
+          { judul: "Tamu konfirmasi hadir", nilai: `${totalTamuHadir} tamu`, keterangan: "Total dari balasan hadir." },
+        ].map((kartu) => (
+          <div key={kartu.judul} className="kartu-kaca rounded-[1.75rem] p-5">
+            <p className="text-sm font-bold text-tintaLembut">{kartu.judul}</p>
+            <p className="mt-1 font-serif text-3xl font-bold">{kartu.nilai}</p>
+            <p className="mt-1 text-sm text-tintaLembut">{kartu.keterangan}</p>
+          </div>
+        ))}
+      </div>
+
+      <section className="mt-10">
         <h2 className="font-serif text-2xl font-bold">Riwayat Pembayaran</h2>
         {daftarPesanan.length === 0 ? (
           <p className="mt-3 text-[15px] text-tintaLembut">Belum ada pembayaran.</p>
@@ -141,88 +261,6 @@ export default async function Akun({
           </ul>
         )}
       </section>
-
-      <div className="mt-8 grid gap-4 sm:grid-cols-3">
-        {[
-          { judul: "Undangan saya", nilai: String(daftar.length), keterangan: `${jumlahAktif} berstatus Aktif.` },
-          { judul: "Balasan RSVP", nilai: String(totalBalasan), keterangan: "Dari semua undangan saya." },
-          { judul: "Tamu konfirmasi hadir", nilai: `${totalTamuHadir} tamu`, keterangan: "Total dari balasan hadir." },
-        ].map((kartu) => (
-          <div key={kartu.judul} className="kartu-kaca rounded-[1.75rem] p-5">
-            <p className="text-sm font-bold text-tintaLembut">{kartu.judul}</p>
-            <p className="mt-1 font-serif text-3xl font-bold">{kartu.nilai}</p>
-            <p className="mt-1 text-sm text-tintaLembut">{kartu.keterangan}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-10 flex flex-wrap items-center justify-between gap-4">
-        <h2 className="font-serif text-3xl font-bold">Undangan Saya</h2>
-        <Link href="/akun/undangan/baru" className="tombol-utama bg-tanah-600 text-sm text-white hover:bg-tanah-700">
-          Buat Undangan Baru
-        </Link>
-      </div>
-
-      <div className="mt-6 grid gap-4">
-        {daftar.map((undangan) => (
-          <article key={undangan.id} className="kartu-kaca rounded-[1.75rem] p-5 sm:p-6">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h3 className="font-serif text-2xl font-bold">
-                  {undangan.namaPertama}
-                  {undangan.namaKedua ? ` dan ${undangan.namaKedua}` : ""}
-                </h3>
-                <p className="mt-1 text-sm text-tintaLembut">
-                  {undangan.jenisAcara} · {formatTanggalIndonesia(undangan.tanggal)} · {undangan.lokasi}
-                </p>
-                <p className="mt-1 text-sm text-tintaLembut">
-                  RSVP: {undangan.ringkasan.totalBalasan} balasan · {undangan.ringkasan.hadir} hadir ({undangan.ringkasan.totalTamuHadir} tamu) · Tautan tamu: /u/{undangan.kodeTamu}
-                </p>
-              </div>
-              <span className="shrink-0 rounded-full bg-daun-100 px-3 py-1 text-xs font-bold text-daun-700">
-                {undangan.status}
-              </span>
-            </div>
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              <Link href={`/u/${undangan.kodeTamu}`} className="min-h-[44px] text-sm font-bold text-tanah-600 underline underline-offset-4">
-                Halaman tamu
-              </Link>
-              <Link href={`/akun/undangan/${undangan.id}`} className="min-h-[44px] text-sm font-bold text-tanah-600 underline underline-offset-4">
-                Lihat RSVP
-              </Link>
-              <form action={ubahStatusUndanganPengguna} className="flex flex-wrap items-center gap-2">
-                <input type="hidden" name="id" value={undangan.id} />
-                <label htmlFor={`status-${undangan.id}`} className="text-sm font-bold">Ubah status:</label>
-                <select
-                  id={`status-${undangan.id}`}
-                  name="status"
-                  defaultValue={undangan.status}
-                  className="min-h-[44px] rounded-full border border-tanah-900/15 bg-white/80 px-3 text-sm font-bold"
-                >
-                  {daftarStatus.map((status) => (
-                    <option key={status} value={status}>{status}</option>
-                  ))}
-                </select>
-                <button type="submit" className="min-h-[44px] rounded-full border-2 border-tanah-600 px-4 text-sm font-bold text-tanah-700">
-                  Simpan status
-                </button>
-              </form>
-              <form action={hapusUndanganPengguna}>
-                <input type="hidden" name="id" value={undangan.id} />
-                <button type="submit" className="min-h-[44px] rounded-full bg-terakota-100 px-4 text-sm font-bold text-tanah-700">
-                  Hapus
-                </button>
-              </form>
-            </div>
-          </article>
-        ))}
-      </div>
-      {daftar.length === 0 && (
-        <p className="kartu-kaca mt-6 rounded-[2rem] p-6 text-center text-tintaLembut">
-          Belum ada undangan atas namamu. Buat yang pertama dari tombol di atas, lalu ubah statusnya
-          jadi Aktif supaya tamu bisa membuka tautan dan mengisi RSVP.
-        </p>
-      )}
     </div>
   );
 }

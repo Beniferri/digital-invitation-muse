@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import Navigasi from "@/komponen/Navigasi";
-import KakiHalaman from "@/komponen/KakiHalaman";
 import { urlSitus } from "@/lib/situs";
 
 // Huruf utama yang mudah dibaca di ponsel, dan huruf serif untuk judul
@@ -46,13 +44,19 @@ export const metadata: Metadata = {
   },
 };
 
+// Tata letak akar: SENGAJA polos — hanya kerangka HTML, huruf, dan gaya.
+// Aturannya: header + footer situs hanya milik halaman website
+// (landing/marketing), dan itu dipasang oleh tata letak grup (situs) di
+// app/(situs)/layout.tsx, bukan di sini. Halaman aplikasi — admin,
+// dasbor pengguna (/akun), editor, halaman tamu (/u), dan pratinjau
+// template (/undangan) — mewarisi tata letak polos ini, jadi tampil
+// penuh tanpa chrome situs. Jangan menambah Navigasi/KakiHalaman ke
+// sini lagi: itu akan mengembalikannya ke semua halaman.
 export default function TataLetakUtama({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id">
       <body className={`${hurufSans.variable} ${hurufSerif.variable} font-sans`}>
-        <Navigasi />
         <main>{children}</main>
-        <KakiHalaman />
       </body>
     </html>
   );

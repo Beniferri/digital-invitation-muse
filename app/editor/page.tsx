@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import FormulirEditor from "@/komponen/FormulirEditor";
@@ -40,7 +41,19 @@ export default async function Editor({
   const galat = searchParams?.galat ? pesanGalat[searchParams.galat] : undefined;
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-      <h1 className="font-serif text-4xl font-bold sm:text-5xl">Editor Undangan</h1>
+      {sesi ? (
+        <Link href="/akun" className="text-sm font-bold text-tanah-600 underline underline-offset-4">
+          Kembali ke dasbor saya
+        </Link>
+      ) : (
+        <p className="text-sm font-bold">
+          <Link href="/daftar" className="text-tanah-600 underline underline-offset-4">Daftar</Link>
+          {" atau "}
+          <Link href="/masuk" className="text-tanah-600 underline underline-offset-4">Masuk</Link>
+          {" untuk menyimpan undanganmu."}
+        </p>
+      )}
+      <h1 className="mt-4 font-serif text-4xl font-bold sm:text-5xl">Editor Undangan</h1>
       <p className="mt-3 max-w-2xl text-lg leading-relaxed text-tintaLembut">
         Isi datanya, lihat hasilnya langsung di pratinjau. Tekan Simpan untuk
         menyimpan undangan ke dasbor saya — kalau belum masuk, daftar atau

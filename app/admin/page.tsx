@@ -66,12 +66,12 @@ export default async function RingkasanAdmin({
       <h1 className="font-serif text-4xl font-bold">Ringkasan</h1>
       <p className="mt-2 max-w-2xl text-[17px] leading-relaxed text-tintaLembut">
         Langganan dan pendapatan UndanganKita, dihitung dari database — bukan angka contoh.
-        MRR = langganan Aktif (tahunan dihitung nominal/12). Churn 30 hari tidak menghitung
-        langganan yang diganti paket baru.
+        Pendapatan rutin = langganan Aktif (tahunan dihitung nominal/12).
+        Angka berhenti 30 hari tidak menghitung langganan yang diganti paket baru.
       </p>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {kartu("MRR", formatRupiah(metrik.mrr), `Dari ${metrik.langgananAktif} langganan aktif.`)}
+        {kartu("Pendapatan rutin / bulan", formatRupiah(metrik.mrr), `Dari ${metrik.langgananAktif} langganan aktif.`)}
         {kartu(
           "Langganan aktif",
           String(metrik.langgananAktif),
@@ -83,10 +83,10 @@ export default async function RingkasanAdmin({
           `+${metrik.penggunaBaru30Hari} akun baru 30 hari terakhir.`,
         )}
         {kartu(
-          "Churn 30 hari",
+          "Berhenti langganan (30 hari)",
           metrik.churn30Hari === null ? "—" : `${(metrik.churn30Hari * 100).toFixed(1)}%`,
           metrik.churn30Hari === null
-            ? "Belum ada data langganan untuk menghitung churn."
+            ? "Belum ada data langganan untuk menghitung angka ini."
             : `${metrik.berakhir30Hari} langganan berakhir 30 hari terakhir.`,
         )}
       </div>
@@ -104,7 +104,7 @@ export default async function RingkasanAdmin({
           <div className="mt-6 flex h-48 items-end gap-2" role="img" aria-label="Grafik batang pendapatan lunas 12 bulan terakhir">
             {perBulan.map((bulan) => (
               <div key={bulan.kunci} className="flex flex-1 flex-col items-center gap-1">
-                <span className="text-center text-[11px] font-bold leading-tight">
+                <span className="text-center text-xs font-bold leading-tight">
                   {bulan.total > 0 ? formatRupiah(bulan.total) : ""}
                 </span>
                 <div
@@ -115,7 +115,7 @@ export default async function RingkasanAdmin({
                     {bulan.label}: {formatRupiah(bulan.total)}
                   </title>
                 </div>
-                <span className="text-center text-[11px] text-tintaLembut">{bulan.label.split(" ")[0]}</span>
+                <span className="text-center text-xs text-tintaLembut">{bulan.label.split(" ")[0]}</span>
               </div>
             ))}
           </div>

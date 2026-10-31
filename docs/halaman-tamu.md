@@ -29,7 +29,7 @@ tidak ditemukan / galat yang ramah.
 | `app/u/[kode]/error.tsx` | Galat muat (komponen klien): pesan ramah + tombol "Coba lagi" (`reset()`) + Beranda. Tanpa detail teknis. |
 | `komponen/UndanganZamrud.tsx` | Perender halaman penuh. Props: `data: DataZamrud` (lihat tipe di berkas itu: nama, tanggal, lokasi, statusAktif, ringkasan, ucapan, kolom v2, galeriTambahan, musikSrc, tautan, kodeTamu, waktuMuat). |
 | `komponen/BarKonfirmasi.tsx` | Bar CTA persisten. Props: `tampil: boolean`, `href?: string` (bawaan `"#rsvp"`). Murni presentasi: tanpa hook dan tanpa impor `next/*`, jadi bisa dipakai server, klien, dan pengujian render. |
-| `komponen/Navigasi.tsx`, `komponen/KakiHalaman.tsx` | Mengembalikan `null` di rute `/u/*` (dibaca lewat `usePathname`). Halaman lain tidak berubah. KakiHalaman dijadikan komponen klien hanya untuk membaca rute. |
+| `app/(situs)/layout.tsx` | Satu-satunya tempat header + footer situs dipasang. Hanya halaman website (landing, katalog, bantuan, syarat, privasi, daftar, masuk) yang masuk grup ini. |
 | `komponen/PratinjauUndangan.tsx`, `komponen/FormulirRsvp.tsx` | Jalur kartu lama; tidak diubah kecuali salinan penutup di `page.tsx`. |
 | `tests/halaman-tamu.tsx` | Pengujian (lihat bawah). |
 
