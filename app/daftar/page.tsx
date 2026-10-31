@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { daftarPengguna } from "@/lib/aksiOtentikasi";
+import { lanjutAman } from "@/lib/lanjut";
 
 // Halaman daftar pengguna biasa. Kata sandi minimal 8 karakter dan
 // langsung di-hash sebelum disimpan; akun baru berperang "pengguna".
@@ -8,15 +9,15 @@ export default function Daftar({
 }: {
   searchParams?: { galat?: string; lanjut?: string };
 }) {
-  // lanjut hanya /editor yang diteruskan (lihat lanjutAman di aksiOtentikasi).
-  const lanjut = searchParams?.lanjut === "/editor" ? "/editor" : null;
+  // lanjut hanya yang ada di daftar putih lib/lanjut.ts yang diteruskan.
+  const lanjut = lanjutAman(searchParams?.lanjut);
   return (
     <div className="mx-auto max-w-md px-4 py-16">
       <div className="kartu-kaca rounded-[2rem] p-6 sm:p-8">
         <h1 className="font-serif text-3xl font-bold">Daftar Akun</h1>
         <p className="mt-2 text-[15px] leading-relaxed text-tintaLembut">
           {lanjut
-            ? "Buat akun untuk menyimpan undanganmu. Setelah daftar, kamu kembali ke editor dengan isian yang tersimpan di perangkatmu."
+            ? "Buat akun untuk melanjutkan. Setelah daftar, kamu kembali ke halaman yang tadi kamu buka."
             : "Buat akun untuk mulai mengelola undanganmu."}
         </p>
         {searchParams?.galat && (

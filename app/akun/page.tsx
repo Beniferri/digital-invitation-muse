@@ -4,9 +4,26 @@ import { ambilSesiSaatIni } from "@/lib/sesi";
 import { keluarPengguna } from "@/lib/aksiOtentikasi";
 import { hapusUndanganPengguna, ubahStatusUndanganPengguna } from "@/lib/aksiPengguna";
 import { bacaDaftarUndanganOlehPengguna, bacaRingkasanRsvp } from "@/lib/tokoData";
+import {
+  bacaDaftarPesananOlehPengguna,
+  jumlahUndanganAktifPengguna,
+  langgananAktifPengguna,
+  periksaKedaluwarsaPengguna,
+} from "@/lib/langganan";
 import { formatTanggalIndonesia } from "@/lib/format";
+import { formatRupiah } from "@/data/paketHarga";
 
 export const dynamic = "force-dynamic";
+
+// Pesan galat dari penegakan batas paket (lihat aksi pengguna): mengubah
+// status jadi Aktif ditolak kalau tidak ada langganan aktif atau slotnya
+// sudah penuh.
+const pesanGalat: Record<string, string> = {
+  "butuh-paket":
+    "Untuk mengaktifkan undangan, kamu butuh langganan aktif. Pilih paket di bawah — membuat Draft tetap gratis.",
+  "slot-habis":
+    "Slot undangan aktif di paketmu sudah penuh. Nonaktifkan satu undangan dulu, atau naik ke paket yang lebih besar.",
+};
 
 // Dasbor pengguna: hanya undangan yang dibuat pengguna ini sendiri.
 // Undangan admin lama (tanpa pemilik) tidak muncul di sini, dan undangan
@@ -17,10 +34,19 @@ const daftarStatus = ["Draft", "Aktif", "Selesai"] as const;
 export default async function Akun({
   searchParams,
 }: {
-  searchParams?: { dari?: string };
+  searchParams?: { dari?: string; galat?: string };
 }) {
   const sesi = await ambilSesiSaatIni();
   if (!sesi) redirect("/masuk");
+
+  // Kedaluwarsa diperiksa malas di sini: langganan yang sudah lewat
+  // tanggalnya (dan undangan Aktif di bawahnya) diubah jadi Selesai
+  // sebelum dasbor dibaca, supaya angka di bawah tidak pernah
+  // menampilkan langganan yang sebenarnya sudah habis.
+  periksaKedaluwarsaPengguna(sesi.id);
+  const langganan = langgananAktifPengguna(sesi.id);
+  const daftarPesanan = bacaDaftarPesananOlehPengguna(sesi.id);
+  const galat = searchParams?.galat ? pesanGalat[searchParams.galat] : undefined;
 
   const daftarDasar = await bacaDaftarUndanganOlehPengguna(sesi.id);
   const daftar = await Promise.all(
@@ -64,6 +90,57 @@ export default async function Akun({
           tautan tamunya.
         </p>
       )}
+      {galat && (
+        <p role="alert" className="mt-6 rounded-2xl bg-terakota-100 px-4 py-3 text-sm font-bold text-tanah-700">
+          {galat}
+        </p>
+      )}
+
+      <section className="kartu-kaca mt-8 rounded-[1.75rem] p-5 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="font-serif text-2xl font-bold">Langganan Saya</h2>
+            {langganan ? (
+              <p className="mt-1 text-[15px] leading-relaxed text-tintaLembut">
+                Paket <strong>{langganan.namaPaket}</strong> · aktif sampai{" "}
+                {formatTanggalIndonesia(langganan.berakhirPada)} ·{" "}
+                {jumlahUndanganAktifPengguna(sesi.id)} dari {langganan.maksUndanganAktif} slot undangan aktif terpakai.
+              </p>
+            ) : (
+              <p className="mt-1 text-[15px] leading-relaxed text-tintaLembut">
+                Belum ada langganan aktif. Membuat undangan (Draft) tetap gratis;
+                untuk mengaktifkannya supaya tamu bisa RSVP, kamu butuh paket.
+              </p>
+            )}
+          </div>
+          <Link href="/akun/paket" className="tombol-utama shrink-0 bg-tanah-600 text-sm text-white hover:bg-tanah-700">
+            {langganan ? "Perpanjang / Ganti Paket" : "Beli Paket"}
+          </Link>
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="font-serif text-2xl font-bold">Riwayat Pembayaran</h2>
+        {daftarPesanan.length === 0 ? (
+          <p className="mt-3 text-[15px] text-tintaLembut">Belum ada pembayaran.</p>
+        ) : (
+          <ul className="mt-4 grid gap-3">
+            {daftarPesanan.map((pesanan) => (
+              <li key={pesanan.id} className="kartu-kaca flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] p-4">
+                <p className="text-[15px]">
+                  <strong>Paket {pesanan.namaPaket}</strong> ({pesanan.periode === "bulanan" ? "bulanan" : "tahunan"}) ·{" "}
+                  {formatRupiah(pesanan.nominal)} ·{" "}
+                  {pesanan.status === "Lunas" ? "Lunas" : pesanan.status === "Gagal" ? "Gagal" : "Menunggu"} ·{" "}
+                  {pesanan.dibuatPada}
+                </p>
+                <Link href={`/akun/pembayaran/${pesanan.id}`} className="text-sm font-bold text-tanah-600 underline underline-offset-4">
+                  Lihat pembayaran
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
         {[

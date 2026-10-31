@@ -10,6 +10,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { buatKodeTamu, idBaru, jalankan, satuBaris, sekarangIso, type Baris } from "./db";
 import { simpanFoto } from "./penyimpananFoto";
+import { bolehAktifkanUndangan } from "./langganan";
 import { ambilSesiSaatIni, type SesiPengguna } from "./sesi";
 import type { StatusUndangan } from "./tokoData";
 
@@ -34,6 +35,14 @@ export async function tambahUndanganPengguna(formulir: FormData) {
   const slugTemplat = teks(formulir, "slugTemplat");
   const templat = satuBaris<Baris>("SELECT slug FROM templat WHERE slug = ? AND aktif = 1", slugTemplat);
   if (!templat) redirect("/akun/undangan/baru?galat=1");
+  // Penegakan Tahap 2: membuat undangan dengan status Aktif langsung
+  // butuh langganan aktif + slot tersisa. Membuat Draft selalu gratis
+  // (penegakannya nanti saat status diubah jadi Aktif).
+  const statusDiminta = statusBersih(teks(formulir, "status"));
+  if (statusDiminta === "Aktif") {
+    const cek = bolehAktifkanUndangan(sesi.id);
+    if (!cek.boleh) redirect(`/akun/undangan/baru?galat=${cek.alasan}`);
+  }
 
   let kodeTamu = buatKodeTamu();
   while (satuBaris<Baris>("SELECT id FROM undangan WHERE kode_tamu = ?", kodeTamu)) {
@@ -62,7 +71,8 @@ export async function tambahUndanganPengguna(formulir: FormData) {
  * Berbeda dengan tambahUndanganPengguna (formulir dasbor): jenis acara
  * diambil dari template yang dipilih di editor, bukan dari isian pengguna
  * (editor tidak punya kolom jenis acara); status selalu Draft — pemilik
- * mengaktifkannya sendiri dari dasbor. Foto yang dipilih di editor ikut
+ * mengaktifkannya sendiri dari dasbor, dan di sanalah penegakan batas
+ * paket Tahap 2 berlaku (membuat Draft dari editor selalu gratis). Foto yang dipilih di editor ikut
  * diunggah lewat simpanFoto yang sama dengan foto sampul template
  * (maks 5 MB, JPG/PNG/WebP); tanpa foto, undangan memakai foto sampul
  * template di halaman tamu. Kegagalan dikembalikan ke /editor dengan kode
@@ -123,7 +133,19 @@ export async function ubahStatusUndanganPengguna(formulir: FormData) {
   const sesi = await wajibPengguna();
   const id = teks(formulir, "id");
   if (!(await undanganMilikPengguna(id, sesi.id))) redirect("/akun");
-  jalankan("UPDATE undangan SET status = ? WHERE id = ?", statusBersih(teks(formulir, "status")), id);
+  const statusBaru = statusBersih(teks(formulir, "status"));
+  // Penegakan Tahap 2: mengubah status MENJADI Aktif butuh langganan
+  // aktif + slot tersisa. Mengubah dari Aktif ke status lain, atau
+  // menyimpan ulang status Aktif yang sudah Aktif, selalu diizinkan
+  // (tidak menghabiskan slot baru).
+  if (statusBaru === "Aktif") {
+    const statusLama = satuBaris<Baris>("SELECT status FROM undangan WHERE id = ?", id);
+    if (String(statusLama?.status ?? "") !== "Aktif") {
+      const cek = bolehAktifkanUndangan(sesi.id);
+      if (!cek.boleh) redirect(`/akun?galat=${cek.alasan}`);
+    }
+  }
+  jalankan("UPDATE undangan SET status = ? WHERE id = ?", statusBaru, id);
   revalidatePath("/akun", "page");
   redirect("/akun");
 }

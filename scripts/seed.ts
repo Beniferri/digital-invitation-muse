@@ -83,23 +83,29 @@ async function utama() {
     }
   }
 
+  // Batas undangan aktif per paket (dipakai penegakan Tahap 2). Diambil dari
+  // nama paket karena toko.json belum punya kolom ini; paket yang tidak
+  // dikenal default 1 supaya tidak pernah tanpa batas.
+  const maksUndanganAktif: Record<string, number> = { Hemat: 1, Populer: 3, "Keluarga Besar": 10 };
   for (let indeks = 0; indeks < toko.paketHarga.length; indeks += 1) {
     const paket = toko.paketHarga[indeks];
+    const maks = maksUndanganAktif[paket.nama] ?? 1;
     const sudahAda = satuBaris<Baris>("SELECT id FROM paket_harga WHERE nama = ?", paket.nama);
     if (sudahAda) {
       jalankan(
-        "UPDATE paket_harga SET keterangan = ?, harga_bulanan = ?, harga_tahunan = ?, paling_populer = ?, fitur_json = ?, urutan = ? WHERE nama = ?",
+        "UPDATE paket_harga SET keterangan = ?, harga_bulanan = ?, harga_tahunan = ?, paling_populer = ?, fitur_json = ?, urutan = ?, maks_undangan_aktif = ? WHERE nama = ?",
         paket.keterangan,
         paket.hargaBulanan,
         paket.hargaTahunan,
         paket.palingPopuler ? 1 : 0,
         JSON.stringify(paket.fitur),
         indeks,
+        maks,
         paket.nama,
       );
     } else {
       jalankan(
-        "INSERT INTO paket_harga (id, nama, keterangan, harga_bulanan, harga_tahunan, paling_populer, fitur_json, urutan) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO paket_harga (id, nama, keterangan, harga_bulanan, harga_tahunan, paling_populer, fitur_json, urutan, maks_undangan_aktif) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         idBaru(),
         paket.nama,
         paket.keterangan,
@@ -108,6 +114,7 @@ async function utama() {
         paket.palingPopuler ? 1 : 0,
         JSON.stringify(paket.fitur),
         indeks,
+        maks,
       );
     }
   }

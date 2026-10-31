@@ -55,5 +55,41 @@ CREATE TABLE IF NOT EXISTS paket_harga (
   harga_tahunan INTEGER NOT NULL,
   paling_populer INTEGER NOT NULL DEFAULT 0,
   fitur_json TEXT NOT NULL,
-  urutan INTEGER NOT NULL DEFAULT 0
+  urutan INTEGER NOT NULL DEFAULT 0,
+  maks_undangan_aktif INTEGER NOT NULL DEFAULT 1
+);
+CREATE TABLE IF NOT EXISTS rsvp (
+  id TEXT PRIMARY KEY,
+  undangan_id TEXT NOT NULL REFERENCES undangan(id) ON DELETE CASCADE,
+  nama TEXT NOT NULL,
+  kehadiran TEXT NOT NULL DEFAULT 'Hadir',
+  jumlah_tamu INTEGER NOT NULL DEFAULT 1,
+  pesan TEXT NOT NULL DEFAULT '',
+  dibuat_pada TEXT NOT NULL,
+  diubah_pada TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS pesanan (
+  id TEXT PRIMARY KEY,
+  order_id TEXT UNIQUE NOT NULL,
+  pengguna_id TEXT NOT NULL REFERENCES pengguna(id) ON DELETE CASCADE,
+  nama_paket TEXT NOT NULL,
+  periode TEXT NOT NULL,
+  nominal INTEGER NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Menunggu',
+  snap_token TEXT,
+  snap_redirect_url TEXT,
+  metode_pembayaran TEXT,
+  dibuat_pada TEXT NOT NULL,
+  diubah_pada TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS langganan (
+  id TEXT PRIMARY KEY,
+  pengguna_id TEXT NOT NULL REFERENCES pengguna(id) ON DELETE CASCADE,
+  pesanan_id TEXT NOT NULL REFERENCES pesanan(id) ON DELETE CASCADE,
+  nama_paket TEXT NOT NULL,
+  maks_undangan_aktif INTEGER NOT NULL,
+  mulai_pada TEXT NOT NULL,
+  berakhir_pada TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Aktif',
+  dibuat_pada TEXT NOT NULL
 );

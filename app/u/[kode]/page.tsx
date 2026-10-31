@@ -2,6 +2,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { bacaDaftarRsvp, bacaDaftarTemplat, bacaRingkasanRsvp, cariUndanganOlehKode } from "@/lib/tokoData";
+import { periksaKedaluwarsaPengguna } from "@/lib/langganan";
 import PratinjauUndangan from "@/komponen/PratinjauUndangan";
 import FormulirRsvp from "@/komponen/FormulirRsvp";
 import BagikanUndangan from "@/komponen/BagikanUndangan";
@@ -24,8 +25,17 @@ export default async function HalamanTamu({
   params: { kode: string };
   searchParams: { rsvp?: string; galat?: string };
 }) {
-  const undangan = await cariUndanganOlehKode(params.kode);
+  let undangan = await cariUndanganOlehKode(params.kode);
   if (!undangan || undangan.status === "Draft") notFound();
+  // Kedaluwarsa diperiksa malas: kalau langganan pemilik sudah habis,
+  // undangan Aktif ini diubah jadi Selesai dulu, lalu dibaca ulang supaya
+  // halaman ini menampilkan status yang benar (tamu tetap bisa melihat,
+  // tapi RSVP sudah ditutup — aturan yang sama dengan undangan Selesai).
+  if (undangan.penggunaId) {
+    periksaKedaluwarsaPengguna(undangan.penggunaId);
+    undangan = await cariUndanganOlehKode(params.kode);
+    if (!undangan || undangan.status === "Draft") notFound();
+  }
 
   const daftarTemplat = await bacaDaftarTemplat();
   const templat = daftarTemplat.find((item) => item.slug === undangan.slugTemplat);

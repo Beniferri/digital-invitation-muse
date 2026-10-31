@@ -14,6 +14,7 @@ export default function TataLetakAdmin({ children }: { children: React.ReactNode
           <Link href="/admin/templat" className="hover:text-tanah-600">Template</Link>
           <Link href="/admin/undangan" className="hover:text-tanah-600">Undangan</Link>
           <Link href="/admin/harga" className="hover:text-tanah-600">Harga</Link>
+          <Link href="/admin/pesanan" className="hover:text-tanah-600">Pesanan</Link>
           <Link href="/" className="hover:text-tanah-600">Lihat Situs</Link>
         </nav>
         <form action={keluarAdmin}>

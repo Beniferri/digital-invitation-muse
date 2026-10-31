@@ -23,7 +23,8 @@ export default function BagianHarga({ daftar }: { daftar: PaketHarga[] }) {
       </div>
       <p className="mt-6 text-center text-sm text-tintaLembut">
         Semua paket memakai templat yang sama. Pilih paket berdasarkan jumlah
-        undangan dan lama aktifnya, bukan berdasarkan desain.
+        undangan aktif yang kamu butuhkan, bukan berdasarkan desain. Paket
+        bulanan aktif 30 hari, paket tahunan aktif 1 tahun sejak pembayaran.
       </p>
     </div>
   );

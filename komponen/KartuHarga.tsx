@@ -36,7 +36,10 @@ export default function KartuHarga({ paket, periode }: { paket: PaketHarga; peri
           </li>
         ))}
       </ul>
-      <Link href="/editor" className="tombol-utama mt-7 w-full bg-tanah-600 text-sm text-white hover:bg-tanah-700">
+      <Link href="/akun/paket" className="tombol-utama mt-7 w-full bg-tanah-600 text-sm text-white hover:bg-tanah-700">
+        Beli Paket Ini
+      </Link>
+      <Link href="/editor" className="tombol-utama mt-3 w-full border-2 border-tanah-600 text-sm text-tanah-700 hover:bg-krem-100">
         Coba Editor Gratis
       </Link>
       <p className="mt-3 text-center text-xs text-tintaLembut">

@@ -75,7 +75,33 @@ CREATE TABLE IF NOT EXISTS paket_harga (
   harga_tahunan INTEGER NOT NULL,
   paling_populer INTEGER NOT NULL DEFAULT 0,
   fitur_json TEXT NOT NULL,
-  urutan INTEGER NOT NULL DEFAULT 0
+  urutan INTEGER NOT NULL DEFAULT 0,
+  maks_undangan_aktif INTEGER NOT NULL DEFAULT 1
+);
+CREATE TABLE IF NOT EXISTS pesanan (
+  id TEXT PRIMARY KEY,
+  order_id TEXT UNIQUE NOT NULL,
+  pengguna_id TEXT NOT NULL REFERENCES pengguna(id) ON DELETE CASCADE,
+  nama_paket TEXT NOT NULL,
+  periode TEXT NOT NULL,
+  nominal INTEGER NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Menunggu',
+  snap_token TEXT,
+  snap_redirect_url TEXT,
+  metode_pembayaran TEXT,
+  dibuat_pada TEXT NOT NULL,
+  diubah_pada TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS langganan (
+  id TEXT PRIMARY KEY,
+  pengguna_id TEXT NOT NULL REFERENCES pengguna(id) ON DELETE CASCADE,
+  pesanan_id TEXT NOT NULL REFERENCES pesanan(id) ON DELETE CASCADE,
+  nama_paket TEXT NOT NULL,
+  maks_undangan_aktif INTEGER NOT NULL,
+  mulai_pada TEXT NOT NULL,
+  berakhir_pada TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Aktif',
+  dibuat_pada TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS rsvp (
   id TEXT PRIMARY KEY,
@@ -105,6 +131,24 @@ export function buatKodeTamu(): string {
  * baru langsung punya kolom-kolom ini dari skema, jadi migrasi ini
  * biasanya tidak mengubah apa-apa.
  */
+/**
+ * Migrasi ringan untuk pembayaran (Tahap 2): tambah kolom
+ * maks_undangan_aktif di paket_harga kalau belum ada, lalu isi dari nama
+ * paket (Hemat 1, Populer 3, Keluarga Besar 10). Tabel pesanan dan
+ * langganan sudah dibuat lewat skema di atas, jadi tidak perlu migrasi
+ * terpisah untuk keduanya.
+ */
+function migrasiPembayaran(db: DatabaseSync): void {
+  const kolom = db.prepare("PRAGMA table_info(paket_harga)").all() as Array<{ name: string }>;
+  if (!kolom.some((c) => c.name === "maks_undangan_aktif")) {
+    db.exec("ALTER TABLE paket_harga ADD COLUMN maks_undangan_aktif INTEGER NOT NULL DEFAULT 1");
+  }
+  const batas: Record<string, number> = { Hemat: 1, Populer: 3, "Keluarga Besar": 10 };
+  for (const [nama, maks] of Object.entries(batas)) {
+    db.prepare("UPDATE paket_harga SET maks_undangan_aktif = ? WHERE nama = ?").run(maks, nama);
+  }
+}
+
 function migrasiUndangan(db: DatabaseSync): void {
   const kolom = db.prepare("PRAGMA table_info(undangan)").all() as Array<{ name: string }>;
   if (!kolom.some((c) => c.name === "kode_tamu")) {
@@ -139,6 +183,7 @@ function bukaDatabase(): DatabaseSync {
     db.exec("PRAGMA foreign_keys = ON");
     db.exec(SKEMA);
     migrasiUndangan(db);
+    migrasiPembayaran(db);
     globalUntukDb.db = db;
   }
   return globalUntukDb.db;

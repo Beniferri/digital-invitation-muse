@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { masukPengguna } from "@/lib/aksiOtentikasi";
+import { lanjutAman } from "@/lib/lanjut";
 
 // Halaman masuk untuk pengguna biasa. Akun admin yang masuk lewat sini
 // tetap diarahkan ke /akun; dasbor admin hanya bisa dibuka lewat /admin/login
@@ -9,16 +10,16 @@ export default function Masuk({
 }: {
   searchParams?: { gagal?: string; lanjut?: string };
 }) {
-  // lanjut hanya /editor yang diteruskan (lihat lanjutAman di aksiOtentikasi);
+  // lanjut hanya yang ada di daftar putih lib/lanjut.ts yang diteruskan;
   // nilai lain diabaikan supaya tidak bisa dipakai mengarahkan ke sembarang halaman.
-  const lanjut = searchParams?.lanjut === "/editor" ? "/editor" : null;
+  const lanjut = lanjutAman(searchParams?.lanjut);
   return (
     <div className="mx-auto max-w-md px-4 py-16">
       <div className="kartu-kaca rounded-[2rem] p-6 sm:p-8">
         <h1 className="font-serif text-3xl font-bold">Masuk</h1>
         <p className="mt-2 text-[15px] leading-relaxed text-tintaLembut">
           {lanjut
-            ? "Masuk dulu untuk menyimpan undanganmu. Setelah masuk, kamu kembali ke editor dengan isian yang tersimpan di perangkatmu."
+            ? "Masuk dulu untuk melanjutkan. Setelah masuk, kamu kembali ke halaman yang tadi kamu buka."
             : "Masuk untuk mengelola undanganmu."}
         </p>
         {searchParams?.gagal && (

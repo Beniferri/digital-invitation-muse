@@ -56,6 +56,61 @@ nyata yang bisa dibagikan, bukan cuma pratinjau yang hilang saat refresh.
 
 ## Tahap 2 — Pembayaran Midtrans (kunci monetisasi)
 
+**Status: SELESAI DI KODE 31 Okt 2026, MENUNGGU UJI SANDBOX.** Uji
+end-to-end dengan Midtrans Sandbox belum bisa jalan karena kunci Sandbox
+belum ada (lihat "Keputusan yang dibutuhkan" di bawah + README bagian
+"Pembayaran Midtrans"). Jangan tandai Tahap 2 tuntas sepenuhnya sebelum
+uji Sandbox lolos.
+
+Yang sudah dibangun (semua di kode, build lolos, logika dites tanpa kunci
+Midtrans — lihat catatan pengujian di bawah):
+
+- Tabel `pesanan` + `langganan`, kolom `paket_harga.maks_undangan_aktif`
+  (Hemat 1, Populer 3, Keluarga Besar 10) + migrasi otomatis di `lib/db.ts`
+- Checkout Snap Redirect dari `/akun/paket` (token + redirect_url dari API
+  Midtrans, tanpa pustaka eksternal — `lib/midtrans.ts`), halaman satu
+  pesanan `/akun/pembayaran/[id]` (tombol lanjut bayar / coba lagi token)
+- Webhook `/api/midtrans/notifikasi`: verifikasi SHA512, cocokkan nominal,
+  idempotent, satu-satunya jalur yang mengubah status jadi Lunas dan
+  mengaktifkan langganan
+- Penegakan batas di `ubahStatusUndanganPengguna` dan
+  `tambahUndanganPengguna` (status Aktif); Draft selalu gratis
+- Kedaluwarsa malas di dasbor + halaman tamu (langganan habis → Selesai,
+  undangan Aktif ikut Selesai)
+- Riwayat pembayaran di `/akun`, daftar pesanan + langganan di
+  `/admin/pesanan`, tombol "Beli Paket Ini" di kartu harga landing
+- Kunci hanya lewat environment variable (`.env.example` diperbarui)
+
+Keputusan yang diambil saat eksekusi (bisa diubah, tapi dicatat supaya
+tidak hilang):
+
+- **Draft gratis, Aktif wajib paket** — sesuai opsi yang diajukan di rencana
+  awal ("1 undangan Draft gratis, Aktif wajib paket"). Belum ada masa
+  gratis berbatas waktu; kalau user mau trial gratis, itu fitur baru.
+- **Durasi mengikuti periode bayar (bulanan 30 hari, tahunan 1 tahun)**,
+  BUKAN durasi per paket 30/90/365 hari. Alasannya: teks katalog lama
+  ("Masa aktif 30/90/365 hari per undangan") bertentangan dengan arti
+  bulanan/tahunan (bayar tahunan Hemat 490rb tapi cuma aktif 30 hari
+  tidak masuk akal). Teks katalog diubah jadi "Masa aktif selama
+  langganan berjalan" (di `data/toko.json` + `data/paketHarga.ts`).
+  Satu-satunya tempat yang menentukan durasi: `durasiHariPeriode()` di
+  `lib/midtrans.ts` — mengubah aturan durasi = ubah fungsi itu saja.
+- **Langganan baru menggantikan yang lama** (status Diganti), masa aktif
+  tidak ditumpuk.
+- **Harga dipakai apa adanya dari katalog** (49rb/99rb/199rb bulanan,
+  490rb/990rb/1.990rb tahunan) — belum ada konfirmasi final dari user
+  bahwa harga ini final; kalau berubah, ubah lewat dasbor admin / harga
+  (nominal di database, bukan hardcode di kode bayar).
+
+Catatan pengujian Tahap 2 (31 Okt 2026): build lolos; fungsi murni
+(signature, badan Snap, slot, kedaluwarsa) dites via tsx; webhook dites
+via curl dengan tanda tangan buatan (kunci uji lokal) termasuk idempotensi
+dan penolakan tanda tangan salah; token Snap dites lewat mock server
+lokal (bukan Midtrans sungguhan) karena kunci Sandbox belum ada; POST
+server action tetap tidak bisa dites di sandbox ini (masalah lingkungan
+yang sama seperti Tahap 1 — "Connection closed"), jadi klik-tayang
+checkout harus dites di Coolify setelah kunci Sandbox dipasang.
+
 Tujuan: paket harga yang sekarang cuma pajangan bisa dibeli dan
 mengaktifkan batas yang dijanjikan.
 
@@ -75,11 +130,16 @@ mengaktifkan batas yang dijanjikan.
   percobaan membuat undangan aktif melebihi batas ditolak dengan pesan
   yang jelas, bukan error kosong)
 
-Keputusan yang dibutuhkan sebelum tahap ini (bukan sekarang, tapi sebelum
-eksekusi): akun Midtrans sudah ada atau belum; apakah ada masa gratis
-(mis. 1 undangan Draft gratis, Aktif wajib paket) atau langsung wajib
-bayar; dan konfirmasi harga paket sudah final (saat ini 49rb / 99rb /
-199rb per bulan).
+Masih terbuka (butuh user, menghambat uji Sandbox — bukan menghambat kode):
+
+- **Akun Midtrans Sandbox sudah ada atau belum?** Kalau belum, user harus
+  daftar di Midtrans dan memasang `MIDTRANS_SERVER_KEY` +
+  `MIDTRANS_CLIENT_KEY` di environment Coolify, plus mengatur Payment
+  Notification URL dan Finish Redirect URL di dasbor Midtrans (detail di
+  README). Tanpa ini, tombol bayar akan gagal dengan pesan jelas dan
+  pesanan tetap Menunggu — itu perilaku yang disengaja, bukan bug.
+- **Harga paket sudah final?** Saat ini dipakai apa adanya dari katalog
+  (49rb/99rb/199rb bulanan). Kalau mau diubah, ubah lewat dasbor admin.
 
 ## Tahap 3 — RSVP yang lebih berguna untuk penyelenggara
 

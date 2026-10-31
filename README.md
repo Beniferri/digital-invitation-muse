@@ -42,7 +42,7 @@ jalan. Berkas itu hanya dipakai sekali sebagai sumber seed awal.
 - **Database:** SQLite bawaan Node (`node:sqlite`, berkas `dev.db` lewat
   `DATABASE_URL`). Skema ada di `db/skema.sql` dan dibuat otomatis oleh
   `lib/db.ts` saat database pertama dibuka: Pengguna, Sesi, Templat,
-  Undangan, PaketHarga. Tidak ada dependensi biner eksternal, jadi proyek
+  Undangan, PaketHarga, Pesanan, Langganan. Tidak ada dependensi biner eksternal, jadi proyek
   langsung jalan tanpa akun layanan luar. Untuk Postgres yang di-hosting
   (misalnya Supabase), ganti lapisan `lib/db.ts` dengan driver Postgres —
   pemanggilnya tidak berubah, karena mereka hanya memakai fungsi baca/
@@ -198,11 +198,68 @@ yang panjang.
   di dasbor pengguna. Admin yang masuk tetap mengelola semua undangan dari
   `/admin`.
 
+## Pembayaran Midtrans (Tahap 2 rencana penyelesaian)
+
+Alur uang sudah jalan di kode (uji Sandbox masih menunggu kunci, lihat di bawah):
+
+- **Beli paket** (`/akun/paket`): pengguna memilih paket (Hemat 1 slot,
+  Populer 3 slot, Keluarga Besar 10 slot) dan periode (bulanan/tahunan),
+  lalu server membuat pesanan berstatus Menunggu dan meminta token Snap ke
+  Midtrans. Pengguna diarahkan ke halaman bayar Midtrans (Snap Redirect).
+- **Halaman pembayaran** (`/akun/pembayaran/[id]`): menampilkan status
+  pesanan dari database. Kalau Midtrans gagal saat membuat token, pesanan
+  tetap tersimpan dan ada tombol "Coba Buat Pembayaran Lagi" — tidak perlu
+  membuat pesanan baru.
+- **Webhook** (`/api/midtrans/notifikasi`): satu-satunya jalur yang mengubah
+  status pesanan jadi Lunas/Gagal dan mengaktifkan langganan. Tanda tangan
+  notifikasi diverifikasi dengan SHA512(order_id + status_code +
+  gross_amount + ServerKey), nominal dicocokkan dengan pesanan, dan
+  aktivasi langganan idempotent (notifikasi ganda tidak membuat langganan
+  ganda). Callback peramban tidak pernah mengubah status.
+- **Aturan paket yang ditegakkan:**
+  - Membuat undangan (Draft) selalu gratis — dari editor maupun dasbor.
+  - Mengubah status jadi Aktif butuh langganan aktif + slot tersisa;
+    kalau tidak ada, pengguna diarahkan membeli paket dengan pesan yang jelas.
+  - Durasi langganan mengikuti periode bayar: bulanan 30 hari, tahunan 1 tahun
+    sejak pembayaran lunas. (Catatan: teks katalog lama yang menyebut masa
+    aktif per paket — 30/90/365 hari — sudah diubah jadi "Masa aktif selama
+    langganan berjalan" supaya tidak bertentangan dengan aturan ini.)
+  - Membeli paket baru menggantikan langganan aktif lama (status Diganti);
+    masa aktif tidak ditumpuk.
+  - Kedaluwarsa diperiksa malas: saat dasbor atau halaman tamu dibuka,
+    langganan yang sudah lewat tanggalnya diubah jadi Selesai dan undangan
+    Aktif di bawahnya ikut jadi Selesai (tamu tetap bisa melihat, RSVP ditutup).
+  - Undangan admin lama (tanpa pemilik) tidak kena batas paket.
+  - Refund/chargeback tidak mengubah status otomatis — diurus manual lewat admin.
+- **Dasbor pengguna** (`/akun`): seksi Langganan Saya (paket, tanggal
+  berakhir, slot terpakai) + Riwayat Pembayaran (tautan ke halaman tiap pesanan).
+- **Dasbor admin** (`/admin/pesanan`): daftar pesanan (email, paket, nominal,
+  status, metode) + daftar langganan + total lunas kasar (sebelum biaya Midtrans
+  dan pajak). Halaman ini hanya baca.
+
+### Yang harus dipasang sebelum pembayaran bisa dites/dipakai
+
+1. **Akun Midtrans Sandbox** (dulu, sebelum Production): daftar di Midtrans,
+   ambil Server Key + Client Key dari Settings > Access Keys.
+2. **Environment variable di Coolify** (tidak pernah di repo):
+   `MIDTRANS_SERVER_KEY`, `MIDTRANS_CLIENT_KEY`, `MIDTRANS_IS_PRODUCTION="false"`
+   untuk Sandbox. Lihat `.env.example`.
+3. **Dasbor Midtrans > Settings > Configuration (Sandbox dulu):**
+   - Payment Notification URL: `https://inv.benifin.my.id/api/midtrans/notifikasi`
+   - Finish Redirect URL: `https://inv.benifin.my.id/akun` (supaya pelanggan
+     kembali ke dasbor setelah bayar; status resmi tetap datang lewat webhook,
+     jadi kalau pelanggan tidak kembali pun langganan tetap aktif).
+4. **Uji Sandbox end-to-end** dengan metode bayar Sandbox (mis. QRIS/VA
+   Sandbox): pilih paket → bayar → webhook → langganan aktif → aktivasi
+   undangan berhasil, dan aktivasi di luar slot ditolak dengan pesan jelas.
+   Setelah lolos, ganti ke kunci Production + `MIDTRANS_IS_PRODUCTION="true"`
+   dan ulangi konfigurasi dasbor di akun Production.
+
 ## Yang sengaja tidak ada di MVP
 
-Pembayaran sungguhan dan CMS. Sejak Tahap 1 rencana penyelesaian, editor
-(`/editor`) sudah bisa menyimpan undangan (lihat di atas); yang masih
-belum ada adalah pembayaran dan batas paket yang ditegakkan.
+CMS dan fitur lanjutan (amplop digital, musik latar, galeri multi-foto,
+domain kustom per undangan, analitik lanjutan). Sejak Tahap 2 rencana
+penyelesaian, pembayaran dan batas paket sudah ditegakkan (lihat di atas).
 
 ## Teknologi
 
@@ -239,14 +296,18 @@ app/
   editor/page.tsx           # Editor (bungkus Suspense untuk parameter tautan)
   undangan/[slug]/page.tsx  # Contoh undangan dinamis (membaca toko admin)
   u/[kode]/page.tsx         # Halaman tamu + formulir RSVP + dinding ucapan
-  admin/                    # Dasbor admin: ringkasan, template, undangan, harga
+  admin/                    # Dasbor admin: ringkasan, template, undangan, harga, pesanan
   admin/login/page.tsx      # Halaman masuk admin (akun database)
   admin/undangan/[id]/page.tsx  # Detail RSVP satu undangan (admin)
+  admin/pesanan/page.tsx    # Daftar pesanan + langganan (hanya baca)
+  api/midtrans/notifikasi/route.ts  # Webhook Midtrans (ubah status pesanan, aktifkan langganan)
   masuk/page.tsx            # Masuk pengguna biasa
   daftar/page.tsx           # Daftar pengguna biasa
-  akun/page.tsx             # Dasbor pengguna: undangan milik sendiri + RSVP
+  akun/page.tsx             # Dasbor pengguna: undangan milik sendiri + RSVP + langganan + riwayat bayar
   akun/undangan/baru/page.tsx   # Tambah undangan milik pengguna
   akun/undangan/[id]/page.tsx   # Detail RSVP milik pengguna (hanya baca)
+  akun/paket/page.tsx       # Beli paket (Midtrans Snap Redirect)
+  akun/pembayaran/[id]/page.tsx # Status satu pesanan + lanjut/coba lagi bayar
   layout.tsx                # Tata letak, huruf, navigasi, dan kaki halaman
   globals.css               # Gaya dasar, kartu kaca, dan aturan reduced-motion
 data/
@@ -271,7 +332,7 @@ komponen/
   TombolWhatsApp.tsx        # Tombol berbagi WhatsApp dengan pesan terisi
   BagikanUndangan.tsx      # Bagikan undangan nyata: WhatsApp + salin tautan
 db/
-  skema.sql                 # Skema database: Pengguna, Sesi, Templat, Undangan, PaketHarga, Rsvp
+  skema.sql                 # Skema database: Pengguna, Sesi, Templat, Undangan, PaketHarga, Rsvp, Pesanan, Langganan
 scripts/
   seed.ts                   # Pindahkan data/toko.json ke database
   buat-admin.ts             # Buat akun admin di database
@@ -286,6 +347,10 @@ lib/
   aksiPengguna.ts           # Server action pengguna: undangan milik sendiri (cek kepemilikan), termasuk simpan dari editor
   aksiRsvp.ts               # Server action RSVP tamu (publik, anti-ganda per nama)
   aksiOtentikasi.ts         # Server action masuk/daftar/keluar
+  aksiPembayaran.ts         # Server action buat pesanan + coba lagi token Snap
+  midtrans.ts               # Snap Redirect + verifikasi signature webhook (tanpa pustaka eksternal)
+  langganan.ts              # Data pesanan/langganan: slot, kedaluwarsa, aktivasi idempotent
+  lanjut.ts                 # Daftar putih tujuan kembali setelah masuk/daftar
   sesi.ts                   # Sesi database + cookie httpOnly, wajibAdmin()
   kataSandi.ts              # Hash scrypt untuk kata sandi
   db.ts                     # Koneksi SQLite + fungsi baca/tulis database
