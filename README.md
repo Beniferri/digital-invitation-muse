@@ -202,11 +202,21 @@ yang panjang.
 
 ## Dasbor admin dan dasbor pengguna
 
-- **Dasbor admin** (`/admin`): metrik gabungan (template aktif, undangan
-  aktif, harga mulai, total balasan RSVP, total tamu konfirmasi hadir),
-  status undangan (aktif/draft/selesai), RSVP terbaru, RSVP per undangan,
-  undangan terbaru, dan daftar template. Semua angka dibaca segar dari
-  database setiap kali halaman dibuka.
+- **Dasbor admin** (`/admin`): Ringkasan langganan & pendapatan dengan
+  kerangka sidebar + topbar (komponen `ShellAdmin`: sidebar desktop,
+  drawer geser di ponsel, pencarian global, lencana pesanan yang perlu
+  perhatian, profil admin). Kartu metrik: MRR (langganan Aktif; tahunan
+  dihitung nominal/12), langganan aktif (bulanan/tahunan), pengguna
+  (+akun baru 30 hari), dan churn 30 hari (langganan Diganti bukan
+  churn). Grafik batang pendapatan lunas 12 bulan, sebaran paket aktif,
+  dan tabel aktivitas terbaru (pesanan, langganan, akun baru) dengan
+  pencarian, filter jenis, dan unduh CSV (`/api/admin/aktivitas/csv`,
+  hanya admin). Semua angka dihitung dari database (`lib/dasborAdmin`),
+  bukan angka contoh. Menu lain: Langganan (`/admin/langganan`, filter
+  status), Pendapatan & Tagihan (`/admin/pesanan`), Pengguna & Akun
+  (`/admin/pengguna`, cari email/nama), Undangan, RSVP (`/admin/rsvp`:
+  isi RSVP Ringkasan lama dipindah ke sini), Templat, Harga. Pencarian
+  global di topbar membuka `/admin/cari` (akun, undangan, pesanan).
 - **Dasbor pengguna** (`/akun`): hanya undangan yang dibuat pengguna itu
   sendiri. Pengguna bisa membuat undangan baru dari `/akun/undangan/baru`
   (hanya template aktif yang bisa dipilih), mengubah status, menghapus,

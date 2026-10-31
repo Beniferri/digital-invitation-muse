@@ -346,3 +346,27 @@ menghasilkan uang, Tahap 3 membuat produk dipertahankan sampai hari H,
 Tahap 4 membuat produk tahan scale, Tahap 5 memastikan rilisnya bersih.
 Membalik Tahap 4 ke depan hanya akan menunda uang masuk tanpa menambah
 satu pun pelanggan.
+
+## Dasbor admin langganan & pendapatan (31 Okt 2026, di luar Tahap 1–5)
+
+Desain dasbor admin (mockup) digabung ke proyek sebagai `/admin` baru
+dengan data asli, bukan angka contoh: `lib/dasborAdmin.ts` (MRR,
+langganan aktif, pengguna, churn 30 hari, pendapatan lunas 12 bulan,
+sebaran paket, aktivitas, pencarian global, CSV aktivitas),
+`komponen/ShellAdmin.tsx` (sidebar + drawer ponsel + topbar cari +
+lencana Menunggu/Gagal + profil), halaman baru `/admin/langganan`,
+`/admin/pengguna`, `/admin/cari`, `/admin/rsvp` (isi RSVP Ringkasan
+lama pindah ke sini), dan route `/api/admin/aktivitas/csv` (admin
+saja). Definisi metrik ditulis di header `lib/dasborAdmin.ts` dan di
+halaman Ringkasan. Tes: tsc + build lolos; asersi tsx di DB uji lolos
+(MRR 313.833, churn 25%, pendapatan per bulan, sebaran paket,
+aktivitas + filter + CSV + pencarian); matriks curl server produksi
+lolos (semua halaman admin 200 dengan sesi admin, 307 ke
+`/admin/login` tanpa sesi/bukan admin, CSV 200 admin / 403 bukan
+admin). Satu temuan tes yang BUKAN bug: `formatRupiah` memakai spasi
+non-breaking (bawaan Intl id-ID), jadi grep harfiah "Rp 313.833"
+gagal padahal nilainya tampil benar. Belum di-push (menunggu perintah
+push); belum dites klik-tayang di peramban (keterbatasan sandbox yang
+sudah diketahui: server action POST gagal "Connection closed", tapi
+halaman baru ini hanya memakai GET + tautan, jadi tidak kena batas
+itu).

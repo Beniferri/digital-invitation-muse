@@ -1,0 +1,152 @@
+"use client";
+
+// Kerangka dasbor admin: sidebar di desktop, drawer geser di ponsel
+// (pola yang sama dengan perbaikan mobile desain dasbor: hamburger,
+// backdrop, Escape, dan tutup otomatis setelah memilih menu).
+// Komponen ini hanya tampilan; semua angka datang dari halaman server
+// di dalamnya, dan otorisasi tetap diwajibkan tiap halaman.
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { keluarAdmin } from "@/lib/aksiOtentikasi";
+
+const MENU = [
+  { href: "/admin", label: "Ringkasan" },
+  { href: "/admin/langganan", label: "Langganan" },
+  { href: "/admin/pesanan", label: "Pendapatan & Tagihan" },
+  { href: "/admin/pengguna", label: "Pengguna & Akun" },
+  { href: "/admin/undangan", label: "Undangan" },
+  { href: "/admin/rsvp", label: "RSVP" },
+  { href: "/admin/templat", label: "Templat" },
+  { href: "/admin/harga", label: "Harga" },
+];
+
+export default function ShellAdmin({
+  email,
+  perhatian,
+  children,
+}: {
+  email: string;
+  perhatian: number;
+  children: React.ReactNode;
+}) {
+  const [terbuka, setTerbuka] = useState(false);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (!terbuka) return;
+    const tutupDenganEscape = (acara: KeyboardEvent) => {
+      if (acara.key === "Escape") setTerbuka(false);
+    };
+    document.addEventListener("keydown", tutupDenganEscape);
+    return () => document.removeEventListener("keydown", tutupDenganEscape);
+  }, [terbuka]);
+
+  const aktif = (href: string) =>
+    href === "/admin" ? pathname === "/admin" : pathname === href || pathname.startsWith(`${href}/`);
+
+  return (
+    <div className="min-h-screen">
+      {terbuka && (
+        <button
+          type="button"
+          aria-label="Tutup menu"
+          onClick={() => setTerbuka(false)}
+          className="fixed inset-0 z-40 bg-tinta/50 lg:hidden"
+        />
+      )}
+
+      <aside
+        aria-label="Navigasi admin"
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-tanah-900 text-krem-100 shadow-xl transition-transform duration-200 lg:translate-x-0 ${
+          terbuka ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="border-b border-white/10 px-5 py-5">
+          <p className="font-serif text-2xl font-bold text-krem-50">UndanganKita</p>
+          <p className="mt-1 text-sm text-krem-300">Dasbor Admin</p>
+        </div>
+        <nav className="flex-1 overflow-y-auto px-3 py-4">
+          <ul className="space-y-1">
+            {MENU.map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  onClick={() => setTerbuka(false)}
+                  aria-current={aktif(item.href) ? "page" : undefined}
+                  className={`block min-h-[44px] rounded-xl px-4 py-3 text-[15px] font-bold ${
+                    aktif(item.href)
+                      ? "bg-white/15 text-krem-50"
+                      : "text-krem-200 hover:bg-white/10 hover:text-krem-50"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div className="border-t border-white/10 px-5 py-4">
+          <Link href="/" onClick={() => setTerbuka(false)} className="text-sm font-bold text-krem-200 underline underline-offset-4">
+            Lihat Situs
+          </Link>
+        </div>
+      </aside>
+
+      <div className="lg:pl-64">
+        <header className="sticky top-0 z-30 border-b border-krem-200 bg-krem-50/90 backdrop-blur">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
+            <button
+              type="button"
+              onClick={() => setTerbuka(true)}
+              aria-label="Buka menu"
+              aria-expanded={terbuka}
+              className="min-h-[44px] min-w-[44px] rounded-full border border-krem-300 px-3 text-lg font-bold lg:hidden"
+            >
+              ☰
+            </button>
+            <form action="/admin/cari" method="get" role="search" className="min-w-0 flex-1">
+              <label htmlFor="cari-admin" className="sr-only">
+                Cari di dasbor admin
+              </label>
+              <input
+                id="cari-admin"
+                type="search"
+                name="q"
+                placeholder="Cari email, kode undangan, order ID…"
+                className="min-h-[44px] w-full rounded-full border border-krem-300 bg-white/80 px-4 text-[15px] outline-none placeholder:text-tintaLembut/70"
+              />
+            </form>
+            <Link
+              href="/admin/pesanan"
+              aria-label={perhatian > 0 ? `${perhatian} pesanan perlu perhatian` : "Tidak ada pesanan perlu perhatian"}
+              className="relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-krem-300 bg-white/80 text-lg"
+            >
+              🔔
+              {perhatian > 0 && (
+                <span className="absolute -right-1 -top-1 flex min-h-[20px] min-w-[20px] items-center justify-center rounded-full bg-tanah-600 px-1 text-[11px] font-bold text-white">
+                  {perhatian > 99 ? "99+" : perhatian}
+                </span>
+              )}
+            </Link>
+            <div className="hidden min-w-0 max-w-[220px] sm:block">
+              <p className="truncate text-sm font-bold">{email}</p>
+              <p className="text-xs text-tintaLembut">Admin</p>
+            </div>
+            <form action={keluarAdmin}>
+              <button
+                type="submit"
+                className="min-h-[44px] rounded-full border-2 border-tanah-600 px-4 text-sm font-bold text-tanah-700"
+              >
+                Keluar
+              </button>
+            </form>
+          </div>
+        </header>
+
+        <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">{children}</main>
+      </div>
+    </div>
+  );
+}
