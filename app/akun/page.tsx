@@ -14,7 +14,11 @@ export const dynamic = "force-dynamic";
 // karena aksi pengguna selalu memeriksa kepemilikan di server.
 const daftarStatus = ["Draft", "Aktif", "Selesai"] as const;
 
-export default async function Akun() {
+export default async function Akun({
+  searchParams,
+}: {
+  searchParams?: { dari?: string };
+}) {
   const sesi = await ambilSesiSaatIni();
   if (!sesi) redirect("/masuk");
 
@@ -52,6 +56,14 @@ export default async function Akun() {
           </button>
         </form>
       </div>
+
+      {searchParams?.dari === "editor" && (
+        <p role="status" className="mt-6 rounded-2xl bg-daun-100 px-4 py-3 text-sm font-bold text-daun-700">
+          Undangan dari editor tersimpan sebagai Draft. Ubah statusnya jadi Aktif
+          di bawah supaya tamu bisa membuka tautan dan mengisi RSVP, lalu bagikan
+          tautan tamunya.
+        </p>
+      )}
 
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
         {[

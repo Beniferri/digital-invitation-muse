@@ -7,15 +7,19 @@ import { masukPengguna } from "@/lib/aksiOtentikasi";
 export default function Masuk({
   searchParams,
 }: {
-  searchParams?: { gagal?: string };
+  searchParams?: { gagal?: string; lanjut?: string };
 }) {
+  // lanjut hanya /editor yang diteruskan (lihat lanjutAman di aksiOtentikasi);
+  // nilai lain diabaikan supaya tidak bisa dipakai mengarahkan ke sembarang halaman.
+  const lanjut = searchParams?.lanjut === "/editor" ? "/editor" : null;
   return (
     <div className="mx-auto max-w-md px-4 py-16">
       <div className="kartu-kaca rounded-[2rem] p-6 sm:p-8">
         <h1 className="font-serif text-3xl font-bold">Masuk</h1>
         <p className="mt-2 text-[15px] leading-relaxed text-tintaLembut">
-          Masuk untuk mengelola akunmu. Undangan yang bisa disimpan akan
-          hadir di tahap berikutnya.
+          {lanjut
+            ? "Masuk dulu untuk menyimpan undanganmu. Setelah masuk, kamu kembali ke editor dengan isian yang tersimpan di perangkatmu."
+            : "Masuk untuk mengelola undanganmu."}
         </p>
         {searchParams?.gagal && (
           <p role="alert" className="mt-4 rounded-2xl bg-terakota-100 px-4 py-3 text-sm font-bold text-tanah-700">
@@ -23,6 +27,7 @@ export default function Masuk({
           </p>
         )}
         <form action={masukPengguna} className="mt-6">
+          {lanjut && <input type="hidden" name="lanjut" value={lanjut} />}
           <label htmlFor="email" className="text-sm font-bold">Email</label>
           <input id="email" name="email" type="email" required autoComplete="username" className="mt-2 min-h-[48px] w-full rounded-2xl border border-tanah-900/15 bg-white/80 px-4 py-3" />
           <label htmlFor="kataSandi" className="mt-4 block text-sm font-bold">Kata sandi</label>
@@ -33,7 +38,7 @@ export default function Masuk({
         </form>
         <p className="mt-4 text-center text-sm">
           Belum punya akun?{" "}
-          <Link href="/daftar" className="font-bold text-tanah-600 underline underline-offset-4">Daftar gratis</Link>.
+          <Link href={lanjut ? `/daftar?lanjut=${lanjut}` : "/daftar"} className="font-bold text-tanah-600 underline underline-offset-4">Daftar gratis</Link>.
         </p>
       </div>
     </div>

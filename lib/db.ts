@@ -64,7 +64,8 @@ CREATE TABLE IF NOT EXISTS undangan (
   status TEXT NOT NULL DEFAULT 'Draft',
   dibuat_pada TEXT NOT NULL,
   pengguna_id TEXT REFERENCES pengguna(id) ON DELETE SET NULL,
-  kode_tamu TEXT
+  kode_tamu TEXT,
+  foto_undangan TEXT
 );
 CREATE TABLE IF NOT EXISTS paket_harga (
   id TEXT PRIMARY KEY,
@@ -98,15 +99,19 @@ export function buatKodeTamu(): string {
 }
 
 /**
- * Migrasi ringan untuk database yang dibuat sebelum kolom kode_tamu ada:
- * tambah kolomnya kalau belum ada, lalu isi kode untuk undangan lama yang
- * masih kosong. Database baru langsung punya kolom ini dari skema, jadi
- * migrasi ini hanya mengisi yang kosong (biasanya tidak ada).
+ * Migrasi ringan untuk database lama: tambah kolom undangan yang belum
+ * ada (kode_tamu dari fondasi RSVP, foto_undangan dari Tahap 1 editor
+ * simpan), lalu isi kode untuk undangan lama yang masih kosong. Database
+ * baru langsung punya kolom-kolom ini dari skema, jadi migrasi ini
+ * biasanya tidak mengubah apa-apa.
  */
-function migrasiKodeTamu(db: DatabaseSync): void {
+function migrasiUndangan(db: DatabaseSync): void {
   const kolom = db.prepare("PRAGMA table_info(undangan)").all() as Array<{ name: string }>;
   if (!kolom.some((c) => c.name === "kode_tamu")) {
     db.exec("ALTER TABLE undangan ADD COLUMN kode_tamu TEXT");
+  }
+  if (!kolom.some((c) => c.name === "foto_undangan")) {
+    db.exec("ALTER TABLE undangan ADD COLUMN foto_undangan TEXT");
   }
   const tanpaKode = db.prepare("SELECT id FROM undangan WHERE kode_tamu IS NULL OR kode_tamu = ''").all() as Array<{ id: string }>;
   for (const baris of tanpaKode) {
@@ -133,7 +138,7 @@ function bukaDatabase(): DatabaseSync {
     const db = new DatabaseSync(jalur);
     db.exec("PRAGMA foreign_keys = ON");
     db.exec(SKEMA);
-    migrasiKodeTamu(db);
+    migrasiUndangan(db);
     globalUntukDb.db = db;
   }
   return globalUntukDb.db;

@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { bacaDaftarRsvp, bacaDaftarTemplat, bacaRingkasanRsvp, cariUndanganOlehKode } from "@/lib/tokoData";
 import PratinjauUndangan from "@/komponen/PratinjauUndangan";
 import FormulirRsvp from "@/komponen/FormulirRsvp";
+import BagikanUndangan from "@/komponen/BagikanUndangan";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +35,14 @@ export default async function HalamanTamu({
   const daftarRsvp = await bacaDaftarRsvp(undangan.id);
   const ucapan = daftarRsvp.filter((rsvp) => rsvp.pesan.trim().length > 0);
   const galat = searchParams.galat ? pesanGalat[searchParams.galat] : undefined;
+  // Tautan absolut untuk pesan WhatsApp: dibangun dari host request ini,
+  // jadi benar di produksi (domain Coolify) maupun di pengembangan lokal.
+  // x-forwarded-proto dipakai karena di balik proxy (Coolify) request yang
+  // sampai ke Next sudah http walaupun pengunjung memakai https.
+  const daftarHeader = headers();
+  const host = daftarHeader.get("x-forwarded-host") ?? daftarHeader.get("host") ?? "localhost:3000";
+  const protokol = daftarHeader.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  const tautanTamu = `${protokol}://${host}/u/${undangan.kodeTamu}`;
 
   return (
     <div className="mx-auto max-w-md px-4 py-8 sm:py-10">
@@ -47,10 +57,22 @@ export default async function HalamanTamu({
             namaKedua: undangan.namaKedua,
             tanggal: undangan.tanggal,
             lokasi: undangan.lokasi,
-            fotoUrl: templat.fotoSampul ?? `https://picsum.photos/seed/${templat.slug}/800/1000`,
+            fotoUrl:
+              undangan.fotoUndangan ??
+              templat.fotoSampul ??
+              `https://picsum.photos/seed/${templat.slug}/800/1000`,
           }}
         />
       </div>
+
+      <BagikanUndangan
+        judulAcara={templat.contoh.judulAcara}
+        namaPertama={undangan.namaPertama}
+        namaKedua={undangan.namaKedua}
+        tanggal={undangan.tanggal}
+        lokasi={undangan.lokasi}
+        tautan={tautanTamu}
+      />
 
       <section className="kartu-kaca mt-6 rounded-[2rem] p-5 sm:p-6">
         <h2 className="font-serif text-2xl font-bold">Konfirmasi Kehadiran</h2>

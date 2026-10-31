@@ -6,14 +6,18 @@ import { daftarPengguna } from "@/lib/aksiOtentikasi";
 export default function Daftar({
   searchParams,
 }: {
-  searchParams?: { galat?: string };
+  searchParams?: { galat?: string; lanjut?: string };
 }) {
+  // lanjut hanya /editor yang diteruskan (lihat lanjutAman di aksiOtentikasi).
+  const lanjut = searchParams?.lanjut === "/editor" ? "/editor" : null;
   return (
     <div className="mx-auto max-w-md px-4 py-16">
       <div className="kartu-kaca rounded-[2rem] p-6 sm:p-8">
         <h1 className="font-serif text-3xl font-bold">Daftar Akun</h1>
         <p className="mt-2 text-[15px] leading-relaxed text-tintaLembut">
-          Buat akun untuk mulai mengelola undanganmu di tahap berikutnya.
+          {lanjut
+            ? "Buat akun untuk menyimpan undanganmu. Setelah daftar, kamu kembali ke editor dengan isian yang tersimpan di perangkatmu."
+            : "Buat akun untuk mulai mengelola undanganmu."}
         </p>
         {searchParams?.galat && (
           <p role="alert" className="mt-4 rounded-2xl bg-terakota-100 px-4 py-3 text-sm font-bold text-tanah-700">
@@ -23,6 +27,7 @@ export default function Daftar({
           </p>
         )}
         <form action={daftarPengguna} className="mt-6">
+          {lanjut && <input type="hidden" name="lanjut" value={lanjut} />}
           <label htmlFor="nama" className="text-sm font-bold">Nama</label>
           <input id="nama" name="nama" autoComplete="name" className="mt-2 min-h-[48px] w-full rounded-2xl border border-tanah-900/15 bg-white/80 px-4 py-3" />
           <label htmlFor="email" className="mt-4 block text-sm font-bold">Email</label>
@@ -35,7 +40,7 @@ export default function Daftar({
         </form>
         <p className="mt-4 text-center text-sm">
           Sudah punya akun?{" "}
-          <Link href="/masuk" className="font-bold text-tanah-600 underline underline-offset-4">Masuk</Link>.
+          <Link href={lanjut ? `/masuk?lanjut=${lanjut}` : "/masuk"} className="font-bold text-tanah-600 underline underline-offset-4">Masuk</Link>.
         </p>
       </div>
     </div>

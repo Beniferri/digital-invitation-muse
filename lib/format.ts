@@ -14,14 +14,19 @@ export function formatTanggalIndonesia(tanggalIso: string): string {
   }).format(tanggal);
 }
 
-/** Pesan WhatsApp yang sudah terisi untuk satu undangan contoh. */
-export function buatPesanWhatsApp(
+/**
+ * Pesan WhatsApp yang sudah terisi untuk satu undangan, dengan tautan
+ * absolut yang diberikan pemanggil (mis. dari header host saat request).
+ * Tautan tidak lagi ditulis keras ke domain contoh — domain contoh itu
+ * tidak pernah ada, jadi pesan lama mengirim tamu ke tautan mati.
+ */
+export function buatPesanBagikanUndangan(
   judulAcara: string,
   namaPertama: string,
   namaKedua: string,
   tanggalIso: string,
   lokasi: string,
-  slug: string,
+  tautan: string,
 ): string {
   const nama = namaKedua
     ? `${namaPertama} dan ${namaKedua}`
@@ -30,11 +35,11 @@ export function buatPesanWhatsApp(
   return (
     `Hai, kami mengundangmu ke ${judulAcara} ${nama} ` +
     `pada ${tanggal} di ${lokasi}. ` +
-    `Yuk, lihat undangan lengkapnya di sini: ` +
-    `https://undangan-contoh.id/undangan/${slug} ` +
+    `Yuk, lihat undangan lengkapnya di sini: ${tautan} ` +
     `Ditunggu kehadiran dan doanya ya, terima kasih!`
   );
 }
+
 
 /** Tautan WhatsApp dengan pesan yang sudah dikodekan. */
 export function buatTautanWhatsApp(pesan: string): string {

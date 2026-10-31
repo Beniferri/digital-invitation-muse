@@ -50,7 +50,10 @@ export default async function DetailRsvpPengguna({ params }: { params: { id: str
               namaKedua: undangan.namaKedua,
               tanggal: undangan.tanggal,
               lokasi: undangan.lokasi,
-              fotoUrl: templat.fotoSampul ?? `https://picsum.photos/seed/${templat.slug}/800/1000`,
+              fotoUrl:
+              undangan.fotoUndangan ??
+              templat.fotoSampul ??
+              `https://picsum.photos/seed/${templat.slug}/800/1000`,
             }}
           />
         </div>

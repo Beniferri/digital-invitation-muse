@@ -23,6 +23,7 @@ export interface UndanganAdmin {
   dibuatPada: string;
   kodeTamu: string;
   penggunaId: string | null;
+  fotoUndangan: string | null;
 }
 
 export type KehadiranRsvp = "Hadir" | "Tidak" | "Ragu";
@@ -91,6 +92,7 @@ function petakanUndangan(baris: Baris): UndanganAdmin {
     dibuatPada: String(baris.dibuat_pada).slice(0, 10),
     kodeTamu: String(baris.kode_tamu ?? ""),
     penggunaId: (baris.pengguna_id as string | null) ?? null,
+    fotoUndangan: (baris.foto_undangan as string | null) ?? null,
   };
 }
 

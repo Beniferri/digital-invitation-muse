@@ -15,9 +15,12 @@ data acara, dan membagikan undangan lewat WhatsApp dalam beberapa menit.
   dan nuansa. Template dipilih bebas dan tidak terikat paket harga.
 - **Editor** (`/editor`): formulir dan pratinjau dalam satu layar. Kolomnya
   sama untuk semua jenis acara: nama pertama, nama kedua (opsional), tanggal,
-  lokasi, dan foto. Foto dari perangkat hanya dipratinjau lewat
-  `URL.createObjectURL`, tidak diunggah ke server, dan hilang saat halaman
-  dimuat ulang.
+  lokasi, dan foto. Isian (kecuali foto) tersimpan otomatis di localStorage
+  perangkat dan dipulihkan saat kembali ke editor. Pengguna yang sudah masuk
+  bisa menekan Simpan untuk menyimpan undangan sebagai Draft miliknya (foto
+  ikut diunggah, maks 5 MB); pengguna yang belum masuk diarahkan ke
+  daftar/masuk dengan tujuan kembali `/editor`, supaya isiannya tetap ada
+  saat kembali.
 - **Contoh undangan** (`/undangan/[slug]`): route dinamis App Router yang
   membaca data dari toko admin. Tampilannya mobile-first, dan satu-satunya tombol
   berbagi adalah tombol WhatsApp dengan pesan yang sudah terisi.
@@ -197,9 +200,9 @@ yang panjang.
 
 ## Yang sengaja tidak ada di MVP
 
-Pembayaran sungguhan dan CMS. Editor (`/editor`) masih berupa pratinjau
-lokal yang tidak tersimpan — undangan yang tersimpan dibuat lewat dasbor
-admin atau dasbor pengguna di atas.
+Pembayaran sungguhan dan CMS. Sejak Tahap 1 rencana penyelesaian, editor
+(`/editor`) sudah bisa menyimpan undangan (lihat di atas); yang masih
+belum ada adalah pembayaran dan batas paket yang ditegakkan.
 
 ## Teknologi
 
@@ -266,6 +269,7 @@ komponen/
   KartuHarga.tsx            # Satu kartu harga
   DaftarPertanyaan.tsx      # FAQ akordeon
   TombolWhatsApp.tsx        # Tombol berbagi WhatsApp dengan pesan terisi
+  BagikanUndangan.tsx      # Bagikan undangan nyata: WhatsApp + salin tautan
 db/
   skema.sql                 # Skema database: Pengguna, Sesi, Templat, Undangan, PaketHarga, Rsvp
 scripts/
@@ -279,7 +283,7 @@ lib/
   format.ts                 # Format tanggal Indonesia dan tautan WhatsApp
   tokoData.ts               # Baca data dari database (SQLite) untuk publik dan admin
   aksiAdmin.ts              # Server action admin: CRUD template/undangan/harga + hapus RSVP
-  aksiPengguna.ts           # Server action pengguna: undangan milik sendiri (cek kepemilikan)
+  aksiPengguna.ts           # Server action pengguna: undangan milik sendiri (cek kepemilikan), termasuk simpan dari editor
   aksiRsvp.ts               # Server action RSVP tamu (publik, anti-ganda per nama)
   aksiOtentikasi.ts         # Server action masuk/daftar/keluar
   sesi.ts                   # Sesi database + cookie httpOnly, wajibAdmin()

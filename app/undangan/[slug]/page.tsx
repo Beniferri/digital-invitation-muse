@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { cariTemplatAktif } from "@/lib/tokoData";
 import PratinjauUndangan from "@/komponen/PratinjauUndangan";
@@ -14,6 +15,11 @@ export const dynamic = "force-dynamic";
 export default async function ContohUndangan({ params }: { params: { slug: string } }) {
   const templat = await cariTemplatAktif(params.slug);
   if (!templat) notFound();
+
+  const daftarHeader = headers();
+  const host = daftarHeader.get("x-forwarded-host") ?? daftarHeader.get("host") ?? "localhost:3000";
+  const protokol = daftarHeader.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  const tautanContoh = `${protokol}://${host}/undangan/${templat.slug}`;
 
   return (
     <div className="mx-auto max-w-md px-4 py-8 sm:py-10">
@@ -34,7 +40,7 @@ export default async function ContohUndangan({ params }: { params: { slug: strin
       </div>
 
       <div className="mt-6 space-y-3">
-        <TombolWhatsApp templat={templat} />
+        <TombolWhatsApp templat={templat} tautan={tautanContoh} />
         <Link
           href={`/editor?templat=${templat.slug}`}
           className="tombol-utama w-full border-2 border-tanah-600 text-sm text-tanah-700 hover:bg-krem-100"
