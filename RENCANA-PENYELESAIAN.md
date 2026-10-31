@@ -558,7 +558,7 @@ Redeploy Coolify MENUNGGU user; setelah redeploy, verifikasi di HP
 sungguhan: bar konfirmasi, tombol hero, drawer menu, musik, scroll,
 dan halaman 404 ramah untuk tautan Draft/hilang.
 
-## Restruktur layout + audit UX (31 Okt 2026, belum di-push)
+## Restruktur layout + audit UX (31 Okt 2026, sudah di-push, head 418e4200)
 
 Aturan baru, menggantikan gate pathname revisi tamu: header + footer
 situs hanya dipasang di tata letak grup (situs) — app/(situs)/layout.tsx
@@ -591,8 +591,35 @@ Verifikasi: tsc + build lolos; server fixture (tamu.db) — / ber-chrome,
 /u/tamuji01, /undangan/seruni-akad-nikah, /editor tanpa chrome dengan
 penanda konten masing-masing tampil.
 
-CATATAN PUSH: pemindahan 7 halaman marketing ke app/(situs)/ membuat
-berkas lama (app/page.tsx, app/katalog/page.tsx, dst.) harus DIHAPUS
-dari repo — push-files hanya upsert, jadi penghapusan dilakukan terpisah
-(delete_file per berkas). Kalau berkas lama tertinggal, build produksi
-gagal karena dua halaman berebut rute yang sama.
+CATATAN PUSH (selesai 31 Okt 23:xx WIB): push utama fa2e7a0c (114 berkas
+teks) + 7 penghapusan terpisah via delete_file (page, katalog, bantuan,
+syarat, privasi, daftar, masuk) — head akhir 418e4200. Semua berkas lama
+terverifikasi 404; tidak ada konflik rute tersisa. Redeploy Coolify
+MENUNGGU user.
+
+## Prioritas 1 editor ala referensi (1 Nov 2026, belum di-push)
+
+Semua di komponen/FormulirEditor.tsx (editor /editor saja; formulir
+/akun/undangan/baru memakai FormulirUndangan yang lebih sederhana dan
+tidak diubah):
+- Header editor nempel: nama undangan (ikut berubah saat mengetik) +
+  lencana Draft + indikator tersimpan otomatis (teks awal "Draf
+  disimpan otomatis di perangkat ini", berubah jadi "Tersimpan otomatis
+  • HH:MM" setelah penyimpanan localStorage pertama) + tombol Pratinjau
+  (jangkar #pratinjau) + Simpan (tombol submit luar formulir lewat
+  atribut form="formulir-editor", aksi server sama) atau tautan Masuk
+  kalau belum masuk.
+- Navigasi seksi: sidebar desktop (sticky, "Bagian") + chip daftar isi
+  di ponsel; jangkar scroll-mt-24 ke #bagian-templat, #bagian-detail,
+  #bagian-sampul, #bagian-galeri, #bagian-kisah, #bagian-tandakasih.
+  Tautan seksi khusus halaman penuh hanya tampil kalau templat
+  terpilih halaman penuh (terverifikasi: Seruni menyembunyikannya).
+- Pratinjau: toggle Ponsel (bingkai gelap max-w-md) / Lebar (penuh)
+  + tombol Layar penuh (Fullscreen API pada pembungkus pratinjau).
+- "Butuh bantuan?" di sidebar desktop + chip ponsel, tautan /bantuan.
+- Sengaja belum: penanda seksi aktif saat menggulir (butuh scroll-spy;
+  tautan kini polos), tanpa ubah skema/logika/API.
+- Verifikasi: tsc + build lolos; server fixture (tamu.db) — semua
+  penanda tampil di /editor dan /editor?templat=zamrud-pernikahan;
+  /editor?templat=seruni-akad-nikah menyembunyikan 3 tautan khusus
+  halaman penuh.

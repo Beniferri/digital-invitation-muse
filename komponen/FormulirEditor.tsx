@@ -23,6 +23,16 @@ import PratinjauUndangan from "./PratinjauUndangan";
 //   localStorage. Sebagai gantinya, ada catatan draf dipulihkan dan tombol
 //   Atur ulang yang mengembalikan isian ke contoh template (dan menimpa
 //   draf dengan nilai contoh itu).
+// - Header editor nempel (Prioritas 1, Nov 2026): nama undangan + lencana
+//   Draft + indikator tersimpan otomatis + tombol Pratinjau (jangkar ke
+//   seksi pratinjau) + Simpan (tombol submit luar formulir lewat atribut
+//   form). Kalau belum masuk, Simpan diganti tautan Masuk.
+// - Navigasi seksi: sidebar di desktop + daftar isi chip di ponsel,
+//   menjangkar ke id bagian form (templat, detail, sampul, galeri,
+//   kisah, tanda kasih). Tautan seksi khusus halaman penuh hanya tampil
+//   kalau templat terpilih memang halaman penuh.
+// - Pratinjau bisa diganti bingkainya (ponsel = bingkai gelap max-w-md,
+//   lebar = penuh) dan dibuka layar penuh lewat Fullscreen API.
 const KUNCI_DRAF = "undangan-editor-draf";
 
 interface DrafEditor {
@@ -87,6 +97,14 @@ export default function FormulirEditor({
   const [namaBerkasGaleri, setNamaBerkasGaleri] = useState<string[]>([]);
   const [sudahDimuat, setSudahDimuat] = useState(false);
   const [drafDipulihkan, setDrafDipulihkan] = useState(false);
+  // Jam terakhir draf tersimpan otomatis (format HH:MM). Kosong sebelum
+  // penyimpanan pertama di sesi ini — header menampilkan teks pengganti.
+  const [tersimpanPada, setTersimpanPada] = useState("");
+  // Bingkai pratinjau: "ponsel" (bingkai gelap max-w-md, sesuai mayoritas
+  // tamu yang membuka dari HP) atau "lebar" (penuh). Layar penuh memakai
+  // Fullscreen API pada pembungkus pratinjau.
+  const [modePratinjau, setModePratinjau] = useState<"ponsel" | "lebar">("ponsel");
+  const pratinjauRef = useRef<HTMLDivElement>(null);
   // Menyimpan apakah URL foto dibuat dari berkas lokal, supaya bisa dibersihkan.
   const fotoLokalRef = useRef<string | null>(null);
 
@@ -183,6 +201,9 @@ export default function FormulirEditor({
         alamatKirim,
       };
       window.localStorage.setItem(KUNCI_DRAF, JSON.stringify(draf));
+      setTersimpanPada(
+        new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
+      );
     } catch {
       // Penyimpanan perangkat penuh atau diblokir: editor tetap jalan.
     }
@@ -271,9 +292,115 @@ export default function FormulirEditor({
   const gayaInput =
     "mt-2 min-h-[48px] w-full rounded-2xl border border-tanah-900/15 bg-white/80 px-4 py-3 text-[15px] text-tinta placeholder:text-tintaLembut/70";
 
+  // Nama yang tampil di header editor (ikut berubah saat mengetik).
+  const namaUndangan = namaKedua ? `${namaPertama} dan ${namaKedua}` : namaPertama;
+  // Urutan tautan mengikuti urutan seksi di formulir. Seksi khusus
+  // halaman penuh hanya ditautkan kalau templat terpilih memang punya
+  // seksi itu, supaya tidak ada tautan yang mengarah ke tempat kosong.
+  const tautanSeksi = [
+    { href: "#bagian-templat", label: "Templat" },
+    { href: "#bagian-detail", label: "Detail Acara" },
+    { href: "#bagian-sampul", label: "Sampul" },
+    ...(templatTerpilih.halamanPenuh
+      ? [
+          { href: "#bagian-galeri", label: "Foto & Galeri" },
+          { href: "#bagian-kisah", label: "Kisah" },
+          { href: "#bagian-tandakasih", label: "Tanda Kasih" },
+        ]
+      : []),
+  ];
+
+  function bukaLayarPenuh() {
+    const elemen = pratinjauRef.current;
+    if (elemen?.requestFullscreen) {
+      elemen.requestFullscreen().catch(() => {});
+    }
+  }
+
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-2">
-      <form action={aksi} className="kartu-kaca rounded-[2rem] p-5 sm:p-7">
+    <>
+      <div className="sticky top-4 z-30 mb-6 flex flex-wrap items-center gap-3 rounded-full kartu-kaca px-4 py-2">
+        <p className="min-w-0 flex-1 truncate text-sm font-bold sm:text-[15px]">
+          {namaUndangan || "Undangan baru"}
+        </p>
+        <span className="shrink-0 rounded-full bg-krem-200 px-3 py-1 text-xs font-bold text-tinta">
+          Draft
+        </span>
+        <p className="hidden shrink-0 text-xs text-tintaLembut md:block">
+          {tersimpanPada
+            ? `Tersimpan otomatis • ${tersimpanPada}`
+            : "Draf disimpan otomatis di perangkat ini"}
+        </p>
+        <a
+          href="#pratinjau"
+          className="flex min-h-[44px] shrink-0 items-center rounded-full border-2 border-tanah-600 px-4 text-sm font-bold text-tanah-700"
+        >
+          Pratinjau
+        </a>
+        {sudahMasuk ? (
+          <button
+            type="submit"
+            form="formulir-editor"
+            className="tombol-utama shrink-0 bg-tanah-600 text-sm text-white hover:bg-tanah-700"
+          >
+            Simpan
+          </button>
+        ) : (
+          <Link
+            href="/masuk?lanjut=/editor"
+            className="tombol-utama shrink-0 bg-tanah-600 text-sm text-white hover:bg-tanah-700"
+          >
+            Masuk
+          </Link>
+        )}
+      </div>
+
+      <nav aria-label="Bagian editor" className="mb-6 flex gap-2 overflow-x-auto pb-1 lg:hidden">
+        {tautanSeksi.map((item) => (
+          <a
+            key={item.href}
+            href={item.href}
+            className="flex min-h-[44px] shrink-0 items-center rounded-full border border-tanah-900/15 bg-white/70 px-4 text-sm font-bold"
+          >
+            {item.label}
+          </a>
+        ))}
+        <a
+          href="/bantuan"
+          className="flex min-h-[44px] shrink-0 items-center rounded-full border border-tanah-900/15 bg-white/70 px-4 text-sm font-bold text-tanah-600"
+        >
+          Butuh bantuan?
+        </a>
+      </nav>
+
+      <div className="grid items-start gap-6 lg:grid-cols-[208px_minmax(0,1fr)]">
+        <nav aria-label="Bagian editor" className="sticky top-24 hidden self-start lg:block">
+          <p className="px-2 text-xs font-bold uppercase tracking-widest text-tintaLembut">Bagian</p>
+          <ul className="mt-2 space-y-1">
+            {tautanSeksi.map((item) => (
+              <li key={item.href}>
+                <a
+                  href={item.href}
+                  className="block min-h-[44px] rounded-2xl px-3 py-3 text-sm font-bold text-tinta hover:bg-krem-100"
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-6 border-t border-krem-200 px-2 pt-4">
+            <p className="text-sm font-bold">Butuh bantuan?</p>
+            <Link
+              href="/bantuan"
+              className="mt-1 block text-sm font-bold text-tanah-600 underline underline-offset-4"
+            >
+              Lihat halaman Bantuan
+            </Link>
+          </div>
+        </nav>
+
+        <div className="grid items-start gap-6 lg:grid-cols-2">
+          <form id="formulir-editor" action={aksi} className="kartu-kaca rounded-[2rem] p-5 sm:p-7">
         <section aria-label="Formulir data undangan">
           <h2 className="font-serif text-2xl font-bold">Isi data acaramu</h2>
           <p className="mt-2 text-[15px] leading-relaxed text-tintaLembut">
@@ -289,7 +416,7 @@ export default function FormulirEditor({
 
           <input type="hidden" name="slugTemplat" value={templatTerpilih.slug} />
 
-          <fieldset className="mt-6">
+          <fieldset id="bagian-templat" className="mt-6 scroll-mt-24">
             <legend className="text-sm font-bold">Pilih templat</legend>
             <div className="mt-2 grid grid-cols-3 gap-2">
               {daftar.map((templat) => (
@@ -311,7 +438,7 @@ export default function FormulirEditor({
             </div>
           </fieldset>
 
-          <div className="mt-5">
+          <div id="bagian-detail" className="mt-5 scroll-mt-24">
             <label htmlFor="nama-pertama" className="text-sm font-bold">
               Nama mempelai / tuan rumah (baris pertama)
             </label>
@@ -464,7 +591,7 @@ export default function FormulirEditor({
             </fieldset>
           )}
 
-          <div className="mt-5">
+          <div id="bagian-sampul" className="mt-5 scroll-mt-24">
             <label htmlFor="foto-acara" className="text-sm font-bold">
               Foto undangan
             </label>
@@ -484,7 +611,7 @@ export default function FormulirEditor({
           </div>
 
           {templatTerpilih.halamanPenuh && (
-            <div className="mt-5">
+            <div id="bagian-galeri" className="mt-5 scroll-mt-24">
               <label htmlFor="galeri-acara" className="text-sm font-bold">
                 Galeri foto tambahan
               </label>
@@ -506,7 +633,7 @@ export default function FormulirEditor({
           )}
 
           {templatTerpilih.halamanPenuh && (
-            <fieldset className="mt-6">
+            <fieldset id="bagian-kisah" className="mt-6 scroll-mt-24">
               <legend className="text-sm font-bold">Kisah perjalanan</legend>
               <p className="mt-1 text-sm leading-relaxed text-tintaLembut">
                 Tiga babak opsional. Babak yang judul dan ceritanya kosong tidak
@@ -556,7 +683,7 @@ export default function FormulirEditor({
           )}
 
           {templatTerpilih.halamanPenuh && (
-            <fieldset className="mt-6">
+            <fieldset id="bagian-tandakasih" className="mt-6 scroll-mt-24">
               <legend className="text-sm font-bold">Tanda kasih</legend>
               <p className="mt-1 text-sm leading-relaxed text-tintaLembut">
                 Kalau nomor rekening atau alamat diisi, undangan menampilkan
@@ -666,17 +793,62 @@ export default function FormulirEditor({
         </section>
       </form>
 
-      <section aria-label="Pratinjau undangan" className="lg:sticky lg:top-28">
+      <section id="pratinjau" aria-label="Pratinjau undangan" className="scroll-mt-24 lg:sticky lg:top-28">
         <p className="mb-3 text-center text-sm font-bold text-tintaLembut">
           Pratinjau langsung · {templatTerpilih.nama} · {templatTerpilih.nuansa}
         </p>
-        <div className="mx-auto max-w-md overflow-hidden rounded-[2rem] shadow-kaca">
-          <PratinjauUndangan
-            templat={templatTerpilih}
-            data={{ namaPertama, namaKedua, tanggal, lokasi, fotoUrl }}
-          />
+        <div className="mb-3 flex flex-wrap items-center justify-center gap-2">
+          <div className="flex rounded-full border border-tanah-900/15 bg-white/70 p-1" role="group" aria-label="Ukuran pratinjau">
+            <button
+              type="button"
+              onClick={() => setModePratinjau("ponsel")}
+              aria-pressed={modePratinjau === "ponsel"}
+              className={`min-h-[44px] rounded-full px-4 text-sm font-bold ${
+                modePratinjau === "ponsel" ? "bg-tanah-600 text-white" : "text-tinta"
+              }`}
+            >
+              Ponsel
+            </button>
+            <button
+              type="button"
+              onClick={() => setModePratinjau("lebar")}
+              aria-pressed={modePratinjau === "lebar"}
+              className={`min-h-[44px] rounded-full px-4 text-sm font-bold ${
+                modePratinjau === "lebar" ? "bg-tanah-600 text-white" : "text-tinta"
+              }`}
+            >
+              Lebar
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={bukaLayarPenuh}
+            className="min-h-[44px] rounded-full border border-tanah-900/15 bg-white/70 px-4 text-sm font-bold"
+          >
+            Layar penuh
+          </button>
         </div>
+        <div
+          ref={pratinjauRef}
+          className={
+            modePratinjau === "ponsel"
+              ? "mx-auto max-w-md rounded-[2.5rem] bg-tinta p-2 shadow-kaca"
+              : "rounded-[2rem] shadow-kaca"
+          }
+        >
+          <div className="overflow-hidden rounded-[2rem]">
+            <PratinjauUndangan
+              templat={templatTerpilih}
+              data={{ namaPertama, namaKedua, tanggal, lokasi, fotoUrl }}
+            />
+          </div>
+        </div>
+        <p className="mt-3 text-center text-xs leading-relaxed text-tintaLembut">
+          Pratinjau memakai foto placeholder kalau belum ada foto dipilih.
+        </p>
       </section>
-    </div>
+        </div>
+      </div>
+    </>
   );
 }
