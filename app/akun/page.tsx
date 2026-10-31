@@ -64,7 +64,7 @@ export default async function Akun({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-serif text-4xl font-bold">Dasbor Saya</h1>
-          <p className="mt-2 max-w-2xl text-[17px] leading-relaxed text-tintaLembut">
+          <p className="mt-2 max-w-2xl break-words text-[17px] leading-relaxed text-tintaLembut">
             Kamu masuk sebagai <strong>{sesi.nama || sesi.email}</strong>
             {sesi.nama ? ` (${sesi.email})` : ""}. Di bawah ini hanya undangan
             yang kamu buat sendiri — lengkap dengan tautan tamu dan ringkasan RSVP-nya.

@@ -370,3 +370,24 @@ push); belum dites klik-tayang di peramban (keterbatasan sandbox yang
 sudah diketahui: server action POST gagal "Connection closed", tapi
 halaman baru ini hanya memakai GET + tautan, jadi tidak kena batas
 itu).
+
+## Perbaikan mobile frontend (31 Okt 2026, BELUM di-push)
+
+Audit menemukan frontend sebenarnya sudah responsif di sebagian besar
+halaman (grid runtuh, formulir 48px, halaman tamu max-w-md), tapi ada
+satu bug overflow nyata di navigasi ponsel: baris tautan mobile tanpa
+flex-wrap dan pil navigasi yang terlalu lebar di layar ~320px.
+Perbaikan: brand mengecil + truncate + tombol "Buat Undangan" lebih
+ramping di ponsel, baris tautan mobile membungkus, salinan editor
+menjadi netral posisi ("isi datanya, lihat hasilnya di pratinjau" —
+dulu "di kiri/di kanan" padahal di ponsel pratinjau ada di bawah),
+tombol pilih templat lebih kecil di ponsel, email panjang di /akun
+memakai break-words, dan `overflow-x: clip` di body sebagai pengaman
+(tidak merusak sticky, tidak seperti hidden). Yang dicek dan ternyata
+BUKAN bug: meta viewport sudah benar (bawaan Next), semua blob cahaya
+sudah di dalam parent overflow-hidden, dan tautan min-h yang tampak
+inline ternyata flex item sehingga min-height-nya berlaku. Tes: tsc +
+build lolos, semua halaman publik 200, penanda HTML baru terverifikasi
+di server produksi lokal (DB uji). Klik-tayang visual di ponsel
+sungguhan belum dites (keterbatasan sandbox) — cek sekali di HP
+setelah redeploy.

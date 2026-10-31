@@ -39,7 +39,7 @@ export default async function Editor({
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <h1 className="font-serif text-4xl font-bold sm:text-5xl">Editor Undangan</h1>
       <p className="mt-3 max-w-2xl text-lg leading-relaxed text-tintaLembut">
-        Isi data di kiri, lihat hasilnya langsung di kanan. Tekan Simpan untuk
+        Isi datanya, lihat hasilnya langsung di pratinjau. Tekan Simpan untuk
         menyimpan undangan ke dasbor saya — kalau belum masuk, daftar atau
         masuk dulu dan isianmu tetap ada saat kembali.
       </p>

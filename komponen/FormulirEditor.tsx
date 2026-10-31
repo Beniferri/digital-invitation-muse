@@ -172,7 +172,7 @@ export default function FormulirEditor({
           <h2 className="font-serif text-2xl font-bold">Isi data acaramu</h2>
           <p className="mt-2 text-[15px] leading-relaxed text-tintaLembut">
             Kolomnya sama untuk semua jenis acara, dari akad nikah sampai wisuda.
-            Ketik, dan pratinjau di samping langsung berubah.
+            Ketik, dan pratinjau langsung berubah.
           </p>
           {drafDipulihkan && (
             <p role="status" className="mt-4 rounded-2xl bg-daun-100 px-4 py-3 text-sm font-bold text-daun-700">
@@ -192,14 +192,14 @@ export default function FormulirEditor({
                   type="button"
                   onClick={() => pilihTemplat(templat.slug)}
                   aria-pressed={templatTerpilih.slug === templat.slug}
-                  className={`min-h-[48px] rounded-2xl border-2 px-2 py-3 text-sm font-bold ${
+                  className={`min-h-[48px] rounded-2xl border-2 px-2 py-3 text-xs font-bold sm:text-sm ${
                     templatTerpilih.slug === templat.slug
                       ? "border-tanah-600 bg-tanah-600 text-white"
                       : "border-tanah-900/15 bg-white/70 text-tinta"
                   }`}
                 >
                   {templat.nama}
-                  <span className="block text-xs font-semibold opacity-80">{templat.jenisAcara}</span>
+                  <span className="block text-[11px] font-semibold opacity-80 sm:text-xs">{templat.jenisAcara}</span>
                 </button>
               ))}
             </div>

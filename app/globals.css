@@ -11,6 +11,10 @@ body {
   background-color: #fffbf3;
   color: #2b1a12;
   -webkit-font-smoothing: antialiased;
+  /* Pengaman mobile: elemen lebar (cahaya blur, kartu) tidak boleh
+     membuat halaman bisa digeser menyamping. overflow-x: clip (bukan
+     hidden) supaya navigasi sticky tetap menempel saat digulir. */
+  overflow-x: clip;
 }
 
 /* Kartu kaca: latar putih semi-transparan, blur, dan border terang.
