@@ -42,6 +42,10 @@ export interface UndanganAdmin {
   acaraKeduaJudul: string;
   acaraKeduaWaktu: string;
   acaraKeduaLokasi: string;
+  // Editor kata-kata — sapaan pembuka + kata pengantar (opsional;
+  // kosong = pakai teks template).
+  teksPembuka: string;
+  kataPengantar: string;
 }
 
 /** Parse kisah_json dengan aman: data rusak atau bukan array -> []. */
@@ -140,6 +144,8 @@ function petakanUndangan(baris: Baris): UndanganAdmin {
     acaraKeduaJudul: String(baris.acara_kedua_judul ?? ""),
     acaraKeduaWaktu: String(baris.acara_kedua_waktu ?? ""),
     acaraKeduaLokasi: String(baris.acara_kedua_lokasi ?? ""),
+    teksPembuka: String(baris.teks_pembuka ?? ""),
+    kataPengantar: String(baris.kata_pengantar ?? ""),
   };
 }
 

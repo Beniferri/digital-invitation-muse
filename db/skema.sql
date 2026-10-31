@@ -60,7 +60,9 @@ CREATE TABLE IF NOT EXISTS undangan (
   acara_waktu TEXT NOT NULL DEFAULT '',
   acara_kedua_judul TEXT NOT NULL DEFAULT '',
   acara_kedua_waktu TEXT NOT NULL DEFAULT '',
-  acara_kedua_lokasi TEXT NOT NULL DEFAULT ''
+  acara_kedua_lokasi TEXT NOT NULL DEFAULT '',
+  teks_pembuka TEXT NOT NULL DEFAULT '',
+  kata_pengantar TEXT NOT NULL DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS foto_galeri (
   id TEXT PRIMARY KEY,

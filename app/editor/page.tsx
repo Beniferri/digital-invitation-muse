@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import FormulirEditor from "@/komponen/FormulirEditor";
@@ -39,46 +38,27 @@ export default async function Editor({
   const daftarTemplat = await bacaDaftarTemplatAktif();
   const sesi = await ambilSesiSaatIni();
   const galat = searchParams?.galat ? pesanGalat[searchParams.galat] : undefined;
-  return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-      {sesi ? (
-        <Link href="/akun" className="text-sm font-bold text-tanah-600 underline underline-offset-4">
-          Kembali ke dasbor saya
-        </Link>
-      ) : (
-        <p className="text-sm font-bold">
-          <Link href="/daftar" className="text-tanah-600 underline underline-offset-4">Daftar</Link>
-          {" atau "}
-          <Link href="/masuk" className="text-tanah-600 underline underline-offset-4">Masuk</Link>
-          {" untuk menyimpan undanganmu."}
+  // Shell tiga kolom dirender penuh oleh FormulirEditor (header aplikasi
+  // + sidebar + formulir + pratinjau) — halaman ini tidak membungkusnya
+  // dengan judul/deskripsi lagi, supaya tidak ada ganda dengan header
+  // editor. Galat simpan diteruskan ke panel tengah.
+  if (daftarTemplat.length === 0) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+        <p className="kartu-kaca rounded-[2rem] p-6 text-center text-tintaLembut">
+          Belum ada template aktif. Aktifkan satu template lewat dasbor admin dulu.
         </p>
-      )}
-      <h1 className="mt-4 font-serif text-4xl font-bold sm:text-5xl">Editor Undangan</h1>
-      <p className="mt-3 max-w-2xl text-lg leading-relaxed text-tintaLembut">
-        Isi datanya, lihat hasilnya langsung di pratinjau. Tekan Simpan untuk
-        menyimpan undangan ke dasbor saya — kalau belum masuk, daftar atau
-        masuk dulu dan isianmu tetap ada saat kembali.
-      </p>
-      {galat && (
-        <p role="alert" className="mt-6 rounded-2xl bg-terakota-100 px-4 py-3 text-sm font-bold text-tanah-700">
-          {galat}
-        </p>
-      )}
-      <div className="mt-8">
-        {daftarTemplat.length === 0 ? (
-          <p className="kartu-kaca rounded-[2rem] p-6 text-center text-tintaLembut">
-            Belum ada template aktif. Aktifkan satu template lewat dasbor admin dulu.
-          </p>
-        ) : (
-          <Suspense fallback={<p className="text-tintaLembut">Memuat editor…</p>}>
-            <FormulirEditor
-              daftar={daftarTemplat}
-              sudahMasuk={!!sesi}
-              aksi={tambahUndanganDariEditor}
-            />
-          </Suspense>
-        )}
       </div>
-    </div>
+    );
+  }
+  return (
+    <Suspense fallback={<p className="p-6 text-tintaLembut">Memuat editor…</p>}>
+      <FormulirEditor
+        daftar={daftarTemplat}
+        sudahMasuk={!!sesi}
+        aksi={tambahUndanganDariEditor}
+        galat={galat}
+      />
+    </Suspense>
   );
 }

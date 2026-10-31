@@ -151,6 +151,8 @@ export default async function HalamanTamu({
           acaraKeduaJudul: undangan.acaraKeduaJudul,
           acaraKeduaWaktu: undangan.acaraKeduaWaktu,
           acaraKeduaLokasi: undangan.acaraKeduaLokasi,
+          teksPembuka: undangan.teksPembuka,
+          kataPengantar: undangan.kataPengantar,
           galeriTambahan,
         }}
       />
@@ -179,6 +181,8 @@ export default async function HalamanTamu({
               undangan.fotoUndangan ??
               templat.fotoSampul ??
               `https://picsum.photos/seed/${templat.slug}/800/1000`,
+            teksPembuka: undangan.teksPembuka,
+            kataPengantar: undangan.kataPengantar,
           }}
         />
       </div>

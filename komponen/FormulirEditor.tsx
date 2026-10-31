@@ -1,14 +1,58 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import type { Templat } from "@/data/templat";
 import PratinjauUndangan from "./PratinjauUndangan";
 
-// Editor sederhana dalam satu layar: formulir di kiri, pratinjau di kanan
-// (di ponsel, pratinjau muncul tepat di bawah formulir, tanpa pindah halaman).
-// Perilaku simpan (Tahap 1):
+// Bilah format kata-kata (B, I, Tautan): membungkus teks terpilih di
+// textarea dengan markah (**tebal**, *miring*, [teks](https://tautan)).
+// Tanpa seleksi, menyisipkan markah berisi kata ganti di posisi kursor.
+function BilahFormat({
+  target,
+  nilai,
+  atur,
+}: {
+  target: RefObject<HTMLTextAreaElement>;
+  nilai: string;
+  atur: (nilai: string) => void;
+}) {
+  function bungkus(pembuka: string, penutup: string, ganti: string) {
+    const elemen = target.current;
+    if (!elemen) return;
+    const awal = elemen.selectionStart ?? nilai.length;
+    const akhir = elemen.selectionEnd ?? nilai.length;
+    const pilih = nilai.slice(awal, akhir);
+    const sisip = pilih ? `${pembuka}${pilih}${penutup}` : `${pembuka}${ganti}${penutup}`;
+    atur(nilai.slice(0, awal) + sisip + nilai.slice(akhir));
+    const posisiAkhir = awal + pembuka.length + (pilih ? pilih.length : ganti.length);
+    requestAnimationFrame(() => {
+      elemen.focus();
+      elemen.setSelectionRange(awal + pembuka.length, posisiAkhir);
+    });
+  }
+  const gayaTombol =
+    "flex min-h-[36px] min-w-[36px] items-center justify-center rounded-lg border border-tanah-900/15 bg-white/80 px-2 text-xs font-bold text-tinta hover:bg-krem-100";
+  return (
+    <span className="flex gap-1">
+      <button type="button" aria-label="Tebalkan teks terpilih" title="Tebal" onClick={() => bungkus("**", "**", "teks tebal")} className={gayaTombol}>
+        <span className="font-bold">B</span>
+      </button>
+      <button type="button" aria-label="Miringkan teks terpilih" title="Miring" onClick={() => bungkus("*", "*", "teks miring")} className={gayaTombol}>
+        <span className="italic">I</span>
+      </button>
+      <button type="button" aria-label="Jadikan teks terpilih sebagai tautan" title="Tautan" onClick={() => bungkus("[", "](https://)", "teks tautan")} className={gayaTombol}>
+        Tautan
+      </button>
+    </span>
+  );
+}
+
+// Editor tiga kolom gaya SAVENTIFY (Nov 2026): header aplikasi +
+// sidebar navigasi (250px) + panel formulir + panel pratinjau (40%).
+// Di ponsel, kolom menumpuk (sidebar jadi chip horizontal, pratinjau di
+// bawah formulir). Perilaku simpan (Tahap 1):
 // - Isian (kecuali foto) tersimpan otomatis di localStorage perangkat ini
 //   dan dipulihkan saat pengguna kembali ke editor — jadi isian tidak hilang
 //   kalau pengguna diminta masuk/daftar dulu sebelum menyimpan. Foto tidak
@@ -23,16 +67,20 @@ import PratinjauUndangan from "./PratinjauUndangan";
 //   localStorage. Sebagai gantinya, ada catatan draf dipulihkan dan tombol
 //   Atur ulang yang mengembalikan isian ke contoh template (dan menimpa
 //   draf dengan nilai contoh itu).
-// - Header editor nempel (Prioritas 1, Nov 2026): nama undangan + lencana
-//   Draft + indikator tersimpan otomatis + tombol Pratinjau (jangkar ke
-//   seksi pratinjau) + Simpan (tombol submit luar formulir lewat atribut
-//   form). Kalau belum masuk, Simpan diganti tautan Masuk.
-// - Navigasi seksi: sidebar di desktop + daftar isi chip di ponsel,
-//   menjangkar ke id bagian form (templat, detail, sampul, galeri,
-//   kisah, tanda kasih). Tautan seksi khusus halaman penuh hanya tampil
+// - Header: brand + nama undangan live + lencana Draft + indikator
+//   tersimpan otomatis + Pratinjau (layar penuh) + Simpan (tombol submit
+//   luar formulir lewat atribut form) + Lanjut (pindah langkah). Kalau
+//   belum masuk, Simpan diganti tautan Masuk.
+// - Langkah (bukan kunci linear): Buat (gulir ke atas formulir),
+//   Periksa (pratinjau layar penuh), Bagikan (gulir ke panel bagikan).
+// - Navigasi seksi: sidebar dengan penanda aktif mengikuti seksi yang
+//   terlihat (scroll-spy); tautan seksi khusus halaman penuh hanya tampil
 //   kalau templat terpilih memang halaman penuh.
 // - Pratinjau bisa diganti bingkainya (ponsel = bingkai gelap max-w-md,
 //   lebar = penuh) dan dibuka layar penuh lewat Fullscreen API.
+// - Kata-kata: sapaan pembuka + kata pengantar (markah **tebal**,
+//   *miring*, [teks](https://tautan) dirender aman di halaman tamu
+//   lewat TeksBerformat — tanpa dangerouslySetInnerHTML).
 const KUNCI_DRAF = "undangan-editor-draf";
 
 interface DrafEditor {
@@ -57,16 +105,21 @@ interface DrafEditor {
   rekeningNomor?: string;
   rekeningNama?: string;
   alamatKirim?: string;
+  // Kata-kata editor (opsional; kosong = teks template).
+  teksPembuka?: string;
+  kataPengantar?: string;
 }
 
 export default function FormulirEditor({
   daftar,
   sudahMasuk,
   aksi,
+  galat,
 }: {
   daftar: Templat[];
   sudahMasuk: boolean;
   aksi: (formulir: FormData) => Promise<void>;
+  galat?: string;
 }) {
   const parameterPencarian = useSearchParams();
   const slugDariTautan = parameterPencarian.get("templat");
@@ -94,9 +147,20 @@ export default function FormulirEditor({
   const [rekeningNomor, setRekeningNomor] = useState("");
   const [rekeningNama, setRekeningNama] = useState("");
   const [alamatKirim, setAlamatKirim] = useState("");
+  // Kata-kata editor: sapaan pembuka + kata pengantar (markah ringan).
+  const [teksPembuka, setTeksPembuka] = useState("");
+  const [kataPengantar, setKataPengantar] = useState("");
+  const teksPembukaRef = useRef<HTMLTextAreaElement>(null);
+  const kataPengantarRef = useRef<HTMLTextAreaElement>(null);
   const [namaBerkasGaleri, setNamaBerkasGaleri] = useState<string[]>([]);
   const [sudahDimuat, setSudahDimuat] = useState(false);
   const [drafDipulihkan, setDrafDipulihkan] = useState(false);
+  // Langkah aktif (penanda, bukan kunci): buat / periksa / bagikan.
+  const [langkahAktif, setLangkahAktif] = useState<"buat" | "periksa" | "bagikan">("buat");
+  // Penanda seksi sidebar mengikuti seksi yang terlihat (scroll-spy).
+  const [bagianAktif, setBagianAktif] = useState("#bagian-templat");
+  // Kontainer gulir panel tengah (dipakai tombol langkah Buat).
+  const panelRef = useRef<HTMLElement>(null);
   // Jam terakhir draf tersimpan otomatis (format HH:MM). Kosong sebelum
   // penyimpanan pertama di sesi ini — header menampilkan teks pengganti.
   const [tersimpanPada, setTersimpanPada] = useState("");
@@ -141,6 +205,8 @@ export default function FormulirEditor({
             setRekeningNomor(draf.rekeningNomor ?? "");
             setRekeningNama(draf.rekeningNama ?? "");
             setAlamatKirim(draf.alamatKirim ?? "");
+            setTeksPembuka(draf.teksPembuka ?? "");
+            setKataPengantar(draf.kataPengantar ?? "");
             setFotoUrl(templatDraf.fotoSampul ?? "https://picsum.photos/seed/undangan-editor/800/1000");
             // Catatan hanya tampil kalau draf benar-benar berbeda dari contoh,
             // supaya kunjungan pertama (draf berisi nilai contoh) tidak
@@ -162,7 +228,9 @@ export default function FormulirEditor({
               (draf.rekeningBank ?? "") !== "" ||
               (draf.rekeningNomor ?? "") !== "" ||
               (draf.rekeningNama ?? "") !== "" ||
-              (draf.alamatKirim ?? "") !== ""
+              (draf.alamatKirim ?? "") !== "" ||
+              (draf.teksPembuka ?? "") !== "" ||
+              (draf.kataPengantar ?? "") !== ""
             ) {
               setDrafDipulihkan(true);
             }
@@ -199,6 +267,8 @@ export default function FormulirEditor({
         rekeningNomor,
         rekeningNama,
         alamatKirim,
+        teksPembuka,
+        kataPengantar,
       };
       window.localStorage.setItem(KUNCI_DRAF, JSON.stringify(draf));
       setTersimpanPada(
@@ -207,7 +277,24 @@ export default function FormulirEditor({
     } catch {
       // Penyimpanan perangkat penuh atau diblokir: editor tetap jalan.
     }
-  }, [sudahDimuat, templatTerpilih, namaPertama, namaKedua, tanggal, lokasi, orangTuaPertama, orangTuaKedua, acaraWaktu, acaraKeduaJudul, acaraKeduaWaktu, acaraKeduaLokasi, kisahJudul, kisahCerita, videoKisah, rekeningBank, rekeningNomor, rekeningNama, alamatKirim]);
+  }, [sudahDimuat, templatTerpilih, namaPertama, namaKedua, tanggal, lokasi, orangTuaPertama, orangTuaKedua, acaraWaktu, acaraKeduaJudul, acaraKeduaWaktu, acaraKeduaLokasi, kisahJudul, kisahCerita, videoKisah, rekeningBank, rekeningNomor, rekeningNama, alamatKirim, teksPembuka, kataPengantar]);
+
+  // Scroll-spy sidebar: seksi yang melewati pita atas layar jadi aktif.
+  // Root dibiarkan viewport supaya jalan di panel tengah (desktop)
+  // maupun gulir halaman (ponsel).
+  useEffect(() => {
+    const seksi = Array.from(document.querySelectorAll("[data-bagian]"));
+    const pengamat = new IntersectionObserver(
+      (entri) => {
+        for (const item of entri) {
+          if (item.isIntersecting) setBagianAktif(`#${item.target.id}`);
+        }
+      },
+      { rootMargin: "-20% 0px -70% 0px" },
+    );
+    seksi.forEach((el) => pengamat.observe(el));
+    return () => pengamat.disconnect();
+  }, [templatTerpilih.halamanPenuh]);
 
   // Bersihkan object URL saat komponen dilepas, supaya tidak membebani peramban.
   useEffect(() => {
@@ -237,6 +324,8 @@ export default function FormulirEditor({
     setRekeningNomor("");
     setRekeningNama("");
     setAlamatKirim("");
+    setTeksPembuka("");
+    setKataPengantar("");
     setNamaBerkasGaleri([]);
     if (fotoLokalRef.current) URL.revokeObjectURL(fotoLokalRef.current);
     fotoLokalRef.current = null;
@@ -285,6 +374,8 @@ export default function FormulirEditor({
     setRekeningNomor("");
     setRekeningNama("");
     setAlamatKirim("");
+    setTeksPembuka("");
+    setKataPengantar("");
     setNamaBerkasGaleri([]);
     setDrafDipulihkan(false);
   }
@@ -300,6 +391,7 @@ export default function FormulirEditor({
   const tautanSeksi = [
     { href: "#bagian-templat", label: "Templat" },
     { href: "#bagian-detail", label: "Detail Acara" },
+    { href: "#bagian-kata-kata", label: "Kata-kata" },
     { href: "#bagian-sampul", label: "Sampul" },
     ...(templatTerpilih.halamanPenuh
       ? [
@@ -309,6 +401,7 @@ export default function FormulirEditor({
         ]
       : []),
   ];
+  const tautanOpsi = [{ href: "#bagian-bagikan", label: "Bagikan & Terbitkan" }];
 
   function bukaLayarPenuh() {
     const elemen = pratinjauRef.current;
@@ -317,26 +410,62 @@ export default function FormulirEditor({
     }
   }
 
+  // Langkah (penanda, bukan kunci): klik memindahkan fokus, tidak
+  // mengunci urutan — pengguna bebas melompat ke langkah mana pun.
+  function keLangkah(langkah: "buat" | "periksa" | "bagikan") {
+    setLangkahAktif(langkah);
+    if (langkah === "buat") {
+      document.getElementById("bagian-templat")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (langkah === "periksa") {
+      bukaLayarPenuh();
+    } else {
+      document.getElementById("bagian-bagikan")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  function lanjut() {
+    if (langkahAktif === "buat") keLangkah("periksa");
+    else keLangkah("bagikan");
+  }
+
+  // Item sidebar: chip di ponsel, baris + penanda aktif di desktop
+  // (latar lebih gelap + bilah kiri terakota, ala referensi).
+  function kelasItemSidebar(href: string) {
+    const aktif = bagianAktif === href;
+    return `flex min-h-[44px] shrink-0 items-center rounded-full border px-4 text-sm font-bold lg:rounded-2xl lg:rounded-l-none lg:border-y-0 lg:border-r-0 lg:border-l-2 lg:px-3 lg:py-3 ${
+      aktif
+        ? "border-tanah-600 bg-tanah-600 text-white lg:border-tanah-600 lg:bg-[#EDE8E1] lg:text-tinta"
+        : "border-tanah-900/15 bg-white/70 text-tinta lg:border-transparent lg:bg-transparent hover:lg:bg-krem-100"
+    }`;
+  }
+
   return (
-    <>
-      <div className="sticky top-4 z-30 mb-6 flex flex-wrap items-center gap-3 rounded-full kartu-kaca px-4 py-2">
+    <div className="flex h-dvh flex-col bg-[#F9F8F6]">
+      {/* Header aplikasi ala referensi: brand | judul + DRAFT |
+          tersimpan | Pratinjau | Simpan | Lanjut. */}
+      <header className="flex shrink-0 flex-wrap items-center gap-3 border-b border-stone-200 px-4 py-3 sm:px-6">
+        <Link href="/" className="shrink-0 font-serif text-lg font-bold tracking-wide text-tanah-700">
+          UndanganKita
+        </Link>
         <p className="min-w-0 flex-1 truncate text-sm font-bold sm:text-[15px]">
-          {namaUndangan || "Undangan baru"}
+          {namaUndangan || "Undangan baru"}{" "}
+          <span className="ml-1 rounded-full bg-krem-200 px-2 py-1 text-[11px] font-bold text-tinta">
+            DRAFT
+          </span>
         </p>
-        <span className="shrink-0 rounded-full bg-krem-200 px-3 py-1 text-xs font-bold text-tinta">
-          Draft
-        </span>
         <p className="hidden shrink-0 text-xs text-tintaLembut md:block">
+          ✓{" "}
           {tersimpanPada
             ? `Tersimpan otomatis • ${tersimpanPada}`
             : "Draf disimpan otomatis di perangkat ini"}
         </p>
-        <a
-          href="#pratinjau"
+        <button
+          type="button"
+          onClick={() => keLangkah("periksa")}
           className="flex min-h-[44px] shrink-0 items-center rounded-full border-2 border-tanah-600 px-4 text-sm font-bold text-tanah-700"
         >
           Pratinjau
-        </a>
+        </button>
         {sudahMasuk ? (
           <button
             type="submit"
@@ -353,54 +482,81 @@ export default function FormulirEditor({
             Masuk
           </Link>
         )}
-      </div>
-
-      <nav aria-label="Bagian editor" className="mb-6 flex gap-2 overflow-x-auto pb-1 lg:hidden">
-        {tautanSeksi.map((item) => (
-          <a
-            key={item.href}
-            href={item.href}
-            className="flex min-h-[44px] shrink-0 items-center rounded-full border border-tanah-900/15 bg-white/70 px-4 text-sm font-bold"
-          >
-            {item.label}
-          </a>
-        ))}
-        <a
-          href="/bantuan"
-          className="flex min-h-[44px] shrink-0 items-center rounded-full border border-tanah-900/15 bg-white/70 px-4 text-sm font-bold text-tanah-600"
+        <button
+          type="button"
+          onClick={lanjut}
+          className="tombol-utama shrink-0 bg-tanah-600 text-sm text-white hover:bg-tanah-700"
         >
-          Butuh bantuan?
-        </a>
-      </nav>
+          Lanjut →
+        </button>
+      </header>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[208px_minmax(0,1fr)]">
-        <nav aria-label="Bagian editor" className="sticky top-24 hidden self-start lg:block">
-          <p className="px-2 text-xs font-bold uppercase tracking-widest text-tintaLembut">Bagian</p>
-          <ul className="mt-2 space-y-1">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
+        {/* Sidebar: chip horizontal di ponsel, daftar di desktop. */}
+        <aside className="shrink-0 border-b border-stone-200 lg:flex lg:h-full lg:w-64 lg:shrink-0 lg:flex-col lg:overflow-y-auto lg:border-b-0 lg:border-r">
+          <div className="px-4 pt-4 lg:px-5 lg:pt-5">
+            {sudahMasuk ? (
+              <Link href="/akun" className="text-sm font-bold text-tanah-600 underline underline-offset-4">
+                ← Kembali ke dasbor
+              </Link>
+            ) : (
+              <p className="text-sm font-bold">
+                <Link href="/daftar?lanjut=/editor" className="text-tanah-600 underline underline-offset-4">Daftar</Link>
+                {" atau "}
+                <Link href="/masuk?lanjut=/editor" className="text-tanah-600 underline underline-offset-4">Masuk</Link>
+              </p>
+            )}
+          </div>
+          <nav aria-label="Bagian editor" className="flex gap-2 overflow-x-auto px-4 py-3 lg:flex-col lg:overflow-visible lg:px-3 lg:py-4">
+            <p className="hidden px-3 text-xs font-bold uppercase tracking-widest text-tintaLembut lg:block">Design</p>
             {tautanSeksi.map((item) => (
-              <li key={item.href}>
-                <a
-                  href={item.href}
-                  className="block min-h-[44px] rounded-2xl px-3 py-3 text-sm font-bold text-tinta hover:bg-krem-100"
-                >
-                  {item.label}
-                </a>
-              </li>
+              <a key={item.href} href={item.href} onClick={() => setBagianAktif(item.href)} className={kelasItemSidebar(item.href)}>
+                {item.label}
+              </a>
             ))}
-          </ul>
-          <div className="mt-6 border-t border-krem-200 px-2 pt-4">
+            <p className="mt-2 hidden px-3 text-xs font-bold uppercase tracking-widest text-tintaLembut lg:block">Opsi</p>
+            {tautanOpsi.map((item) => (
+              <a key={item.href} href={item.href} onClick={() => setBagianAktif(item.href)} className={kelasItemSidebar(item.href)}>
+                {item.label}
+              </a>
+            ))}
+          </nav>
+          <div className="mt-auto hidden border-t border-stone-200 px-5 py-4 lg:block">
             <p className="text-sm font-bold">Butuh bantuan?</p>
-            <Link
-              href="/bantuan"
-              className="mt-1 block text-sm font-bold text-tanah-600 underline underline-offset-4"
-            >
-              Lihat halaman Bantuan
+            <Link href="/bantuan" className="mt-1 block text-sm font-bold text-tanah-600 underline underline-offset-4">
+              Lihat artikel bantuan
             </Link>
           </div>
-        </nav>
+        </aside>
 
-        <div className="grid items-start gap-6 lg:grid-cols-2">
-          <form id="formulir-editor" action={aksi} className="kartu-kaca rounded-[2rem] p-5 sm:p-7">
+        {/* Panel tengah: langkah + formulir. */}
+        <main ref={panelRef} className="min-w-0 flex-1 bg-white lg:h-full lg:overflow-y-auto">
+          <div className="sticky top-0 z-20 border-b border-stone-200 bg-white px-5 py-3 sm:px-8">
+            <ol className="flex items-center gap-4 text-sm font-bold sm:gap-6">
+              {([
+                { kunci: "buat", label: "1. Buat" },
+                { kunci: "periksa", label: "2. Periksa" },
+                { kunci: "bagikan", label: "3. Bagikan" },
+              ] as const).map((langkah) => (
+                <li key={langkah.kunci}>
+                  <button
+                    type="button"
+                    onClick={() => keLangkah(langkah.kunci)}
+                    aria-current={langkahAktif === langkah.kunci ? "step" : undefined}
+                    className={langkahAktif === langkah.kunci ? "text-tanah-700 underline decoration-tanah-600 decoration-2 underline-offset-8" : "text-tintaLembut"}
+                  >
+                    {langkah.label}
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </div>
+          {galat && (
+            <p role="alert" className="mx-5 mt-5 rounded-2xl bg-terakota-100 px-4 py-3 text-sm font-bold text-tanah-700 sm:mx-8">
+              {galat}
+            </p>
+          )}
+          <form id="formulir-editor" action={aksi} className="p-5 sm:p-8">
         <section aria-label="Formulir data undangan">
           <h2 className="font-serif text-2xl font-bold">Isi data acaramu</h2>
           <p className="mt-2 text-[15px] leading-relaxed text-tintaLembut">
@@ -416,7 +572,7 @@ export default function FormulirEditor({
 
           <input type="hidden" name="slugTemplat" value={templatTerpilih.slug} />
 
-          <fieldset id="bagian-templat" className="mt-6 scroll-mt-24">
+          <fieldset id="bagian-templat" data-bagian className="mt-6 scroll-mt-24">
             <legend className="text-sm font-bold">Pilih templat</legend>
             <div className="mt-2 grid grid-cols-3 gap-2">
               {daftar.map((templat) => (
@@ -438,7 +594,7 @@ export default function FormulirEditor({
             </div>
           </fieldset>
 
-          <div id="bagian-detail" className="mt-5 scroll-mt-24">
+          <div id="bagian-detail" data-bagian className="mt-5 scroll-mt-24">
             <label htmlFor="nama-pertama" className="text-sm font-bold">
               Nama mempelai / tuan rumah (baris pertama)
             </label>
@@ -591,7 +747,118 @@ export default function FormulirEditor({
             </fieldset>
           )}
 
-          <div id="bagian-sampul" className="mt-5 scroll-mt-24">
+          <fieldset id="bagian-kata-kata" data-bagian className="mt-6 scroll-mt-24">
+            <legend className="text-sm font-bold">Kata-kata undangan</legend>
+            <p className="mt-1 text-sm leading-relaxed text-tintaLembut">
+              Ubah kata-kata undanganmu di sini. Kosongkan sapaan atau
+              pengantar untuk memakai teks bawaan template. Markah
+              **tebal**, *miring*, dan [tautan](https://...) tampil di
+              halaman tamu.
+            </p>
+            <div className="mt-4">
+              <label htmlFor="gaya-kata" className="text-sm font-bold">
+                Gaya
+              </label>
+              <select
+                id="gaya-kata"
+                value={templatTerpilih.slug}
+                onChange={(acara) => pilihTemplat(acara.target.value)}
+                className={gayaInput}
+              >
+                {daftar.map((templat) => (
+                  <option key={templat.slug} value={templat.slug}>
+                    {templat.nama} · {templat.nuansa}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-sm text-tintaLembut">
+                Gaya sama dengan template yang dipilih di atas — menggantinya
+                di sini mengisi ulang contoh template.
+              </p>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-center justify-between gap-2">
+                <label htmlFor="teks-pembuka" className="text-sm font-bold">
+                  Sapaan pembuka <span className="font-semibold text-tintaLembut">(opsional)</span>
+                </label>
+                <BilahFormat target={teksPembukaRef} nilai={teksPembuka} atur={setTeksPembuka} />
+              </div>
+              <textarea
+                id="teks-pembuka"
+                ref={teksPembukaRef}
+                name="teksPembuka"
+                value={teksPembuka}
+                onChange={(acara) => setTeksPembuka(acara.target.value)}
+                rows={2}
+                maxLength={200}
+                placeholder="Contoh: Dengan penuh syukur, kami mengundangmu hadir"
+                className={gayaInput}
+              />
+            </div>
+            <div className="mt-4">
+              <label className="text-sm font-bold">
+                Judul acara
+              </label>
+              <p className="mt-2 rounded-2xl border border-tanah-900/15 bg-krem-50 px-4 py-3 text-[15px] font-bold text-tinta">
+                {namaUndangan || "Isi nama di Detail Acara"}
+              </p>
+              <p className="mt-1 text-sm text-tintaLembut">
+                Judul mengikuti nama di Detail Acara —{" "}
+                <a href="#bagian-detail" className="font-bold text-tanah-600 underline underline-offset-4">ubah di sana</a>.
+              </p>
+            </div>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="tanggal-kata" className="text-sm font-bold">
+                  Tanggal acara
+                </label>
+                <input
+                  id="tanggal-kata"
+                  type="date"
+                  value={tanggal}
+                  onChange={(acara) => setTanggal(acara.target.value)}
+                  className={gayaInput}
+                />
+              </div>
+              <div>
+                <label htmlFor="lokasi-kata" className="text-sm font-bold">
+                  Lokasi acara
+                </label>
+                <input
+                  id="lokasi-kata"
+                  value={lokasi}
+                  onChange={(acara) => setLokasi(acara.target.value)}
+                  placeholder="Contoh: Pendopo Seruni, Sleman"
+                  className={gayaInput}
+                />
+              </div>
+            </div>
+            <p className="mt-1 text-sm text-tintaLembut">
+              Tanggal dan lokasi ini sama dengan isian Detail Acara — mengubah
+              di sini mengubah di sana juga.
+            </p>
+            <div className="mt-4">
+              <div className="flex items-center justify-between gap-2">
+                <label htmlFor="kata-pengantar" className="text-sm font-bold">
+                  Kata pengantar <span className="font-semibold text-tintaLembut">(opsional)</span>
+                </label>
+                <BilahFormat target={kataPengantarRef} nilai={kataPengantar} atur={setKataPengantar} />
+              </div>
+              <textarea
+                id="kata-pengantar"
+                ref={kataPengantarRef}
+                name="kataPengantar"
+                value={kataPengantar}
+                onChange={(acara) => setKataPengantar(acara.target.value)}
+                rows={3}
+                maxLength={2000}
+                placeholder="Contoh: Kehadiranmu adalah hadiah terindah bagi kami"
+                className={gayaInput}
+              />
+            </div>
+          </fieldset>
+
+          <div id="bagian-sampul" data-bagian className="mt-5 scroll-mt-24">
             <label htmlFor="foto-acara" className="text-sm font-bold">
               Foto undangan
             </label>
@@ -611,7 +878,7 @@ export default function FormulirEditor({
           </div>
 
           {templatTerpilih.halamanPenuh && (
-            <div id="bagian-galeri" className="mt-5 scroll-mt-24">
+            <div id="bagian-galeri" data-bagian className="mt-5 scroll-mt-24">
               <label htmlFor="galeri-acara" className="text-sm font-bold">
                 Galeri foto tambahan
               </label>
@@ -633,7 +900,7 @@ export default function FormulirEditor({
           )}
 
           {templatTerpilih.halamanPenuh && (
-            <fieldset id="bagian-kisah" className="mt-6 scroll-mt-24">
+            <fieldset id="bagian-kisah" data-bagian className="mt-6 scroll-mt-24">
               <legend className="text-sm font-bold">Kisah perjalanan</legend>
               <p className="mt-1 text-sm leading-relaxed text-tintaLembut">
                 Tiga babak opsional. Babak yang judul dan ceritanya kosong tidak
@@ -683,7 +950,7 @@ export default function FormulirEditor({
           )}
 
           {templatTerpilih.halamanPenuh && (
-            <fieldset id="bagian-tandakasih" className="mt-6 scroll-mt-24">
+            <fieldset id="bagian-tandakasih" data-bagian className="mt-6 scroll-mt-24">
               <legend className="text-sm font-bold">Tanda kasih</legend>
               <p className="mt-1 text-sm leading-relaxed text-tintaLembut">
                 Kalau nomor rekening atau alamat diisi, undangan menampilkan
@@ -778,6 +1045,37 @@ export default function FormulirEditor({
             </div>
           )}
 
+          <div id="bagian-bagikan" data-bagian className="mt-8 scroll-mt-24 rounded-[1.5rem] border border-tanah-900/15 bg-krem-50 p-5">
+            <h3 className="font-serif text-xl font-bold">Bagikan & terbitkan</h3>
+            <p className="mt-2 text-sm leading-relaxed text-tintaLembut">
+              Tiga langkah dari draf ke undangan yang bisa dibuka tamu.
+            </p>
+            <ol className="mt-4 space-y-3 text-sm leading-relaxed">
+              <li>
+                <span className="font-bold">1. Simpan.</span> Tekan Simpan di
+                header atau di atas — undangan tersimpan sebagai Draft di
+                dasbor saya.
+              </li>
+              <li>
+                <span className="font-bold">2. Aktifkan.</span> Dari dasbor,
+                ubah statusnya jadi Aktif (perlu paket aktif dan slot
+                tersisa).{" "}
+                <Link href="/akun" className="font-bold text-tanah-600 underline underline-offset-4">Buka dasbor saya</Link>
+                {" · "}
+                <Link href="/akun/paket" className="font-bold text-tanah-600 underline underline-offset-4">Lihat paket</Link>
+              </li>
+              <li>
+                <span className="font-bold">3. Bagikan.</span> Setelah Aktif,
+                tautan tamu dan tombol WhatsApp tersedia di dasbor — bagikan
+                ke grup atau kirim personal.
+              </li>
+            </ol>
+            <p className="mt-3 text-xs leading-relaxed text-tintaLembut">
+              Tautan tamu baru ada setelah undangan disimpan — panel ini tidak
+              membuat tautan palsu.
+            </p>
+          </div>
+
           <button
             type="button"
             onClick={aturUlang}
@@ -793,12 +1091,15 @@ export default function FormulirEditor({
         </section>
       </form>
 
-      <section id="pratinjau" aria-label="Pratinjau undangan" className="scroll-mt-24 lg:sticky lg:top-28">
-        <p className="mb-3 text-center text-sm font-bold text-tintaLembut">
+      </main>
+
+      {/* Panel kanan: pratinjau live dalam bingkai ponsel / lebar. */}
+      <aside aria-label="Pratinjau undangan" className="shrink-0 bg-[#F1ECE6] px-4 py-6 sm:px-6 lg:h-full lg:w-[40%] lg:overflow-y-auto">
+        <p className="text-center text-sm font-bold text-tintaLembut">
           Pratinjau langsung · {templatTerpilih.nama} · {templatTerpilih.nuansa}
         </p>
-        <div className="mb-3 flex flex-wrap items-center justify-center gap-2">
-          <div className="flex rounded-full border border-tanah-900/15 bg-white/70 p-1" role="group" aria-label="Ukuran pratinjau">
+        <div className="mb-4 mt-3 flex flex-wrap items-center justify-center gap-2">
+          <div className="flex rounded-full border border-stone-200 bg-white p-1" role="group" aria-label="Ukuran pratinjau">
             <button
               type="button"
               onClick={() => setModePratinjau("ponsel")}
@@ -823,7 +1124,7 @@ export default function FormulirEditor({
           <button
             type="button"
             onClick={bukaLayarPenuh}
-            className="min-h-[44px] rounded-full border border-tanah-900/15 bg-white/70 px-4 text-sm font-bold"
+            className="min-h-[44px] rounded-full border border-stone-200 bg-white px-4 text-sm font-bold"
           >
             Layar penuh
           </button>
@@ -839,16 +1140,15 @@ export default function FormulirEditor({
           <div className="overflow-hidden rounded-[2rem]">
             <PratinjauUndangan
               templat={templatTerpilih}
-              data={{ namaPertama, namaKedua, tanggal, lokasi, fotoUrl }}
+              data={{ namaPertama, namaKedua, tanggal, lokasi, fotoUrl, teksPembuka, kataPengantar }}
             />
           </div>
         </div>
         <p className="mt-3 text-center text-xs leading-relaxed text-tintaLembut">
           Pratinjau memakai foto placeholder kalau belum ada foto dipilih.
         </p>
-      </section>
-        </div>
-      </div>
-    </>
+      </aside>
+    </div>
+  </div>
   );
 }

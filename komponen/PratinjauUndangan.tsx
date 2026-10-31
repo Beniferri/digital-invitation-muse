@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { Templat } from "@/data/templat";
 import { formatTanggalIndonesia } from "@/lib/format";
 import { IkonKalender, IkonLokasi, OrnamenGarisSenja, OrnamenMelati, OrnamenParang } from "./IlustrasiOrnamen";
+import TeksBerformat from "./TeksBerformat";
 
 // Data yang ditampilkan pratinjau. Dipakai bersama oleh editor dan halaman contoh,
 // supaya tampilannya tidak berbeda-beda di dua tempat.
@@ -11,6 +12,10 @@ export interface DataPratinjau {
   tanggal: string;
   lokasi: string;
   fotoUrl: string;
+  // Kata-kata editor (opsional): sapaan menggantikan salam template,
+  // pengantar tampil sebagai paragraf tambahan. Kosong = teks template.
+  teksPembuka?: string;
+  kataPengantar?: string;
 }
 
 interface PropertiPratinjau {
@@ -62,7 +67,13 @@ export default function PratinjauUndangan({ templat, data, tampilkanCatatan = tr
           {gaya.pola === "melati" && <OrnamenMelati />}
           {gaya.pola === "garis" && <OrnamenGarisSenja />}
 
-          <p className="mt-4 text-center text-[15px] leading-relaxed text-tintaLembut">{contoh.salamPembuka}</p>
+          <p className="mt-4 text-center text-[15px] leading-relaxed text-tintaLembut">
+            {data.teksPembuka?.trim() ? (
+              <TeksBerformat teks={data.teksPembuka} />
+            ) : (
+              contoh.salamPembuka
+            )}
+          </p>
           <p className={`mt-4 text-center font-serif text-lg font-semibold italic leading-snug ${gaya.aksen}`}>
             &ldquo;{contoh.kutipan}&rdquo;
           </p>
@@ -77,6 +88,12 @@ export default function PratinjauUndangan({ templat, data, tampilkanCatatan = tr
               {data.lokasi || "Lokasi menyusul"}
             </p>
           </div>
+
+          {data.kataPengantar?.trim() && (
+            <p className="mt-5 text-center text-[15px] leading-relaxed text-tinta">
+              <TeksBerformat teks={data.kataPengantar} />
+            </p>
+          )}
 
           {tampilkanCatatan && (
             <p className="mt-5 text-center text-sm leading-relaxed text-tintaLembut">{contoh.catatan}</p>

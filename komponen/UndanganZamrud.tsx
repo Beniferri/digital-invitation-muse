@@ -27,6 +27,7 @@ import Link from "next/link";
 import { Great_Vibes } from "next/font/google";
 import { kirimRsvp } from "@/lib/aksiRsvp";
 import BarKonfirmasi from "@/komponen/BarKonfirmasi";
+import TeksBerformat from "@/komponen/TeksBerformat";
 import {
   buatPesanBagikanUndangan,
   buatTautanWhatsApp,
@@ -99,6 +100,9 @@ export interface DataZamrud {
   acaraKeduaJudul: string;
   acaraKeduaWaktu: string;
   acaraKeduaLokasi: string;
+  // Kata-kata editor (opsional; kosong = teks template).
+  teksPembuka: string;
+  kataPengantar: string;
   galeriTambahan: string[];
 }
 
@@ -500,6 +504,11 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
             <p className="text-xs font-bold uppercase tracking-[0.35em] text-emas-500 lg:text-emerald-800">
               Undangan {data.jenisAcara}
             </p>
+            {data.teksPembuka.trim() !== "" && (
+              <p className="mx-auto mt-6 max-w-md font-serif text-xl font-semibold italic leading-relaxed">
+                <TeksBerformat teks={data.teksPembuka} />
+              </p>
+            )}
             <p className="mx-auto mt-6 flex h-28 w-28 items-center justify-center rounded-full border-2 border-emas-300 font-script text-4xl text-krem-50 lg:text-emerald-900">
               {monogram(data)}
             </p>
@@ -531,6 +540,15 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
             </div>
           </div>
         </section>
+
+        {/* Kata pengantar editor (opsional): jembatan antara hero dan mempelai. */}
+        {data.kataPengantar.trim() !== "" && (
+          <p data-tampil className="tampil bg-krem-50 px-6 py-10 text-center text-[15px] leading-relaxed text-tinta">
+            <span className="mx-auto block max-w-xl">
+              <TeksBerformat teks={data.kataPengantar} />
+            </span>
+          </p>
+        )}
 
         {/* Mempelai */}
         <section id="mempelai" data-tampil className="tampil scroll-mt-6 bg-emerald-950 px-6 py-16 text-krem-50">

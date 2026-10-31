@@ -624,7 +624,7 @@ tidak diubah):
   /editor?templat=seruni-akad-nikah menyembunyikan 3 tautan khusus
   halaman penuh.
 
-## RSVP + Send Gift ala referensi (1 Nov 2026, belum di-push)
+## RSVP + Send Gift ala referensi (1 Nov 2026, sudah di-push, head d4b6224a)
 
 Semua di komponen/UndanganZamrud.tsx + app/globals.css (tema Zamrud
 saja; formulir RSVP jalur kartu lama tidak diubah):
@@ -647,7 +647,7 @@ saja; formulir RSVP jalur kartu lama tidak diubah):
 - MENYUSUL (menunggu pemeriksaan animasi/navbar referensi): navbar
   dan efek animasi/transisi.
 
-## Navbar + animasi ala referensi (1 Nov 2026, belum di-push)
+## Navbar + animasi ala referensi (1 Nov 2026, sudah di-push, head d4b6224a)
 
 Pemeriksaan ulang referensi (jendela desktop lebar): referensi TIDAK
 punya bilah atas — navigasinya tombol mengambang + panel atas blur;
@@ -688,3 +688,56 @@ Yang disamakan di komponen/UndanganZamrud.tsx + app/globals.css:
   backdrop-blur, posisi musik bawah-desktop, aria-current tampil,
   drawer lama hilang total; fixture zamrud-v2.db — SEND GIFT, Close,
   panel gelap, Salin Alamat tampil.
+
+## Editor tiga kolom gaya SAVENTIFY (1 Nov 2026, belum di-push)
+
+Referensi: tangkapan editor SAVENTIFY (header + 3 kolom + langkah
+Buat/Periksa/Bagikan + panel kata-kata + pratinjau bingkai ponsel).
+Diterapkan ke /editor (editor pelanggan), BUKAN ke dasbor admin
+operator — layar referensi adalah editor undangan, bukan dasbor metrik.
+Brand tetap UndanganKita (bukan SAVENTIFY/Beta Storia).
+
+- Shell: `komponen/FormulirEditor.tsx` + `app/editor/page.tsx`
+  (halaman kini merender shell penuh tanpa pembungkus judul lama).
+  Header: brand | nama undangan live + lencana DRAFT | indikator
+  tersimpan otomatis + ✓ | Pratinjau (layar penuh) | Simpan (submit
+  luar formulir) | Lanjut (terakota, pindah langkah). Latar
+  #F9F8F6, panel tengah putih, panel pratinjau #F1ECE6, border
+  stone-200. Di ponsel kolom menumpuk (sidebar jadi chip horizontal,
+  pratinjau di bawah formulir).
+- Sidebar: kembali ke dasbor (atau daftar/masuk), Design (Templat,
+  Detail Acara, Kata-kata, Sampul, Foto & Galeri, Kisah, Tanda Kasih
+  — 3 terakhir hanya templat halaman penuh), Opsi (Bagikan &
+  Terbitkan), Butuh bantuan → /bantuan. Penanda aktif mengikuti seksi
+  yang terlihat (scroll-spy IntersectionObserver, pita -20%/-70%).
+- Langkah (penanda, bukan kunci linear): 1. Buat (gulir ke atas
+  formulir), 2. Periksa (pratinjau layar penuh), 3. Bagikan (gulir ke
+  panel bagikan). Tombol Lanjut di header memajukan langkah.
+- Kata-kata (Prioritas 2, bentuk baru): kolom baru undangan
+  `teks_pembuka` (maks 200) + `kata_pengantar` (maks 2000) —
+  migrasi otomatis, skema, aksi simpan editor, draf localStorage.
+  Seksi berisi: Gaya (dropdown template, state sama dengan seksi
+  Templat), Sapaan pembuka (menggantikan salam template kalau diisi),
+  Judul acara (tampilan nama dari Detail Acara, bukan input ganda),
+  Tanggal + Lokasi (input cermin state Detail Acara, tanpa name
+  ganda di formulir), Kata pengantar (paragraf tambahan). Bilah
+  format B/I/Tautan membungkus seleksi textarea dengan markah.
+- Render aman: `komponen/TeksBerformat.tsx` — parser **tebal**,
+  *miring*, [teks](https://tautan); tanpa dangerouslySetInnerHTML
+  (React meng-escape string), tautan hanya http(s). Render di
+  PratinjauUndangan (sapaan + pengantar — dipakai editor, halaman
+  contoh, dan jalur kartu tamu) dan UndanganZamrud (sapaan di hero,
+  pengantar di antara hero dan mempelai).
+- Panel Bagikan di akhir formulir: 3 langkah Simpan → Aktifkan →
+  Bagikan + tautan /akun dan /akun/paket. Tautan tamu TIDAK dibuat di
+  sini (baru ada setelah undangan disimpan + diaktifkan).
+- Sengaja TIDAK ditiru: Envelope (amplop kertas, tidak relevan untuk
+  distribusi WhatsApp), Guest List per orang (butuh skema + tautan
+  personal — keputusan Prioritas 3), RSVP di sidebar editor (balasan
+  RSVP dikelola dari dasbor setelah undangan aktif).
+- Verifikasi: tsc bersih + build lolos (/editor 10,6 kB); server
+  fixture tamu.db: semua penanda editor tampil; undangan uji Zamrud
+  + kartu menampilkan sapaan/pengantar berformat, dan tag script
+  dalam pengantar ter-escape (tidak dieksekusi). Klik Simpan sungguhan
+  hanya bisa diverifikasi di produksi (POST server action gagal di
+  sandbox — batas yang sudah diketahui).

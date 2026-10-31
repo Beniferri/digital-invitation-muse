@@ -98,7 +98,9 @@ CREATE TABLE IF NOT EXISTS undangan (
   acara_waktu TEXT NOT NULL DEFAULT '',
   acara_kedua_judul TEXT NOT NULL DEFAULT '',
   acara_kedua_waktu TEXT NOT NULL DEFAULT '',
-  acara_kedua_lokasi TEXT NOT NULL DEFAULT ''
+  acara_kedua_lokasi TEXT NOT NULL DEFAULT '',
+  teks_pembuka TEXT NOT NULL DEFAULT '',
+  kata_pengantar TEXT NOT NULL DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS foto_galeri (
   id TEXT PRIMARY KEY,
@@ -369,6 +371,10 @@ async function migrasiUndangan(backend: Backend): Promise<void> {
     ["acara_kedua_judul", "ALTER TABLE undangan ADD COLUMN acara_kedua_judul TEXT NOT NULL DEFAULT ''"],
     ["acara_kedua_waktu", "ALTER TABLE undangan ADD COLUMN acara_kedua_waktu TEXT NOT NULL DEFAULT ''"],
     ["acara_kedua_lokasi", "ALTER TABLE undangan ADD COLUMN acara_kedua_lokasi TEXT NOT NULL DEFAULT ''"],
+    // Editor kata-kata (gaya SAVENTIFY): sapaan pembuka + kata pengantar,
+    // opsional — undangan lama tetap jalan, kosong = pakai teks template.
+    ["teks_pembuka", "ALTER TABLE undangan ADD COLUMN teks_pembuka TEXT NOT NULL DEFAULT ''"],
+    ["kata_pengantar", "ALTER TABLE undangan ADD COLUMN kata_pengantar TEXT NOT NULL DEFAULT ''"],
   ];
   for (const [kolom, sql] of kolomBaru) {
     if (!(await backend.kolomAda("undangan", kolom))) {
