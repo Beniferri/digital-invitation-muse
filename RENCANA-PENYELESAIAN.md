@@ -410,7 +410,7 @@ hilang di tengah pengujian — DB uji kini di ~/workspace/dasbor-uji/
 (supaya awet) dan pemeriksaan server-wajib-hidup dulu sebelum klaim
 lulus, supaya hasil kosong tidak terbaca sebagai lulus.
 
-## Templat halaman penuh Zamrud (31 Okt 2026, SELESAI DI KODE, BELUM di-push)
+## Templat halaman penuh Zamrud (31 Okt 2026, SUDAH di-push 17:15 WIB — redeploy Coolify menunggu user)
 
 Replika pengalaman referensi wedding.benifin.my.id sebagai opsi template
 baru — dibangun ulang dengan kode dan aset sendiri, bukan salinan
@@ -445,12 +445,19 @@ yang direncanakan, bukan diisi data palsu. Tes: tsc + build lolos;
 server DB uji (salinan dev.db lama): semua penanda halaman Zamrud
 hadir (sampul, nama, orang tua, hitung mundur, busana, galeri, RSVP,
 ucapan, musik, gambar), halaman kartu lama + Draft 404 + katalog +
-editor tetap jalan, musik/gambar 200. Catatan pengujian: perintah
+editor tetap jalan, musik/gambar 200. Catatan push (31 Okt 17:15 WIB,
+3 commit: 25b291d2 kode, 7e9a2980 + 3392a188 aset): tool push hanya
+menerima UTF-8 dan payload 5,58 MB kena HTTP 413, jadi 5 aset biner
+disimpan sebagai .b64 di repo dan di-decode di tahap builder
+Dockerfile (gagal decode = build gagal jelas, bukan berkas kosong).
+Aturan ke depan: aset biner baru wajib .b64 + decode di Dockerfile,
+dan jangan redeploy di antara commit kode dan commit aset (build
+akan lolos tapi aset 404). Catatan pengujian: perintah
 `cd ... && server &` membackground seluruh rantai — server tetap
 jalan, tapi cek dev.db terakhir salah direktori; dev.db diverifikasi
 terpisah tetap 69.632 byte, mtime 13:09.
 
-## Koreksi opening Zamrud: splash intro (31 Okt 2026, BELUM di-push)
+## Koreksi opening Zamrud: splash intro (31 Okt 2026, sudah ikut di-push 17:15 WIB)
 
 Pengecekan desktop pertama melewatkan splash intro referensi; screenshot
 pengguna + pengecekan ulang membuktikan urutan sebenarnya: layar hijau
