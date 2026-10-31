@@ -191,6 +191,18 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
   const [tersalin, setTersalin] = useState(false);
   const [tersalinRekening, setTersalinRekening] = useState(false);
   const [tersalinAlamat, setTersalinAlamat] = useState(false);
+  // RSVP ala referensi: dua tombol (Hadir/Berhalangan), bukan radio tiga
+  // pilihan. Nilai server tetap Hadir/Tidak — "Berhalangan" dikirim
+  // sebagai "Tidak" (server memaksa jumlah tamu 0 untuk Tidak), jadi
+  // kolom jumlah hanya dirender saat Hadir. "Ragu" hilang dari formulir
+  // tamu (baris lama tetap tampil di ringkasan/filter dasbor).
+  const [kehadiran, setKehadiran] = useState<"Hadir" | "Tidak">("Hadir");
+  // Panel tanda kasih ala referensi: tersembunyi di balik tombol SEND
+  // GIFT, mengembang/menciut dengan transisi grid-rows.
+  const [giftTerbuka, setGiftTerbuka] = useState(false);
+  // Scroll-spy ala referensi: tautan menu seksi yang sedang terlihat
+  // jadi emas. Awalnya beranda (posisi tamu setelah membuka undangan).
+  const [bagianAktif, setBagianAktif] = useState("#beranda");
   const audioRef = useRef<HTMLAudioElement>(null);
   const tutupSampulRef = useRef<number | null>(null);
 
@@ -259,6 +271,22 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
       { threshold: 0.15 },
     );
     elemen.forEach((el) => pengamat.observe(el));
+    return () => pengamat.disconnect();
+  }, []);
+
+  // Scroll-spy: observer terpisah dari reveal (pita pandang berbeda) —
+  // seksi yang melewati pita atas-tengah layar jadi bagianAktif.
+  useEffect(() => {
+    const seksi = Array.from(document.querySelectorAll("section[id]"));
+    const pengamat = new IntersectionObserver(
+      (entri) => {
+        for (const item of entri) {
+          if (item.isIntersecting) setBagianAktif(`#${item.target.id}`);
+        }
+      },
+      { rootMargin: "-30% 0px -60% 0px" },
+    );
+    seksi.forEach((el) => pengamat.observe(el));
     return () => pengamat.disconnect();
   }, []);
 
@@ -731,6 +759,9 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
           </p>
           <h2 className="mt-3 font-serif text-3xl font-bold">Konfirmasi Kehadiran</h2>
           <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-krem-100/85">
+            Mohon kabari kami apakah Anda dapat hadir.
+          </p>
+          <p className="mt-1 max-w-xl text-sm leading-relaxed text-krem-100/70">
             {data.ringkasan.totalBalasan === 0
               ? "Belum ada yang mengonfirmasi. Jadilah yang pertama."
               : `${data.ringkasan.hadir} balasan hadir (${data.ringkasan.totalTamuHadir} tamu), ${data.ringkasan.ragu} masih ragu, ${data.ringkasan.tidak} tidak bisa hadir.`}
@@ -754,7 +785,7 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
                 <input id="situs-web-zamrud" name="situs_web" tabIndex={-1} autoComplete="off" />
               </div>
               <div>
-                <label htmlFor="nama-zamrud" className="text-sm font-bold">Nama kamu</label>
+                <label htmlFor="nama-zamrud" className="text-sm font-bold text-emas-300">Nama kamu</label>
                 <input
                   id="nama-zamrud"
                   name="nama"
@@ -763,54 +794,63 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
                   maxLength={100}
                   autoComplete="name"
                   placeholder="Tulis nama lengkapmu"
-                  className="mt-2 min-h-[48px] w-full rounded-2xl border border-emerald-900/20 bg-white px-4 py-3 text-[15px] text-tinta"
+                  className="mt-2 min-h-[48px] w-full rounded-2xl border border-krem-50/25 bg-white/10 px-4 py-3 text-[15px] text-krem-50 placeholder:text-krem-100/50"
                 />
               </div>
               <fieldset>
-                <legend className="text-sm font-bold">Kehadiran</legend>
-                <div className="mt-2 flex flex-wrap gap-2">
+                <legend className="text-sm font-bold text-emas-300">Kehadiran</legend>
+                <div className="mt-2 grid grid-cols-2 gap-3">
                   {[
                     { nilai: "Hadir", label: "Hadir" },
-                    { nilai: "Ragu", label: "Masih ragu" },
-                    { nilai: "Tidak", label: "Tidak bisa hadir" },
+                    { nilai: "Tidak", label: "Berhalangan" },
                   ].map((pilihan) => (
-                    <label
+                    <button
                       key={pilihan.nilai}
-                      className="flex min-h-[48px] cursor-pointer items-center gap-2 rounded-full border border-krem-50/30 bg-white/10 px-4 text-sm font-bold"
+                      type="button"
+                      onClick={() => setKehadiran(pilihan.nilai as "Hadir" | "Tidak")}
+                      aria-pressed={kehadiran === pilihan.nilai}
+                      className={`min-h-[52px] rounded-2xl border px-4 text-sm font-bold transition-colors duration-200 ${
+                        kehadiran === pilihan.nilai
+                          ? "border-emas-300 bg-white/15 text-krem-50"
+                          : "border-krem-50/25 bg-white/5 text-krem-100/85 hover:bg-white/10"
+                      }`}
                     >
-                      <input type="radio" name="kehadiran" value={pilihan.nilai} defaultChecked={pilihan.nilai === "Hadir"} />
                       {pilihan.label}
-                    </label>
+                    </button>
                   ))}
                 </div>
+                <input type="hidden" name="kehadiran" value={kehadiran} />
               </fieldset>
+              {kehadiran === "Hadir" && (
+                <div className="muncul-halus">
+                  <label htmlFor="jumlah-zamrud" className="text-sm font-bold text-emas-300">Jumlah tamu (termasuk kamu)</label>
+                  <select
+                    id="jumlah-zamrud"
+                    name="jumlahTamu"
+                    defaultValue="1"
+                    aria-describedby="jumlah-keterangan-zamrud"
+                    className="mt-2 min-h-[48px] w-full rounded-2xl border border-krem-50/25 bg-white/10 px-4 py-3 text-[15px] text-krem-50"
+                  >
+                    {Array.from({ length: 10 }, (_, i) => i + 1).map((jumlah) => (
+                      <option key={jumlah} value={jumlah}>{jumlah} orang</option>
+                    ))}
+                  </select>
+                  <p id="jumlah-keterangan-zamrud" className="mt-1 text-sm text-krem-100/75">Maksimal 10 orang per balasan.</p>
+                </div>
+              )}
               <div>
-                <label htmlFor="jumlah-zamrud" className="text-sm font-bold">Jumlah tamu (termasuk kamu)</label>
-                <select
-                  id="jumlah-zamrud"
-                  name="jumlahTamu"
-                  defaultValue="1"
-                  aria-describedby="jumlah-keterangan-zamrud"
-                  className="mt-2 min-h-[48px] w-full rounded-2xl border border-emerald-900/20 bg-white px-4 py-3 text-[15px] text-tinta"
-                >
-                  {Array.from({ length: 10 }, (_, i) => i + 1).map((jumlah) => (
-                    <option key={jumlah} value={jumlah}>{jumlah} orang</option>
-                  ))}
-                </select>
-                <p id="jumlah-keterangan-zamrud" className="mt-1 text-sm text-krem-100/75">Maksimal 10 orang per balasan. Kalau memilih tidak bisa hadir, jumlah ini tidak dihitung.</p>
-              </div>
-              <div>
-                <label htmlFor="pesan-zamrud" className="text-sm font-bold">Pesan atau doa (opsional)</label>
+                <label htmlFor="pesan-zamrud" className="text-sm font-bold text-emas-300">Pesan atau doa (opsional)</label>
                 <textarea
                   id="pesan-zamrud"
                   name="pesan"
                   maxLength={500}
                   rows={3}
                   placeholder="Tulis doa atau ucapan selamat di sini"
-                  className="mt-2 w-full rounded-2xl border border-emerald-900/20 bg-white px-4 py-3 text-[15px] text-tinta"
+                  className="mt-2 w-full rounded-2xl border border-krem-50/25 bg-white/10 px-4 py-3 text-[15px] text-krem-50 placeholder:text-krem-100/50"
                 />
               </div>
-              <button type="submit" className="min-h-[52px] w-full rounded-full bg-emas-500 text-sm font-bold text-emerald-950 hover:bg-emas-300">
+              <button type="submit" className="min-h-[52px] w-full rounded-full bg-emerald-700 text-sm font-bold text-white transition-colors duration-200 hover:bg-emerald-600">
+                <span aria-hidden="true" className="mr-2">✈</span>
                 Kirim Konfirmasi & Ucapan
               </button>
               <p className="text-center text-sm text-krem-100/75">
@@ -862,39 +902,74 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
               Kehadiranmu sudah jadi hadiah. Kalau mau memberi tanda kasih,
               silakan lewat rekening atau alamat di bawah ini.
             </p>
-            <div className="mx-auto mt-8 grid max-w-2xl gap-4 sm:grid-cols-2">
+            <div className="mt-8 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setGiftTerbuka((b) => !b)}
+                aria-expanded={giftTerbuka}
+                aria-controls="panel-tanda-kasih"
+                className={`inline-flex min-h-[52px] items-center rounded-full border-2 px-8 text-sm font-bold transition-colors duration-200 ${
+                  giftTerbuka
+                    ? "border-emerald-800 bg-emerald-800 text-white"
+                    : "border-emas-500 bg-white text-emerald-950 hover:bg-krem-50"
+                }`}
+              >
+                SEND GIFT
+                <span aria-hidden="true" className={`ml-2 inline-block transition-transform duration-300 ${giftTerbuka ? "rotate-180" : ""}`}>▾</span>
+              </button>
+            </div>
+            <div
+              id="panel-tanda-kasih"
+              className={`grid transition-all duration-300 ease-out ${giftTerbuka ? "[grid-template-rows:1fr] opacity-100" : "[grid-template-rows:0fr] opacity-0"}`}
+            >
+              <div className="overflow-hidden">
+                <div className="mx-auto mt-8 max-w-2xl rounded-[1.75rem] bg-emerald-950 p-6 text-krem-50">
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setGiftTerbuka(false)}
+                      className="text-xs font-bold uppercase tracking-widest text-krem-100/70 underline underline-offset-4"
+                    >
+                      Close
+                    </button>
+                  </div>
               {data.rekeningNomor.trim() !== "" && (
-                <div className="rounded-[1.75rem] border border-emas-300/40 bg-white/80 p-6 text-center">
-                  <p className="text-xs font-bold uppercase tracking-widest text-emas-600">Transfer</p>
+                <div className="text-center">
+                  <p className="text-xs font-bold uppercase tracking-widest text-emas-300">Transfer</p>
                   {data.rekeningBank.trim() !== "" && (
-                    <p className="mt-3 font-serif text-2xl font-bold text-emerald-950">{data.rekeningBank}</p>
+                    <p className="mt-3 font-serif text-2xl font-bold">{data.rekeningBank}</p>
                   )}
-                  <p className="mt-2 font-mono text-lg font-bold tracking-wide text-tinta">{data.rekeningNomor}</p>
+                  <p className="mt-2 font-mono text-lg font-bold tracking-wide">{data.rekeningNomor}</p>
                   {data.rekeningNama.trim() !== "" && (
-                    <p className="mt-1 text-sm text-tintaLembut">{data.rekeningNama}</p>
+                    <p className="mt-1 text-sm text-krem-100/80">{data.rekeningNama}</p>
                   )}
                   <button
                     type="button"
                     onClick={() => salinTeks(data.rekeningNomor, setTersalinRekening)}
-                    className="mt-4 inline-flex min-h-[44px] items-center rounded-full bg-emerald-800 px-5 text-sm font-bold text-white hover:bg-emerald-900"
+                    className="mt-4 inline-flex min-h-[44px] items-center rounded-full border border-emas-300/60 px-5 text-sm font-bold text-emas-300 hover:bg-white/10"
                   >
                     {tersalinRekening ? "Nomor tersalin!" : "Salin Nomor"}
                   </button>
                 </div>
               )}
+              {data.rekeningNomor.trim() !== "" && data.alamatKirim.trim() !== "" && (
+                <hr className="my-6 border-krem-50/15" />
+              )}
               {data.alamatKirim.trim() !== "" && (
-                <div className="rounded-[1.75rem] border border-emas-300/40 bg-white/80 p-6 text-center">
-                  <p className="text-xs font-bold uppercase tracking-widest text-emas-600">Kirim Hadiah</p>
-                  <p className="mt-3 text-[15px] leading-relaxed text-tinta">{data.alamatKirim}</p>
+                <div className="text-center">
+                  <p className="text-xs font-bold uppercase tracking-widest text-emas-300">Kirim Hadiah</p>
+                  <p className="mt-3 text-[15px] leading-relaxed">{data.alamatKirim}</p>
                   <button
                     type="button"
                     onClick={() => salinTeks(data.alamatKirim, setTersalinAlamat)}
-                    className="mt-4 inline-flex min-h-[44px] items-center rounded-full bg-emerald-800 px-5 text-sm font-bold text-white hover:bg-emerald-900"
+                    className="mt-4 inline-flex min-h-[44px] items-center rounded-full border border-emas-300/60 px-5 text-sm font-bold text-emas-300 hover:bg-white/10"
                   >
                     {tersalinAlamat ? "Alamat tersalin!" : "Salin Alamat"}
                   </button>
                 </div>
               )}
+                </div>
+              </div>
             </div>
           </section>
         )}
@@ -933,84 +1008,71 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
         </section>
       </div>
 
-      {/* Tombol mengambang: musik (kalau ada) + menu. Dipindah ke kanan
-          atas karena bar konfirmasi kini menempati bawah layar; header
-          platform sudah disembunyikan di halaman tamu, jadi pojok kanan
-          atas bebas dan tidak menutupi konten maupun bar. */}
-      <div className="fixed right-4 top-4 z-40 flex gap-2">
-        {data.musikSrc && (
-          <button
-            type="button"
-            onClick={alihMusik}
-            aria-label={musikMain ? "Jeda musik" : "Putar musik"}
-            className="flex min-h-[48px] min-w-[48px] items-center justify-center rounded-full bg-emerald-900 text-lg text-krem-50 shadow-kaca"
-          >
-            {musikMain ? "❚❚" : "♪"}
-          </button>
-        )}
+      {/* Tombol mengambang ala referensi: musik di kiri (bawah di
+          desktop, atas di ponsel supaya tidak menutupi bar konfirmasi),
+          menu di kanan atas. Panel menu tidak pakai backdrop. */}
+      {data.musikSrc && (
         <button
           type="button"
-          onClick={() => setMenuTerbuka(true)}
-          aria-label="Buka menu"
-          className="flex min-h-[48px] min-w-[48px] items-center justify-center rounded-full bg-emerald-900 text-lg font-bold text-krem-50 shadow-kaca"
+          onClick={alihMusik}
+          aria-label={musikMain ? "Jeda musik" : "Putar musik"}
+          className="fixed left-4 top-4 z-40 flex min-h-[48px] min-w-[48px] items-center justify-center rounded-full bg-emerald-900 text-lg text-krem-50 shadow-kaca lg:top-auto lg:bottom-4"
         >
-          ☰
+          {musikMain ? "❚❚" : "♪"}
         </button>
-      </div>
+      )}
+      <button
+        type="button"
+        onClick={() => setMenuTerbuka(true)}
+        aria-label="Buka menu"
+        className="fixed right-4 top-4 z-40 flex min-h-[48px] min-w-[48px] items-center justify-center rounded-full bg-emerald-900 text-lg font-bold text-krem-50 shadow-kaca"
+      >
+        ☰
+      </button>
 
       {/* Bar konfirmasi persisten (hanya setelah terbuka & RSVP dibuka). */}
       <BarKonfirmasi tampil={barTampil} />
 
-      {/* Drawer menu */}
-      {menuTerbuka && (
-        <button
-          type="button"
-          aria-label="Tutup menu"
-          onClick={() => setMenuTerbuka(false)}
-          className="fixed inset-0 z-[75] bg-tinta/50"
-        />
-      )}
+      {/* Panel menu ala referensi: panel atas blur di atas kolom konten
+          saja (desktop: mulai 42%), bukan drawer samping + backdrop.
+          Muncul dengan fade + turun sedikit (±0,5 dtk); ditutup lewat
+          × atau tautan (tautan lalu smooth-scroll ke seksi). */}
       <div
-        className={`fixed inset-y-0 right-0 z-[80] flex w-72 max-w-[85vw] flex-col bg-krem-50 shadow-xl transition-transform duration-200 ${
-          menuTerbuka ? "translate-x-0 visible" : "translate-x-full invisible"
+        className={`fixed inset-x-4 top-4 z-[80] rounded-[20px] bg-emerald-950/85 shadow-xl backdrop-blur-xl transition-all duration-500 lg:left-[calc(42%+1rem)] lg:right-4 ${
+          menuTerbuka ? "visible translate-y-0 opacity-100" : "invisible -translate-y-2 opacity-0"
         }`}
       >
         <div className="flex items-center justify-between px-5 py-4">
-          <p className="font-serif text-xl font-bold text-emerald-950">Menu</p>
+          <p className="font-serif text-xl font-bold text-krem-50">Menu</p>
           <button
             type="button"
             onClick={() => setMenuTerbuka(false)}
             aria-label="Tutup menu"
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-krem-300 text-lg font-bold"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-krem-50/30 text-lg font-bold text-krem-50"
           >
             ✕
           </button>
         </div>
-        <nav aria-label="Menu undangan" className="flex-1 overflow-y-auto px-3 pb-4">
+        <nav aria-label="Menu undangan" className="max-h-[70vh] overflow-y-auto px-3 pb-4">
           <ul className="space-y-1">
-            {data.statusAktif && (
-              <li>
-                <a
-                  href="#rsvp"
-                  onClick={() => setMenuTerbuka(false)}
-                  className="block min-h-[48px] rounded-2xl bg-emas-500 px-4 py-3 text-center text-[15px] font-bold text-emerald-950"
-                >
-                  Konfirmasi Kehadiran
-                </a>
-              </li>
-            )}
             {menuTampil.map((item) => (
               <li key={item.href}>
                 <a
                   href={item.href}
                   onClick={() => setMenuTerbuka(false)}
-                  className="block min-h-[48px] rounded-2xl px-4 py-3 text-[15px] font-bold text-tinta hover:bg-krem-100"
+                  aria-current={bagianAktif === item.href ? "location" : undefined}
+                  className={`block min-h-[48px] rounded-2xl px-4 py-3 font-serif text-lg font-bold ${
+                    bagianAktif === item.href ? "text-emas-300" : "text-krem-50"
+                  }`}
                 >
                   {item.label}
                 </a>
               </li>
             ))}
           </ul>
+          <p className="px-4 pb-2 pt-3 text-sm italic text-krem-100/70">
+            Pilih bagian yang ingin Anda lihat.
+          </p>
         </nav>
       </div>
 

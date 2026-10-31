@@ -597,7 +597,7 @@ syarat, privasi, daftar, masuk) — head akhir 418e4200. Semua berkas lama
 terverifikasi 404; tidak ada konflik rute tersisa. Redeploy Coolify
 MENUNGGU user.
 
-## Prioritas 1 editor ala referensi (1 Nov 2026, belum di-push)
+## Prioritas 1 editor ala referensi (1 Nov 2026, sudah di-push, head afd9db88)
 
 Semua di komponen/FormulirEditor.tsx (editor /editor saja; formulir
 /akun/undangan/baru memakai FormulirUndangan yang lebih sederhana dan
@@ -623,3 +623,68 @@ tidak diubah):
   penanda tampil di /editor dan /editor?templat=zamrud-pernikahan;
   /editor?templat=seruni-akad-nikah menyembunyikan 3 tautan khusus
   halaman penuh.
+
+## RSVP + Send Gift ala referensi (1 Nov 2026, belum di-push)
+
+Semua di komponen/UndanganZamrud.tsx + app/globals.css (tema Zamrud
+saja; formulir RSVP jalur kartu lama tidak diubah):
+- RSVP: panel gelap sesuai tangkapan referensi — label emas, input
+  gelap transparan (border krem), tombol kirim pil hijau + ikon pesawat.
+  Kehadiran jadi dua tombol (Hadir/Berhalangan) ganti radio tiga
+  pilihan; "Berhalangan" dikirim sebagai "Tidak" (enum server tetap,
+  server memaksa jumlah 0 untuk Tidak). Kolom jumlah tamu hanya render
+  saat Hadir, muncul dengan animasi muncul-halus (fade + geser 0,3 dtk).
+  "Ragu" hilang dari formulir tamu; baris lama tetap tampil di
+  ringkasan/filter dasbor. Tanpa ubah server action/skema.
+- Tanda kasih: kartu rekening/alamat kini tersembunyi di balik tombol
+  SEND GIFT (aria-expanded + panel panel-tanda-kasih), mengembang/
+  menciut dengan transisi grid-rows 0,3 dtk + opacity. Seksi tetap
+  data-gated (hanya tampil kalau rekening/alamat diisi).
+- Verifikasi: tsc + build lolos; server fixture tamu.db (/u/tamuji01)
+  — tombol Berhalangan, instruksi, kolom jumlah tampil, label lama
+  hilang; fixture zamrud-v2.db (/u/v2uji001) — SEND GIFT + panel +
+  Salin Nomor tampil.
+- MENYUSUL (menunggu pemeriksaan animasi/navbar referensi): navbar
+  dan efek animasi/transisi.
+
+## Navbar + animasi ala referensi (1 Nov 2026, belum di-push)
+
+Pemeriksaan ulang referensi (jendela desktop lebar): referensi TIDAK
+punya bilah atas — navigasinya tombol mengambang + panel atas blur;
+reveal-nya fade lembut tanpa geser; hover nyaris tanpa perubahan.
+Yang disamakan di komponen/UndanganZamrud.tsx + app/globals.css:
+- Panel menu: drawer samping + backdrop DIGANTI panel atas blur
+  (rounded 20px, bg zamrud gelap transparan + backdrop-blur, di atas
+  kolom konten saja — desktop mulai 42%, ponsel selebar layar kurang
+  margin; maks 70vh + gulir). Muncul fade + turun sedikit 0,5 dtk;
+  ditutup lewat × atau tautan (tautan smooth-scroll, sudah ada di
+  CSS). Tanpa backdrop. Tautan kini serif besar putih; seksi yang
+  sedang terlihat jadi emas via scroll-spy (IntersectionObserver
+  pita -30%/-60%, state bagianAktif, aria-current location) + catatan
+  kaki miring "Pilih bagian yang ingin Anda lihat." Entri pil emas
+  Konfirmasi Kehadiran di drawer lama DIHAPUS (referensi tidak punya;
+  CTA tetap ada lewat bar persisten + tombol hero).
+- Tombol mengambang: musik pindah ke kiri (bawah di desktop seperti
+  referensi, atas di ponsel supaya tidak menutupi bar konfirmasi);
+  menu tetap kanan atas. Tombol Ganti tema TIDAK ikut dibangun
+  (fitur terpisah, masih rencana) — panel menu + musik saja yang
+  disamakan.
+- Reveal: .tampil kini fade opacity 0,7 dtk saja (geser 24px
+  DIHAPUS) — sesuai karakter gerak referensi yang kalem. Hitung
+  mundur tetap swap angka polos (sudah sesuai); hover tetap minim
+  (tidak ada lift/zoom/bayangan baru).
+- Panel gift direstyle: tombol SEND GIFT kini pil putih border emas
+  (tertutup) / hijau gelap solid (terbuka) + tautan CLOSE kecil di
+  kanan atas panel; isi jadi SATU panel gelap (label emas, teks krem,
+  tombol salin outline emas, pemisah antar entri) ganti dua kartu
+  putih berdampingan.
+- Catatan rekonsiliasi RSVP: tangkapan referensi yang gelap = TEMA
+  GELAP referensi (pemeriksaan desktop melihat tema terang: krem +
+  kolom putih). Formulir gelap kita = tampilan tema gelap referensi,
+  sudah sesuai permintaan. Perbedaan sadar yang dipertahankan:
+  Hadir terpilih default (referensi mulai tanpa pilihan — default
+  menghindari kiriman kosong) dan jumlah maks 10 (referensi 4).
+- Verifikasi: tsc + build lolos; fixture tamu.db — panel menu,
+  backdrop-blur, posisi musik bawah-desktop, aria-current tampil,
+  drawer lama hilang total; fixture zamrud-v2.db — SEND GIFT, Close,
+  panel gelap, Salin Alamat tampil.
