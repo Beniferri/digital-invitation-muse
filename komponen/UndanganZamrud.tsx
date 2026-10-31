@@ -264,14 +264,25 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
     };
   }, []);
 
-  // Kunci gulir selama intro/sampul tampil; bersihkan timer saat dilepas.
+  // Kunci gulir selama intro/sampul tampil.
   useEffect(() => {
     document.body.style.overflow = tahap === "terbuka" ? "" : "hidden";
     return () => {
       document.body.style.overflow = "";
-      if (tutupSampulRef.current !== null) window.clearTimeout(tutupSampulRef.current);
     };
   }, [tahap]);
+
+  // Bersihkan timer buka sampul HANYA saat komponen dilepas. Jangan
+  // membersihkannya di efek tahap: timer itu dipasang bersamaan dengan
+  // perubahan tahap ke "membuka", jadi cleanup efek tahap justru
+  // membatalkan timer tersebut — tahap mentok di "membuka", sampul
+  // transparan tetap menutupi layar, dan semua tombol di bawahnya
+  // tidak bisa diklik (bug 31 Okt 2026).
+  useEffect(() => {
+    return () => {
+      if (tutupSampulRef.current !== null) window.clearTimeout(tutupSampulRef.current);
+    };
+  }, []);
 
   // Escape menutup lightbox dan menu.
   useEffect(() => {
