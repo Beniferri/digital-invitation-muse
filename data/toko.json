@@ -1,0 +1,155 @@
+{
+  "templat": [
+    {
+      "slug": "seruni-akad-nikah",
+      "nama": "Seruni",
+      "jenisAcara": "Pernikahan",
+      "warna": "Emas",
+      "nuansa": "Tradisional",
+      "aktif": true,
+      "deskripsi": "Untuk akad nikah dan resepsi yang hangat dan khidmat. Lengkung atasnya mengingatkan pada gerbang pendopo, dengan garis parang yang halus di pinggir kartu.",
+      "gaya": {
+        "latar": "bg-krem-100",
+        "kartu": "rounded-t-[10rem] rounded-b-[2rem]",
+        "aksen": "text-emas-600",
+        "aksenLembut": "bg-emas-300/40",
+        "bentuk": "lengkung-atas",
+        "pola": "parang"
+      },
+      "contoh": {
+        "judulAcara": "Akad Nikah dan Resepsi",
+        "namaPertama": "Nadia Ayu Prameswari",
+        "namaKedua": "Arka Pradana Wijaya",
+        "tanggal": "2027-03-14",
+        "lokasi": "Pendopo Seruni, Sleman, Yogyakarta",
+        "salamPembuka": "Dengan penuh syukur dan doa dari kedua keluarga, kami mengundang Bapak, Ibu, dan Saudara/i tercinta untuk hadir dan mendoakan kami.",
+        "kutipan": "Dua keluarga, satu doa yang sama: semoga rumah tangga ini selalu dijaga dalam kebaikan.",
+        "catatan": "Kehadiranmu sudah jadi hadiah. Kalau mau memberi doa lewat bingkisan, kabari kami dulu ya."
+      }
+    },
+    {
+      "slug": "melati-aqiqah",
+      "nama": "Melati",
+      "jenisAcara": "Aqiqah",
+      "warna": "Hijau",
+      "nuansa": "Islami",
+      "aktif": true,
+      "deskripsi": "Untuk aqiqah dan syukuran kelahiran yang lembut dan teduh. Kartu kacanya dibingkai bunga melati kecil, dengan hijau sage yang menenangkan mata.",
+      "gaya": {
+        "latar": "bg-daun-100",
+        "kartu": "rounded-[2.5rem]",
+        "aksen": "text-daun-700",
+        "aksenLembut": "bg-daun-100",
+        "bentuk": "kotak-bulat",
+        "pola": "melati"
+      },
+      "contoh": {
+        "judulAcara": "Aqiqah dan Syukuran",
+        "namaPertama": "Bilqis Zahra Putri",
+        "namaKedua": "Putri dari Ahmad dan Siti Rahmawati",
+        "tanggal": "2026-11-22",
+        "lokasi": "Rumah Keluarga, Bandung",
+        "salamPembuka": "Alhamdulillah, putri kecil kami sudah lahir dengan sehat. Kami mengundang keluarga dan sahabat untuk ikut mendoakan dan merayakan bersama.",
+        "kutipan": "Semoga Bilqis tumbuh jadi anak yang sehat, salehah, dan membawa berkah untuk banyak orang.",
+        "catatan": "Acara digelar santai di rumah. Datang dengan pakaian yang nyaman saja, yang penting silaturahmi."
+      }
+    },
+    {
+      "slug": "kala-wisuda",
+      "nama": "Kala Senja",
+      "jenisAcara": "Wisuda",
+      "warna": "Terakota",
+      "nuansa": "Modern",
+      "aktif": true,
+      "deskripsi": "Untuk syukuran wisuda dan ulang tahun yang ceria tapi tetap rapi. Tata letaknya asimetris, cahayanya hangat seperti sore hari, dan teksnya mudah dibaca.",
+      "gaya": {
+        "latar": "bg-terakota-100",
+        "kartu": "rounded-[1.75rem]",
+        "aksen": "text-terakota-600",
+        "aksenLembut": "bg-terakota-100",
+        "bentuk": "asimetris",
+        "pola": "garis"
+      },
+      "contoh": {
+        "judulAcara": "Syukuran Wisuda",
+        "namaPertama": "Raisa Prameswari, S.T.",
+        "namaKedua": "",
+        "tanggal": "2026-12-12",
+        "lokasi": "Balai Serbaguna Kampus, Jakarta Selatan",
+        "salamPembuka": "Akhirnya sampai juga di garis akhir kuliah ini. Terima kasih untuk semua yang sudah menemani, dan yuk rayakan bareng di acara syukuran ini.",
+        "kutipan": "Gelar boleh selesai, tapi belajar dan silaturahmi jangan sampai berhenti di sini.",
+        "catatan": "Ada makan siang bersama setelah prosesi. Boleh ajak satu teman atau anggota keluarga."
+      }
+    }
+  ],
+  "undangan": [
+    {
+      "id": "und-001",
+      "namaPertama": "Nadia Ayu Prameswari",
+      "namaKedua": "Arka Pradana Wijaya",
+      "jenisAcara": "Pernikahan",
+      "tanggal": "2027-03-14",
+      "lokasi": "Pendopo Seruni, Sleman, Yogyakarta",
+      "slugTemplat": "seruni-akad-nikah",
+      "status": "Aktif",
+      "dibuatPada": "2026-10-31"
+    },
+    {
+      "id": "und-002",
+      "namaPertama": "Bilqis Zahra Putri",
+      "namaKedua": "Putri dari Ahmad dan Siti Rahmawati",
+      "jenisAcara": "Aqiqah",
+      "tanggal": "2026-11-22",
+      "lokasi": "Rumah Keluarga, Bandung",
+      "slugTemplat": "melati-aqiqah",
+      "status": "Draft",
+      "dibuatPada": "2026-10-31"
+    }
+  ],
+  "paketHarga": [
+    {
+      "nama": "Hemat",
+      "keterangan": "Untuk acara keluarga kecil yang undangannya dibagikan ke lingkaran dekat.",
+      "hargaBulanan": 49000,
+      "hargaTahunan": 490000,
+      "palingPopuler": false,
+      "fitur": [
+        "1 undangan aktif",
+        "Semua templat bisa dipilih bebas",
+        "Bagikan lewat WhatsApp",
+        "Masa aktif 30 hari per undangan",
+        "Bantuan lewat chat pada jam kerja"
+      ]
+    },
+    {
+      "nama": "Populer",
+      "keterangan": "Untuk pernikahan dan aqiqah yang tamunya banyak dan butuh revisi berkali-kali.",
+      "hargaBulanan": 99000,
+      "hargaTahunan": 990000,
+      "palingPopuler": true,
+      "fitur": [
+        "3 undangan aktif",
+        "Semua templat bisa dipilih bebas",
+        "Bagikan lewat WhatsApp",
+        "Revisi data tanpa batas selama aktif",
+        "Masa aktif 90 hari per undangan",
+        "Prioritas bantuan lewat chat"
+      ]
+    },
+    {
+      "nama": "Keluarga Besar",
+      "keterangan": "Untuk yang mengurus beberapa acara sekaligus, termasuk acara kantor.",
+      "hargaBulanan": 199000,
+      "hargaTahunan": 1990000,
+      "palingPopuler": false,
+      "fitur": [
+        "10 undangan aktif",
+        "Semua templat bisa dipilih bebas",
+        "Bagikan lewat WhatsApp",
+        "Revisi data tanpa batas selama aktif",
+        "Masa aktif 1 tahun per undangan",
+        "Bantuan lewat chat dan telepon"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "dependencies": {
+    "next": "14.2.32",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "description": "Prototipe SaaS undangan digital untuk berbagai acara di Indonesia.",
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@types/react": "18.3.3",
+    "@types/react-dom": "18.3.0",
+    "autoprefixer": "10.4.20",
+    "postcss": "8.4.40",
+    "tailwindcss": "3.4.17",
+    "tsx": "^4.23.15",
+    "typescript": "5.5.4"
+  },
+  "name": "undangan-digital",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "lint": "next lint",
+    "start": "next start",
+    "db:seed": "tsx scripts/seed.ts",
+    "buat-admin": "tsx scripts/buat-admin.ts"
+  },
+  "version": "0.1.0"
+}

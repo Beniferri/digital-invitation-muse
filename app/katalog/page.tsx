@@ -1,0 +1,19 @@
+import { bacaDaftarTemplatAktif } from "@/lib/tokoData";
+import FilterKatalog from "@/komponen/FilterKatalog";
+
+// Halaman katalog (server component): datanya dari toko admin, filternya komponen klien.
+export default async function Katalog() {
+  const daftarTemplat = await bacaDaftarTemplatAktif();
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <h1 className="font-serif text-4xl font-bold sm:text-5xl">Katalog Template</h1>
+      <p className="mt-3 max-w-2xl text-lg leading-relaxed text-tintaLembut">
+        Saring berdasarkan jenis acara, warna, dan nuansa. Templat dipilih bebas
+        dan tidak terikat paket harga apa pun.
+      </p>
+      <div className="mt-8">
+        <FilterKatalog daftar={daftarTemplat} />
+      </div>
+    </div>
+  );
+}

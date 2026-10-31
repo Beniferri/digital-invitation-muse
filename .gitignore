@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+.env*.local
+.DS_Store
+dev.db
+dev.db-journal
+public/unggahan/*
+!public/unggahan/.gitkeep
+.env.local
