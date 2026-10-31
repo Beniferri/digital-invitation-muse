@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { bacaDaftarRsvp, bacaDaftarTemplat, bacaRingkasanRsvp, cariUndanganOlehKode } from "@/lib/tokoData";
 import { periksaKedaluwarsaPengguna } from "@/lib/langganan";
+import { formatTanggalIndonesia } from "@/lib/format";
+import { urlAbsolut, urlSitus } from "@/lib/situs";
 import PratinjauUndangan from "@/komponen/PratinjauUndangan";
 import FormulirRsvp from "@/komponen/FormulirRsvp";
 import BagikanUndangan from "@/komponen/BagikanUndangan";
@@ -20,6 +23,56 @@ const pesanGalat: Record<string, string> = {
   batas: "Terlalu banyak percobaan dari perangkat ini dalam satu jam terakhir. Tunggu sebentar lalu coba lagi.",
   robot: "Gagal mengirim. Coba lagi.",
 };
+
+// Pratinjau tautan (Open Graph) untuk halaman tamu (Tahap 5, SEO).
+// Mengambil data yang sama dengan halaman itu sendiri, termasuk
+// pemeriksaan kedaluwarsa malas, supaya judul/deskripsi pratinjau tidak
+// mengajak RSVP untuk undangan yang sudah Selesai. Undangan Draft atau
+// yang tidak ada tidak membocorkan nama di metadata (halaman 404 yang
+// dirender memakai metadata layout, bukan metadata halaman ini).
+// Foto pratinjau memakai foto undangan atau foto sampul templat kalau
+// ada; kalau tidak ada, pratinjau tanpa gambar (SENGAJA tidak memakai
+// foto picsum cadangan seperti di halaman, supaya pratinjau yang
+// dibagikan tidak menampilkan foto stok acak sebagai foto acara).
+export async function generateMetadata({ params }: { params: { kode: string } }): Promise<Metadata> {
+  const generik: Metadata = { title: "Undangan — UndanganKita" };
+  let undangan = await cariUndanganOlehKode(params.kode);
+  if (!undangan || undangan.status === "Draft") return generik;
+  if (undangan.penggunaId) {
+    await periksaKedaluwarsaPengguna(undangan.penggunaId);
+    undangan = await cariUndanganOlehKode(params.kode);
+    if (!undangan || undangan.status === "Draft") return generik;
+  }
+  const daftarTemplat = await bacaDaftarTemplat();
+  const templat = daftarTemplat.find((item) => item.slug === undangan.slugTemplat);
+  const nama = undangan.namaKedua ? `${undangan.namaPertama} & ${undangan.namaKedua}` : undangan.namaPertama;
+  const judul = `${nama} — ${undangan.jenisAcara} | UndanganKita`;
+  const deskripsi =
+    undangan.status === "Aktif"
+      ? `Undangan ${undangan.jenisAcara} pada ${formatTanggalIndonesia(undangan.tanggal)} di ${undangan.lokasi}. Konfirmasi kehadiranmu lewat formulir RSVP.`
+      : `Undangan ${undangan.jenisAcara} pada ${formatTanggalIndonesia(undangan.tanggal)} di ${undangan.lokasi}. Lihat detail acaranya di sini.`;
+  const foto = undangan.fotoUndangan ?? templat?.fotoSampul ?? null;
+  const gambar = foto ? [urlAbsolut(foto)] : undefined;
+  return {
+    title: judul,
+    description: deskripsi,
+    openGraph: {
+      title: judul,
+      description: deskripsi,
+      url: `${urlSitus()}/u/${undangan.kodeTamu}`,
+      siteName: "UndanganKita",
+      locale: "id_ID",
+      type: "website",
+      images: gambar,
+    },
+    twitter: {
+      card: gambar ? "summary_large_image" : "summary",
+      title: judul,
+      description: deskripsi,
+      images: gambar,
+    },
+  };
+}
 
 export default async function HalamanTamu({
   params,

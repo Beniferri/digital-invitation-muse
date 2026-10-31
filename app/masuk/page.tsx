@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { masukPengguna } from "@/lib/aksiOtentikasi";
 import { lanjutAman } from "@/lib/lanjut";
+
+export const metadata: Metadata = {
+  title: "Masuk — UndanganKita",
+  description: "Masuk ke akun UndanganKita untuk mengelola undangan dan langgananmu.",
+};
 
 // Halaman masuk untuk pengguna biasa. Akun admin yang masuk lewat sini
 // tetap diarahkan ke /akun; dasbor admin hanya bisa dibuka lewat /admin/login

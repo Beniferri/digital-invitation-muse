@@ -1,6 +1,10 @@
 import Link from "next/link";
 
-// Kaki halaman yang singkat. Tidak ada tautan palsu ke halaman yang belum ada.
+// Kaki halaman yang singkat. Tautan legal (Tahap 5) mengarah ke halaman
+// yang benar-benar ada. Klaim "belum ada pembayaran sungguhan" dari era
+// MVP sudah dihapus — sejak Tahap 2, pembayaran lewat Midtrans sudah
+// menjadi bagian produk (aktivasi Production-nya ada di checklist
+// peluncuran, bukan di teks footer).
 export default function KakiHalaman() {
   return (
     <footer className="relative mt-20 overflow-hidden bg-tanah-900 text-krem-100">
@@ -16,11 +20,14 @@ export default function KakiHalaman() {
           <Link href="/" className="hover:text-white">Beranda</Link>
           <Link href="/katalog" className="hover:text-white">Katalog Template</Link>
           <Link href="/editor" className="hover:text-white">Editor</Link>
+          <Link href="/bantuan" className="hover:text-white">Bantuan</Link>
+          <Link href="/syarat" className="hover:text-white">Syarat &amp; Ketentuan</Link>
+          <Link href="/privasi" className="hover:text-white">Kebijakan Privasi</Link>
         </div>
         <p className="mt-8 border-t border-white/15 pt-6 text-xs text-krem-200">
-          UndanganKita dalam pengembangan aktif. Belum ada pembayaran sungguhan.
-          Undangan bisa dibuat dari editor atau dasbor pengguna, lalu dibagikan
-          lewat tautan tamu.
+          UndanganKita dalam pengembangan aktif. Undangan bisa dibuat dari
+          editor atau dasbor pengguna, lalu dibagikan lewat tautan tamu.
+          Pembayaran diproses lewat Midtrans.
         </p>
       </div>
     </footer>

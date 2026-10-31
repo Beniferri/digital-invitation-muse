@@ -314,6 +314,28 @@ Alur uang sudah jalan di kode (uji Sandbox masih menunggu kunci, lihat di bawah)
   database bisa dijangkau (500 kalau tidak). Dockerfile memasang
   HEALTHCHECK ke endpoint ini; di Coolify, pakai path `/api/sehat`.
 
+## Rilis (Tahap 5 rencana penyelesaian)
+
+- **Halaman legal dan bantuan:** `/syarat`, `/privasi`, `/bantuan`
+  (ditautkan dari footer). Isinya sesuai perilaku produk yang
+  sebenarnya — baca sebelum mengubah perilaku produk, dan perbarui
+  halaman ini bersamaan kalau perilaku berubah.
+- **Kontak dukungan:** pasang `DUKUNGAN_EMAIL` dan/atau
+  `DUKUNGAN_WHATSAPP_URL` di environment Coolify. Kalau keduanya
+  kosong, `/bantuan` menampilkan pemberitahuan bahwa kontak belum
+  diumumkan — dan itu memblokir pengumuman (lihat
+  `DAFTAR-PELUNCURAN.md`).
+- **SEO:** metadata tiap halaman utama, `sitemap.xml` dan `robots.txt`
+  otomatis (hanya halaman publik; `/admin`, `/akun`, `/api`, dan
+  undangan tamu `/u` tidak diindeks), dan pratinjau Open Graph dinamis
+  untuk halaman tamu (judul nama + jenis acara, foto undangan/sampul
+  kalau ada). Alamat situs dari `SITUS_URL` (lihat `.env.example`).
+- **Checklist peluncuran:** `DAFTAR-PELUNCURAN.md` adalah gerbang
+  pengumuman — jangan mengumumkan sebelum semua item BLOKIR selesai
+  (Midtrans Production + uji beli sungguhan, kontak dukungan, cron
+  cadangan, healthcheck, harga final, akun admin cadangan, uji beta
+  3–5 pengguna nyata).
+
 ## Yang sengaja tidak ada di MVP
 
 CMS dan fitur lanjutan (amplop digital, musik latar, galeri multi-foto,

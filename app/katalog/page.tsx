@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { bacaDaftarTemplatAktif } from "@/lib/tokoData";
 import FilterKatalog from "@/komponen/FilterKatalog";
 
@@ -5,6 +6,12 @@ import FilterKatalog from "@/komponen/FilterKatalog";
 // Dinamis dengan alasan yang sama seperti landing: database runtime bisa
 // berubah tanpa rebuild, jadi katalog harus selalu dibaca segar.
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Katalog Template — UndanganKita",
+  description:
+    "Pilih templat undangan digital untuk pernikahan, aqiqah, wisuda, dan syukuran — semuanya bisa dipakai di paket apa pun.",
+};
 
 export default async function Katalog() {
   const daftarTemplat = await bacaDaftarTemplatAktif();

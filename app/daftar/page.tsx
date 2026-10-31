@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { daftarPengguna } from "@/lib/aksiOtentikasi";
 import { lanjutAman } from "@/lib/lanjut";
+
+export const metadata: Metadata = {
+  title: "Daftar — UndanganKita",
+  description: "Buat akun UndanganKita gratis dan mulai membuat undangan digital pertamamu.",
+};
 
 // Halaman daftar pengguna biasa. Kata sandi minimal 8 karakter dan
 // langsung di-hash sebelum disimpan; akun baru berperang "pengguna".

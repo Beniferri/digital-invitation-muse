@@ -30,7 +30,10 @@ Masih bolong (ini yang diselesaikan rencana ini):
 - Database masih SQLite berkas lokal + foto sampul di dalam container
   (selesai di kode Tahap 4: backend Postgres opsional + foto ke volume
   /data; verifikasi Postgres sungguhan dan redeploy masih tertunda)
-- Belum ada halaman syarat/ketentuan, privasi, dan bantuan (Tahap 5)
+- Belum ada halaman syarat/ketentuan, privasi, dan bantuan
+  (selesai di kode Tahap 5; uji beta + checklist peluncuran masih
+  menunggu tindakan manusia, dan kriteria "satu pelanggan bukan penguji
+  internal membeli + RSVP masuk" belum terjadi)
 
 ## Tahap 1 — Editor yang benar-benar menyimpan (inti produk) — SELESAI 31 Okt 2026
 
@@ -267,21 +270,67 @@ itu BELUM terpenuhi penuh: Tahap 4 selesai di kode, bukan selesai
 di produksi. Tahap 5 boleh jalan tanpa menunggu Postgres, karena
 SQLite tetap didukung penuh.
 
-## Tahap 5 — Rilis
+## Tahap 5 — Rilis — SELESAI DI KODE 31 Okt 2026, BELUM di-push; uji beta + checklist peluncuran menunggu tindakan manusia (lihat DAFTAR-PELUNCURAN.md)
 
 Tujuan: produk bisa diumumkan tanpa malu-malu dan tanpa kejutan di hari
 pertama pelanggan bayar.
 
-- Halaman syarat & ketentuan, kebijakan privasi, dan bantuan/kontak
-- SEO dasar: metadata tiap halaman utama, sitemap, dan pratinjau tautan
-  (Open Graph) untuk halaman tamu
-- Uji beta dengan 3–5 pengguna nyata (keluarga/teman): mereka membuat
-  undangan sungguhan, membagikan, dan RSVP dari HP; semua temuan
-  diperbaiki sebelum pengumuman
-- Checklist peluncuran: Midtrans produksi, cadangan jalan, monitoring
-  Coolify aktif, harga final, dan akun admin cadangan
-- Kriteria selesai: satu pelanggan yang bukan penguji internal berhasil
-  membeli paket dan membagikan undangan yang RSVP-nya masuk
+Yang dibangun (31 Okt 2026):
+
+- **Halaman legal dan bantuan (statis, kecuali Bantuan):** `/syarat`
+  (Syarat & Ketentuan), `/privasi` (Kebijakan Privasi), `/bantuan`
+  (panduan + masalah umum + kontak). Isinya ditulis sesuai perilaku
+  produk yang sebenarnya, bukan templat generik: Draft gratis, Aktif
+  butuh langganan, langganan baru menggantikan yang lama, pembayaran
+  lewat Midtrans tanpa nomor kartu tersimpan, pengembalian dana manual,
+  pesan RSVP tampil publik bagi pemegang tautan, cookie hanya sesi
+  login 8 jam, hash IP RSVP terhapus setelah 1 jam, tidak ada pelacak
+  iklan/analitik. `/bantuan` sengaja `force-dynamic` karena bagian
+  Kontaknya membaca environment `DUKUNGAN_EMAIL` /
+  `DUKUNGAN_WHATSAPP_URL` saat request — kalau keduanya belum dipasang,
+  halaman menampilkan pemberitahuan jujur bahwa kontak belum diumumkan,
+  dan itu adalah item BLOKIR di checklist peluncuran.
+- **SEO dasar:** metadataBase + Open Graph + Twitter card di layout
+  (juga metadata Beranda); metadata per halaman untuk Katalog, Editor,
+  Masuk, Daftar, Syarat, Privasi, Bantuan; `app/sitemap.ts` (hanya
+  halaman publik yang layak diindeks) dan `app/robots.ts` (larang
+  /admin, /akun, /api, /u — undangan tamu bersifat pribadi); Open Graph
+  dinamis untuk halaman tamu lewat `generateMetadata` (judul nama +
+  jenis acara, deskripsi tanggal/lokasi + ajakan RSVP hanya kalau
+  status Aktif, foto undangan/sampul kalau ada — SENGAJA tanpa foto
+  picsum cadangan supaya pratinjau tidak menampilkan foto stok acak).
+  Alamat situs dari `SITUS_URL` (fallback domain produksi saat ini).
+- **Perbaikan salinan basi (kejujuran peluncuran):** footer tidak lagi
+  mengklaim "belum ada pembayaran sungguhan" (salah sejak Tahap 2) dan
+  kini menautkan Syarat/Privasi/Bantuan; dua jawaban FAQ landing yang
+  sudah salah diperbaiki (edit data undangan: belum bisa, hapus dan
+  buat ulang; biaya tersembunyi: tidak ada, pembayaran lewat Midtrans).
+- **Checklist peluncuran (`DAFTAR-PELUNCURAN.md`):** gerbang pengumuman
+  dengan item BLOKIR yang jelas — Midtrans Production + satu uji beli
+  sungguhan, kontak dukungan, cron cadangan + uji pulih di salinan,
+  healthcheck Coolify, harga final, akun admin cadangan, uji beta 3–5
+  pengguna nyata (tugas langkah demi langkah dari HP, termasuk beli
+  Hemat Rp 49.000 dengan tawaran ganti rugi manual), smoke test akhir,
+  dan kriteria selesai. Yang sengaja TIDAK memblokir: pindah Postgres
+  dan fitur setelah rilis.
+
+Catatan pengujian Tahap 5 (31 Okt 2026): build lolos (/bantuan
+dinamis, /syarat + /privasi statis, /sitemap.xml + /robots.txt ada);
+server produksi lokal: /syarat + /privasi + /bantuan 200 dengan isi
+yang benar (Midtrans, scrypt, pemberitahuan kontak belum diumumkan
+saat env kosong); sitemap berisi halaman legal tanpa /u dan /admin;
+robots melarang /admin, /akun, /api, /u; OG tamu Aktif berjudul nama +
+jenis acara dengan deskripsi ajakan RSVP dan TANPA og:image picsum
+saat tidak ada foto; OG tamu Selesai memakai deskripsi "Lihat detail"
+(bukan ajakan RSVP); tamu Draft 404 tanpa nama bocor di og:title;
+footer menautkan Syarat/Privasi/Bantuan dan tidak ada lagi klaim basi
+di beranda; judul metadata per halaman (Katalog, Editor, Masuk,
+Daftar) benar; /bantuan dengan DUKUNGAN_EMAIL menampilkan mailto dan
+pemberitahuan "belum diumumkan" hilang. Yang BELUM terverifikasi dan
+TIDAK BOLEH diklaim selesai: uji beta (butuh manusia), checklist
+peluncuran (butuh tindakan manusia di Coolify/Midtrans), dan kriteria
+selesai (satu pelanggan bukan penguji internal membeli + RSVP masuk).
+Tahap 5 selesai di kode, bukan selesai di pasar.
 
 ## Setelah rilis (sengaja bukan bagian dari "selesai")
 

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import FormulirEditor from "@/komponen/FormulirEditor";
 import { bacaDaftarTemplatAktif } from "@/lib/tokoData";
@@ -8,6 +9,12 @@ import { tambahUndanganDariEditor } from "@/lib/aksiPengguna";
 // Dinamis dengan alasan yang sama seperti landing: daftar template harus
 // dibaca segar dari database runtime, bukan dari hasil build.
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Editor Undangan — UndanganKita",
+  description:
+    "Pilih templat, isi nama, tanggal, dan lokasi, lalu simpan undanganmu. Gratis untuk draf; aktifkan dengan paket saat siap dibagikan.",
+};
 
 // Pesan galat dari server action simpan (lihat tambahUndanganDariEditor).
 // Draf teks pengguna tetap ada di localStorage perangkatnya, jadi ia bisa

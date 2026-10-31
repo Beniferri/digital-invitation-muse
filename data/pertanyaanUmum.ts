@@ -1,5 +1,7 @@
 // Pertanyaan yang paling sering ditanyakan calon pengguna non-teknis.
-// Jawabannya singkat, jujur soal batas MVP, dan tanpa janji berlebihan.
+// Jawabannya singkat, sesuai perilaku produk saat ini, dan tanpa janji
+// berlebihan. Kalau perilaku produk berubah, jawaban di sini wajib
+// diperbarui bersamaan (lihat juga halaman Bantuan untuk panduan lengkap).
 
 export interface PertanyaanUmum {
   pertanyaan: string;
@@ -25,11 +27,11 @@ export const daftarPertanyaanUmum: PertanyaanUmum[] = [
   {
     pertanyaan: "Bisakah saya mengganti foto dan data setelah undangan dibagikan?",
     jawaban:
-      "Di editor demo ini, perubahan hanya terlihat sebagai pratinjau dan akan hilang kalau halaman dimuat ulang. Pada versi lengkapnya, perubahan di paket Populer dan Keluarga Besar bisa dilakukan tanpa batas selama masa aktif.",
+      "Belum bisa. Nama, tanggal, lokasi, dan foto yang sudah disimpan belum bisa diubah — yang bisa diubah dari dasbor adalah status undangan (Draft, Aktif, Selesai) dan menghapus undangan. Kalau ada kesalahan ketik, hapus undangan itu dan buat ulang selama slot paketmu masih tersedia.",
   },
   {
     pertanyaan: "Apakah ada biaya tersembunyi di luar harga paket?",
     jawaban:
-      "Tidak. Harga yang tertera adalah harga paketnya. Pada prototipe ini belum ada pembayaran sungguhan, jadi tombol harga mengarahkanmu ke editor untuk mencoba dulu.",
+      "Tidak. Harga yang tertera adalah harga yang kamu bayar untuk paket itu. Pembayaran diproses lewat Midtrans, dan UndanganKita tidak menambahkan biaya lain di luar harga paket.",
   },
 ];
