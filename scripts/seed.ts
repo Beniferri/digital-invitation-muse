@@ -18,6 +18,7 @@ interface TokoLama {
     nuansa: string;
     deskripsi: string;
     aktif: boolean;
+    halamanPenuh?: boolean;
     gaya: unknown;
     contoh: unknown;
     fotoSampul?: string | null;
@@ -50,13 +51,14 @@ async function utama() {
     const sudahAda = await satuBaris<Baris>("SELECT id FROM templat WHERE slug = ?", templat.slug);
     if (sudahAda) {
       await jalankan(
-        "UPDATE templat SET nama = ?, jenis_acara = ?, warna = ?, nuansa = ?, deskripsi = ?, aktif = ?, gaya_json = ?, contoh_json = ?, foto_sampul = ?, diubah_pada = ? WHERE slug = ?",
+        "UPDATE templat SET nama = ?, jenis_acara = ?, warna = ?, nuansa = ?, deskripsi = ?, aktif = ?, halaman_penuh = ?, gaya_json = ?, contoh_json = ?, foto_sampul = ?, diubah_pada = ? WHERE slug = ?",
         templat.nama,
         templat.jenisAcara,
         templat.warna,
         templat.nuansa,
         templat.deskripsi,
         templat.aktif ? 1 : 0,
+        templat.halamanPenuh ? 1 : 0,
         JSON.stringify(templat.gaya),
         JSON.stringify(templat.contoh),
         templat.fotoSampul ?? null,
@@ -65,7 +67,7 @@ async function utama() {
       );
     } else {
       await jalankan(
-        "INSERT INTO templat (id, slug, nama, jenis_acara, warna, nuansa, deskripsi, aktif, gaya_json, contoh_json, foto_sampul, dibuat_pada, diubah_pada) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO templat (id, slug, nama, jenis_acara, warna, nuansa, deskripsi, aktif, halaman_penuh, gaya_json, contoh_json, foto_sampul, dibuat_pada, diubah_pada) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         idBaru(),
         templat.slug,
         templat.nama,
@@ -74,6 +76,7 @@ async function utama() {
         templat.nuansa,
         templat.deskripsi,
         templat.aktif ? 1 : 0,
+        templat.halamanPenuh ? 1 : 0,
         JSON.stringify(templat.gaya),
         JSON.stringify(templat.contoh),
         templat.fotoSampul ?? null,

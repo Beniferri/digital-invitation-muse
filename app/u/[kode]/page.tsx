@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { existsSync } from "fs";
+import path from "path";
 import { bacaDaftarRsvp, bacaDaftarTemplat, bacaRingkasanRsvp, cariUndanganOlehKode } from "@/lib/tokoData";
 import { periksaKedaluwarsaPengguna } from "@/lib/langganan";
 import { formatTanggalIndonesia } from "@/lib/format";
@@ -9,6 +11,7 @@ import { urlAbsolut, urlSitus } from "@/lib/situs";
 import PratinjauUndangan from "@/komponen/PratinjauUndangan";
 import FormulirRsvp from "@/komponen/FormulirRsvp";
 import BagikanUndangan from "@/komponen/BagikanUndangan";
+import UndanganZamrud from "@/komponen/UndanganZamrud";
 
 export const dynamic = "force-dynamic";
 
@@ -109,6 +112,37 @@ export default async function HalamanTamu({
   const host = daftarHeader.get("x-forwarded-host") ?? daftarHeader.get("host") ?? "localhost:3000";
   const protokol = daftarHeader.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
   const tautanTamu = `${protokol}://${host}/u/${undangan.kodeTamu}`;
+
+  // Templat halaman penuh (Zamrud) memakai perendernya sendiri, bukan
+  // kartu pratinjau + formulir standar di bawah. Musik hanya ditawarkan
+  // kalau berkasnya benar-benar ada di public/musik.
+  if (templat.halamanPenuh) {
+    const musikAda = existsSync(path.join(process.cwd(), "public", "musik", "zamrud.mp3"));
+    return (
+      <UndanganZamrud
+        data={{
+          namaPertama: undangan.namaPertama,
+          namaKedua: undangan.namaKedua,
+          jenisAcara: undangan.jenisAcara,
+          tanggal: undangan.tanggal,
+          lokasi: undangan.lokasi,
+          fotoUndangan: undangan.fotoUndangan,
+          fotoSampul: templat.fotoSampul ?? null,
+          orangTuaPertama: undangan.orangTuaPertama,
+          orangTuaKedua: undangan.orangTuaKedua,
+          statusAktif: undangan.status === "Aktif",
+          rsvpTerkirim: searchParams.rsvp === "terkirim",
+          pesanGalat: galat,
+          kodeTamu: undangan.kodeTamu,
+          waktuMuat: Date.now(),
+          tautan: tautanTamu,
+          musikSrc: musikAda ? "/musik/zamrud.mp3" : null,
+          ringkasan,
+          ucapan,
+        }}
+      />
+    );
+  }
 
   return (
     <div className="mx-auto max-w-md px-4 py-8 sm:py-10">

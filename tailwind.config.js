@@ -45,6 +45,10 @@ module.exports = {
       fontFamily: {
         sans: ["var(--huruf-sans)", "system-ui", "sans-serif"],
         serif: ["var(--huruf-serif)", "Georgia", "serif"],
+        // Huruf script untuk nama pasangan di templat Zamrud (Great Vibes,
+        // dimuat lewat next/font di komponennya, variabelnya ditempel di
+        // elemen akar komponen itu).
+        script: ["var(--huruf-script)", "cursive"],
       },
       boxShadow: {
         kaca: "0 18px 45px rgba(110, 42, 24, 0.14)",

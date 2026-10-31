@@ -24,6 +24,8 @@ export interface UndanganAdmin {
   kodeTamu: string;
   penggunaId: string | null;
   fotoUndangan: string | null;
+  orangTuaPertama: string;
+  orangTuaKedua: string;
 }
 
 export type KehadiranRsvp = "Hadir" | "Tidak" | "Ragu";
@@ -62,6 +64,7 @@ function petakanTemplat(baris: Baris): Templat {
     nuansa: String(baris.nuansa) as Templat["nuansa"],
     deskripsi: String(baris.deskripsi),
     aktif: Number(baris.aktif) === 1,
+    halamanPenuh: Number(baris.halaman_penuh) === 1 || baris.halaman_penuh === true,
     gaya: JSON.parse(String(baris.gaya_json)) as Templat["gaya"],
     contoh: JSON.parse(String(baris.contoh_json)) as ContohUndangan,
     fotoSampul: (baris.foto_sampul as string | null) ?? null,
@@ -93,6 +96,8 @@ function petakanUndangan(baris: Baris): UndanganAdmin {
     kodeTamu: String(baris.kode_tamu ?? ""),
     penggunaId: (baris.pengguna_id as string | null) ?? null,
     fotoUndangan: (baris.foto_undangan as string | null) ?? null,
+    orangTuaPertama: String(baris.orang_tua_pertama ?? ""),
+    orangTuaKedua: String(baris.orang_tua_kedua ?? ""),
   };
 }
 

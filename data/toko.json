@@ -80,6 +80,35 @@
         "kutipan": "Gelar boleh selesai, tapi belajar dan silaturahmi jangan sampai berhenti di sini.",
         "catatan": "Ada makan siang bersama setelah prosesi. Boleh ajak satu teman atau anggota keluarga."
       }
+    },
+    {
+      "slug": "zamrud-pernikahan",
+      "nama": "Zamrud",
+      "jenisAcara": "Pernikahan",
+      "warna": "Hijau",
+      "nuansa": "Islami",
+      "aktif": true,
+      "halamanPenuh": true,
+      "fotoSampul": "/templat/zamrud/masjid.jpg",
+      "deskripsi": "Undangan pernikahan halaman penuh bernuansa islami: sampul pembuka dengan musik, panel hero yang tetap di desktop, hitung mundur live, galeri dengan lightbox, dan RSVP — dalam palet hijau zamrud, krem, dan emas.",
+      "gaya": {
+        "latar": "bg-emerald-950",
+        "kartu": "rounded-[2rem]",
+        "aksen": "text-emas-300",
+        "aksenLembut": "bg-emas-300/20",
+        "bentuk": "kotak-bulat",
+        "pola": "garis"
+      },
+      "contoh": {
+        "judulAcara": "Akad Nikah dan Resepsi",
+        "namaPertama": "Aisyah Putri Maharani",
+        "namaKedua": "Raka Aditya Pratama",
+        "tanggal": "2027-02-20",
+        "lokasi": "Masjid Agung, Yogyakarta",
+        "salamPembuka": "Dengan penuh syukur dan doa dari kedua keluarga, kami mengundang Bapak, Ibu, dan Saudara/i tercinta untuk hadir dan mendoakan kami.",
+        "kutipan": "Semoga pernikahan ini menjadi awal dari keluarga yang penuh ketenangan, kasih sayang, dan keberkahan.",
+        "catatan": "Kehadiranmu sudah jadi hadiah. Kalau mau memberi doa lewat bingkisan, kabari kami dulu ya."
+      }
     }
   ],
   "undangan": [

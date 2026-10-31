@@ -40,6 +40,9 @@ export interface Templat {
   deskripsi: string;
   // Dipakai dasbor admin: templat nonaktif disembunyikan dari situs publik.
   aktif: boolean;
+  // Kalau true, halaman tamu memakai perender halaman penuh (Zamrud),
+  // bukan kartu pratinjau biasa. Disimpan di kolom templat.halaman_penuh.
+  halamanPenuh: boolean;
   // Jalur foto sampul dari penyimpanan (misalnya /unggahan/xxx.jpg).
   // Kosong berarti pakai foto placeholder seperti sebelumnya.
   fotoSampul?: string | null;
@@ -63,6 +66,7 @@ export const daftarTemplat: Templat[] = [
     warna: "Emas",
     nuansa: "Tradisional",
     aktif: true,
+    halamanPenuh: false,
     deskripsi:
       "Untuk akad nikah dan resepsi yang hangat dan khidmat. Lengkung atasnya mengingatkan pada gerbang pendopo, dengan garis parang yang halus di pinggir kartu.",
     gaya: {
@@ -94,6 +98,7 @@ export const daftarTemplat: Templat[] = [
     warna: "Hijau",
     nuansa: "Islami",
     aktif: true,
+    halamanPenuh: false,
     deskripsi:
       "Untuk aqiqah dan syukuran kelahiran yang lembut dan teduh. Kartu kacanya dibingkai bunga melati kecil, dengan hijau sage yang menenangkan mata.",
     gaya: {
@@ -125,6 +130,7 @@ export const daftarTemplat: Templat[] = [
     warna: "Terakota",
     nuansa: "Modern",
     aktif: true,
+    halamanPenuh: false,
     deskripsi:
       "Untuk syukuran wisuda dan ulang tahun yang ceria tapi tetap rapi. Tata letaknya asimetris, cahayanya hangat seperti sore hari, dan teksnya mudah dibaca.",
     gaya: {
@@ -147,6 +153,39 @@ export const daftarTemplat: Templat[] = [
         "Gelar boleh selesai, tapi belajar dan silaturahmi jangan sampai berhenti di sini.",
       catatan:
         "Ada makan siang bersama setelah prosesi. Boleh ajak satu teman atau anggota keluarga.",
+    },
+  },
+  {
+    slug: "zamrud-pernikahan",
+    nama: "Zamrud",
+    jenisAcara: "Pernikahan",
+    warna: "Hijau",
+    nuansa: "Islami",
+    aktif: true,
+    halamanPenuh: true,
+    fotoSampul: "/templat/zamrud/masjid.jpg",
+    deskripsi:
+      "Undangan pernikahan halaman penuh bernuansa islami: sampul pembuka dengan musik, panel hero yang tetap di desktop, hitung mundur live, galeri dengan lightbox, dan RSVP — dalam palet hijau zamrud, krem, dan emas.",
+    gaya: {
+      latar: "bg-emerald-950",
+      kartu: "rounded-[2rem]",
+      aksen: "text-emas-300",
+      aksenLembut: "bg-emas-300/20",
+      bentuk: "kotak-bulat",
+      pola: "garis",
+    },
+    contoh: {
+      judulAcara: "Akad Nikah dan Resepsi",
+      namaPertama: "Aisyah Putri Maharani",
+      namaKedua: "Raka Aditya Pratama",
+      tanggal: "2027-02-20",
+      lokasi: "Masjid Agung, Yogyakarta",
+      salamPembuka:
+        "Dengan penuh syukur dan doa dari kedua keluarga, kami mengundang Bapak, Ibu, dan Saudara/i tercinta untuk hadir dan mendoakan kami.",
+      kutipan:
+        "Semoga pernikahan ini menjadi awal dari keluarga yang penuh ketenangan, kasih sayang, dan keberkahan.",
+      catatan:
+        "Kehadiranmu sudah jadi hadiah. Kalau mau memberi doa lewat bingkisan, kabari kami dulu ya.",
     },
   },
 ];

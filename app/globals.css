@@ -82,6 +82,22 @@ body {
   animation: naik-halus 0.5s ease-out both;
 }
 
+/* Reveal saat seksi masuk layar (templat Zamrud): elemen ber-atribut
+   data-tampil mulai transparan dan bergeser ke bawah, lalu pengamat
+   IntersectionObserver di komponen menambahkan kelas tampil-aktif.
+   Efek ini butuh JavaScript — wajar untuk halaman undangan interaktif
+   penuh (sampul, musik, hitung mundur, dan lightbox juga begitu). */
+.tampil {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.tampil.tampil-aktif {
+  opacity: 1;
+  transform: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

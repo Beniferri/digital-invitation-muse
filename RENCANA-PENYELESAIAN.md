@@ -409,3 +409,61 @@ berubah. Tes: tsc + build lolos, HTML beranda memuat tombol hamburger
 hilang di tengah pengujian — DB uji kini di ~/workspace/dasbor-uji/
 (supaya awet) dan pemeriksaan server-wajib-hidup dulu sebelum klaim
 lulus, supaya hasil kosong tidak terbaca sebagai lulus.
+
+## Templat halaman penuh Zamrud (31 Okt 2026, SELESAI DI KODE, BELUM di-push)
+
+Replika pengalaman referensi wedding.benifin.my.id sebagai opsi template
+baru — dibangun ulang dengan kode dan aset sendiri, bukan salinan
+kode/foto/musik/data referensi. Koreksi penting dari analisa: opening
+referensi ternyata bukan animasi amplop sinematik, melainkan sampul
+layar penuh + reveal + musik saat tombol ditekan; Zamrud memakai pola
+yang sama (sampul fade+zoom 750ms + musik mulai saat dibuka).
+Isi: sampul (The Wedding Of, nama script, tanggal, Tamu Undangan),
+panel hero tetap di desktop + hero ponsel, mempelai (monogram +
+nama orang tua), ayat & doa (Basmalah + teks bingkai orisinal),
+acara (Maps + Google Calendar), hitung mundur live per detik,
+busana (4 swatch Zamrud/Sage/Champagne/Ivory), galeri geser +
+lightbox (sebelum/sesudah, unduh, Escape), RSVP (aksi kirimRsvp yang
+sama + anti-spam), ucapan & doa dari RSVP, penutup + bagikan
+(WhatsApp + salin tautan). Aset baru: 4 gambar AI tanpa orang
+(public/templat/zamrud: masjid, galeri-bunga, galeri-lentera,
+galeri-arsitektur) + musik instrumental hasil Ace Music
+(public/musik/zamrud.mp3, ~833 KB, loop; tombol musik hanya tampil
+kalau berkasnya ada, dicek halaman tamu lewat fs).
+Perubahan data: kolom templat.halaman_penuh + undangan.orang_tua_*
+(migrasi + skema), seed upsert diperbarui, skrip baru
+scripts/tambah-templat-baru.mjs (hanya INSERT yang belum ada, tanpa
+menimpa edit admin) yang dipanggil entrypoint Docker setiap start —
+inilah yang memunculkan Zamrud di produksi setelah redeploy (seed
+penuh dilewati kalau DB sudah berisi). Editor: kolom orang tua hanya
+muncul kalau template halaman penuh dipilih. Navigasi situs global
+tetap tampil di atas undangan Zamrud (konsisten dengan halaman tamu
+lama); drawer menu undangan + tombol musik mengambang di kanan bawah.
+Yang SENGAJA belum ada di v1 (butuh kolom data baru, bukan teks
+karangan): kisah perjalanan dan tanda kasih (rekening) — lanjutan
+yang direncanakan, bukan diisi data palsu. Tes: tsc + build lolos;
+server DB uji (salinan dev.db lama): semua penanda halaman Zamrud
+hadir (sampul, nama, orang tua, hitung mundur, busana, galeri, RSVP,
+ucapan, musik, gambar), halaman kartu lama + Draft 404 + katalog +
+editor tetap jalan, musik/gambar 200. Catatan pengujian: perintah
+`cd ... && server &` membackground seluruh rantai — server tetap
+jalan, tapi cek dev.db terakhir salah direktori; dev.db diverifikasi
+terpisah tetap 69.632 byte, mtime 13:09.
+
+## Koreksi opening Zamrud: splash intro (31 Okt 2026, BELUM di-push)
+
+Pengecekan desktop pertama melewatkan splash intro referensi; screenshot
+pengguna + pengecekan ulang membuktikan urutan sebenarnya: layar hijau
+zamrud gelap kosong -> splash monogram serif besar + nama script
+tengah (fade-in satu blok, tanpa foto/ornamen/tombol) -> splash memudar
+sendiri sementara sampul di bawahnya mencerah (cross-dissolve, total
+~2 detik) -> sampul (nama serif bertumpuk, kartu tamu gelap, tombol
+pil gelap berikon amplop) -> tekan Buka Undangan: fade/reveal cepat +
+musik mulai. Zamrud disesuaikan persis urutan itu (tahap
+intro -> sampul -> membuka -> terbuka; sampul redup selama intro).
+Verdict mobile referensi dari pengecekan ulang: kolom tunggal rapi,
+tidak ada yang meluber; countdown tetap 4 kotak sebaris (sempit tapi
+terbaca di 390px); teks timeline sempat tampak samar sesaat saat
+fade-in (normal, bukan rusak). Catatan: browser uji tidak bisa
+mengatur viewport 390px persis — cek perangkat sungguhan tetap
+disarankan sebelum meniru layout mentah-mentah.

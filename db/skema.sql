@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS templat (
   nuansa TEXT NOT NULL,
   deskripsi TEXT NOT NULL DEFAULT '',
   aktif INTEGER NOT NULL DEFAULT 1,
+  halaman_penuh INTEGER NOT NULL DEFAULT 0,
   gaya_json TEXT NOT NULL,
   contoh_json TEXT NOT NULL,
   foto_sampul TEXT,
@@ -45,7 +46,9 @@ CREATE TABLE IF NOT EXISTS undangan (
   slug_templat TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'Draft',
   dibuat_pada TEXT NOT NULL,
-  pengguna_id TEXT REFERENCES pengguna(id) ON DELETE SET NULL
+  pengguna_id TEXT REFERENCES pengguna(id) ON DELETE SET NULL,
+  orang_tua_pertama TEXT NOT NULL DEFAULT '',
+  orang_tua_kedua TEXT NOT NULL DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS paket_harga (
   id TEXT PRIMARY KEY,

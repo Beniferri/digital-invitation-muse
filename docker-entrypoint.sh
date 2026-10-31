@@ -17,4 +17,9 @@ else
   echo "Database sudah berisi, seed dilewati."
 fi
 
+# Template baru dari repo (mis. Zamrud) ditambahkan kalau belum ada, tanpa
+# mengubah template yang sudah ada — jadi redeploy cukup untuk memunculkan
+# template baru di produksi. Kegagalan di sini hanya peringatan, bukan fatal.
+node scripts/tambah-templat-baru.mjs || echo "Peringatan: sinkronisasi template baru gagal, aplikasi tetap dijalankan."
+
 exec npm run start

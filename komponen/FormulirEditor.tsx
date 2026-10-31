@@ -31,6 +31,9 @@ interface DrafEditor {
   namaKedua: string;
   tanggal: string;
   lokasi: string;
+  // Nama orang tua hanya dipakai templat halaman penuh (Zamrud).
+  orangTuaPertama?: string;
+  orangTuaKedua?: string;
 }
 
 export default function FormulirEditor({
@@ -50,6 +53,8 @@ export default function FormulirEditor({
   const [templatTerpilih, setTemplatTerpilih] = useState(templatAwal);
   const [namaPertama, setNamaPertama] = useState(templatAwal?.contoh.namaPertama ?? "");
   const [namaKedua, setNamaKedua] = useState(templatAwal?.contoh.namaKedua ?? "");
+  const [orangTuaPertama, setOrangTuaPertama] = useState("");
+  const [orangTuaKedua, setOrangTuaKedua] = useState("");
   const [tanggal, setTanggal] = useState(templatAwal?.contoh.tanggal ?? "");
   const [lokasi, setLokasi] = useState(templatAwal?.contoh.lokasi ?? "");
   const [fotoUrl, setFotoUrl] = useState(templatAwal?.fotoSampul ?? "https://picsum.photos/seed/undangan-editor/800/1000");
@@ -79,6 +84,8 @@ export default function FormulirEditor({
             setNamaKedua(namaKeduaDraf);
             setTanggal(tanggalDraf);
             setLokasi(lokasiDraf);
+            setOrangTuaPertama(draf.orangTuaPertama ?? "");
+            setOrangTuaKedua(draf.orangTuaKedua ?? "");
             setFotoUrl(templatDraf.fotoSampul ?? "https://picsum.photos/seed/undangan-editor/800/1000");
             // Catatan hanya tampil kalau draf benar-benar berbeda dari contoh,
             // supaya kunjungan pertama (draf berisi nilai contoh) tidak
@@ -111,12 +118,14 @@ export default function FormulirEditor({
         namaKedua,
         tanggal,
         lokasi,
+        orangTuaPertama,
+        orangTuaKedua,
       };
       window.localStorage.setItem(KUNCI_DRAF, JSON.stringify(draf));
     } catch {
       // Penyimpanan perangkat penuh atau diblokir: editor tetap jalan.
     }
-  }, [sudahDimuat, templatTerpilih, namaPertama, namaKedua, tanggal, lokasi]);
+  }, [sudahDimuat, templatTerpilih, namaPertama, namaKedua, tanggal, lokasi, orangTuaPertama, orangTuaKedua]);
 
   // Bersihkan object URL saat komponen dilepas, supaya tidak membebani peramban.
   useEffect(() => {
@@ -133,6 +142,8 @@ export default function FormulirEditor({
     setNamaKedua(templat.contoh.namaKedua);
     setTanggal(templat.contoh.tanggal);
     setLokasi(templat.contoh.lokasi);
+    setOrangTuaPertama("");
+    setOrangTuaKedua("");
     if (fotoLokalRef.current) URL.revokeObjectURL(fotoLokalRef.current);
     fotoLokalRef.current = null;
     setNamaBerkasFoto("");
@@ -159,6 +170,8 @@ export default function FormulirEditor({
     setNamaKedua(templatTerpilih.contoh.namaKedua);
     setTanggal(templatTerpilih.contoh.tanggal);
     setLokasi(templatTerpilih.contoh.lokasi);
+    setOrangTuaPertama("");
+    setOrangTuaKedua("");
     setDrafDipulihkan(false);
   }
 
@@ -233,6 +246,37 @@ export default function FormulirEditor({
               className={gayaInput}
             />
           </div>
+
+          {templatTerpilih.halamanPenuh && (
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="orang-tua-pertama" className="text-sm font-bold">
+                  Nama orang tua pertama <span className="font-semibold text-tintaLembut">(opsional)</span>
+                </label>
+                <input
+                  id="orang-tua-pertama"
+                  name="orangTuaPertama"
+                  value={orangTuaPertama}
+                  onChange={(acara) => setOrangTuaPertama(acara.target.value)}
+                  placeholder="Contoh: Bapak Ahmad Fauzan dan Ibu Siti Rahmawati"
+                  className={gayaInput}
+                />
+              </div>
+              <div>
+                <label htmlFor="orang-tua-kedua" className="text-sm font-bold">
+                  Nama orang tua kedua <span className="font-semibold text-tintaLembut">(opsional)</span>
+                </label>
+                <input
+                  id="orang-tua-kedua"
+                  name="orangTuaKedua"
+                  value={orangTuaKedua}
+                  onChange={(acara) => setOrangTuaKedua(acara.target.value)}
+                  placeholder="Contoh: Bapak H. Abdul Hakim dan Ibu Hj. Nur Aini"
+                  className={gayaInput}
+                />
+              </div>
+            </div>
+          )}
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>

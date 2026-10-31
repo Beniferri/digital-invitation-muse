@@ -106,7 +106,7 @@ export async function tambahUndanganDariEditor(formulir: FormData) {
     kodeTamu = buatKodeTamu();
   }
   await jalankan(
-    "INSERT INTO undangan (id, nama_pertama, nama_kedua, jenis_acara, tanggal, lokasi, slug_templat, status, dibuat_pada, pengguna_id, kode_tamu, foto_undangan) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    "INSERT INTO undangan (id, nama_pertama, nama_kedua, jenis_acara, tanggal, lokasi, slug_templat, status, dibuat_pada, pengguna_id, kode_tamu, foto_undangan, orang_tua_pertama, orang_tua_kedua) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     idBaru(),
     namaPertama,
     teks(formulir, "namaKedua"),
@@ -119,6 +119,8 @@ export async function tambahUndanganDariEditor(formulir: FormData) {
     sesi.id,
     kodeTamu,
     fotoUndangan,
+    teks(formulir, "orangTuaPertama"),
+    teks(formulir, "orangTuaKedua"),
   );
   revalidatePath("/akun", "page");
   redirect("/akun?dari=editor");

@@ -298,6 +298,7 @@ async function dapatkanBackend(): Promise<Backend> {
       await backend.siapkan();
       await migrasiUndangan(backend);
       await migrasiPembayaran(backend);
+      await migrasiTemplat(backend);
     })();
   }
   await globalUntukDb.siap;
@@ -327,6 +328,13 @@ async function migrasiUndangan(backend: Backend): Promise<void> {
   if (!(await backend.kolomAda("undangan", "foto_undangan"))) {
     await backend.tulis("ALTER TABLE undangan ADD COLUMN foto_undangan TEXT", []);
   }
+  // Nama orang tua (opsional, dipakai templat halaman penuh Zamrud).
+  if (!(await backend.kolomAda("undangan", "orang_tua_pertama"))) {
+    await backend.tulis("ALTER TABLE undangan ADD COLUMN orang_tua_pertama TEXT NOT NULL DEFAULT ''", []);
+  }
+  if (!(await backend.kolomAda("undangan", "orang_tua_kedua"))) {
+    await backend.tulis("ALTER TABLE undangan ADD COLUMN orang_tua_kedua TEXT NOT NULL DEFAULT ''", []);
+  }
   const tanpaKode = await backend.semua(
     "SELECT id FROM undangan WHERE kode_tamu IS NULL OR kode_tamu = ''",
     [],
@@ -337,6 +345,17 @@ async function migrasiUndangan(backend: Backend): Promise<void> {
       kode = buatKodeTamu();
     }
     await backend.tulis("UPDATE undangan SET kode_tamu = ? WHERE id = ?", [kode, String(baris.id)]);
+  }
+}
+
+/**
+ * Migrasi ringan untuk templat halaman penuh (Zamrud): tambah kolom
+ * halaman_penuh kalau belum ada. Database baru langsung punya kolom ini
+ * dari skema, jadi migrasi ini biasanya tidak mengubah apa-apa.
+ */
+async function migrasiTemplat(backend: Backend): Promise<void> {
+  if (!(await backend.kolomAda("templat", "halaman_penuh"))) {
+    await backend.tulis("ALTER TABLE templat ADD COLUMN halaman_penuh INTEGER NOT NULL DEFAULT 0", []);
   }
 }
 
