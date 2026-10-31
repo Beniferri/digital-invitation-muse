@@ -11,6 +11,7 @@ import { urlAbsolut, urlSitus } from "@/lib/situs";
 import PratinjauUndangan from "@/komponen/PratinjauUndangan";
 import FormulirRsvp from "@/komponen/FormulirRsvp";
 import BagikanUndangan from "@/komponen/BagikanUndangan";
+import BarKonfirmasi from "@/komponen/BarKonfirmasi";
 import UndanganZamrud from "@/komponen/UndanganZamrud";
 
 export const dynamic = "force-dynamic";
@@ -156,8 +157,13 @@ export default async function HalamanTamu({
     );
   }
 
+  // Jalur kartu (templat lama): tidak ada sampul, jadi bar konfirmasi
+  // tampil begitu halaman dibuka selama RSVP masih dibuka. Bantalan bawah
+  // menjaga penutup tidak tertutup bar.
+  const barTampil = undangan.status === "Aktif";
   return (
-    <div className="mx-auto max-w-md px-4 py-8 sm:py-10">
+    <div className={`mx-auto max-w-md px-4 py-8 sm:py-10 ${barTampil ? "pb-28" : ""}`}>
+      <BarKonfirmasi tampil={barTampil} />
       <p className="text-center text-sm font-bold uppercase tracking-widest text-tintaLembut">
         Undangan · {undangan.jenisAcara}
       </p>
@@ -207,7 +213,7 @@ export default async function HalamanTamu({
           <FormulirRsvp kode={undangan.kodeTamu} waktuMuat={Date.now()} />
         ) : (
           <p className="mt-4 rounded-2xl bg-krem-200 px-4 py-3 text-sm font-bold text-tinta">
-            RSVP untuk undangan ini sudah ditutup karena acaranya sudah selesai.
+            Konfirmasi kehadiran untuk undangan ini sudah ditutup. Terima kasih atas doa dan perhatiannya.
           </p>
         )}
       </section>

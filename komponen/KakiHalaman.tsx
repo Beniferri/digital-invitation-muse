@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 // Kaki halaman yang singkat. Tautan legal (Tahap 5) mengarah ke halaman
 // yang benar-benar ada. Klaim "belum ada pembayaran sungguhan" dari era
@@ -6,6 +9,12 @@ import Link from "next/link";
 // menjadi bagian produk (aktivasi Production-nya ada di checklist
 // peluncuran, bukan di teks footer).
 export default function KakiHalaman() {
+  const pathname = usePathname();
+  // Alasan sama dengan Navigasi: halaman tamu ditutup oleh penutup
+  // undangannya sendiri ("Dibuat dengan UndanganKita"), bukan footer
+  // situs yang berisi pemasaran dan tautan legal. Komponen ini dijadikan
+  // komponen klien hanya untuk membaca rute; halaman lain tidak berubah.
+  if (pathname?.startsWith("/u/")) return null;
   return (
     <footer className="relative mt-20 overflow-hidden bg-tanah-900 text-krem-100">
       <div className="cahaya-hangat -top-16 right-10 h-56 w-56 bg-emas-500/30" />

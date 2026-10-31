@@ -522,3 +522,38 @@ Belum bisa dites dari sandbox (batas lama): klik Simpan editor di
 peramban sungguhan (POST server action) — verifikasi di produksi setelah
 deploy: buat undangan Zamrud, isi field baru, simpan, aktifkan, buka
 tautan tamu. dev.db lokal tidak tersentuh (69.632 byte, mtime 13:09).
+
+## Revisi halaman tamu (31 Okt 2026, belum di-push)
+
+Berangkat dari undangan Zamrud live /u/nvjvq95c. Yang diubah (hanya
+jalur tamu; autentikasi, routing, dan halaman lain tidak disentuh):
+
+- Bar konfirmasi persisten (komponen/BarKonfirmasi.tsx, baru): tombol
+  emas "Konfirmasi Kehadiran" di bawah layar, hanya saat RSVP dibuka.
+  Di Zamrud, sampul (z-70) menutupi bar (z-40) sampai terbuka.
+- Hero memuat lokasi + tombol emas konfirmasi (hanya saat Aktif);
+  drawer menu mendapat entri emas konfirmasi di urutan pertama.
+- Kontrol sekunder (musik, menu) pindah ke kanan atas; jangkar
+  scroll-mt-28 menjadi scroll-mt-6 (header lengket sudah tidak ada).
+- Navigasi + footer situs mengembalikan null di /u/* (usePathname) —
+  tamu tidak lagi melihat tautan Admin/Masuk atau footer pemasaran.
+- loading.tsx (kerangka sampul + teks status), not-found.tsx
+  ("Tautan ini belum bisa dibuka"), error.tsx ("Coba lagi") di
+  app/u/[kode]/. Catatan: dengan loading.tsx, Next mengirim shell
+  sebagai 200 sebelum notFound() terlempar (soft-404, terbukti lewat
+  eksperimen) — dipertahankan karena /u/* dilarang robots dan tamu
+  melihat halaman ramah yang sama.
+- Hitung mundur: angka berdetak aria-hidden + ringkasan sr-only.
+  Formulir: autoComplete="name", aria-describedby pada select jumlah.
+  Judul RSVP menjadi "Konfirmasi Kehadiran"; salinan penutup dibuat
+  netral (Selesai juga bisa berarti langganan kedaluwarsa).
+- Pengujian tests/halaman-tamu.tsx (script "uji:tamu"): 32 asersi lulus
+  (renderToString BarKonfirmasi + HTTP server fixture: Zamrud Aktif /
+  Selesai / Draft, kartu lama Aktif, kode hilang). Skrip memakai
+  detached group kill + pra-pemeriksaan port supaya tidak ada server
+  yatim. Perilaku ketuk tetap diverifikasi lewat browser pasca-deploy.
+- Dokumentasi: docs/halaman-tamu.md (komponen, props, status, cara uji).
+
+Belum di-push; setelah push + redeploy, verifikasi di HP sungguhan:
+bar konfirmasi, tombol hero, drawer menu, musik, scroll, dan halaman
+404 ramah untuk tautan Draft/hilang.

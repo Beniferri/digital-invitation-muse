@@ -6,11 +6,16 @@
 //
 // Struktur (mengikuti referensi, tanpa menyalin foto, musik, teks kisah,
 // maupun data pribadi referensi):
-// sampul pembuka + musik -> hero (panel kiri tetap di desktop) ->
-// mempelai -> ayat & doa -> kisah perjalanan (v2) -> acara
-// (+ Maps & Google Calendar, bisa dua kartu) -> hitung mundur live ->
-// busana -> galeri (+ lightbox) -> RSVP -> ucapan & doa ->
-// tanda kasih (v2) -> penutup + bagikan.
+// sampul pembuka + musik -> hero (panel kiri tetap di desktop, memuat
+// nama, tanggal, LOKASI, dan tombol konfirmasi) -> mempelai -> ayat &
+// doa -> kisah perjalanan (v2) -> acara (+ Maps & Google Calendar,
+// bisa dua kartu) -> hitung mundur live -> busana -> galeri
+// (+ lightbox) -> RSVP -> ucapan & doa -> tanda kasih (v2) ->
+// penutup + bagikan. Di atas itu, tiga jalan menuju tindakan utama yang
+// sama: bar konfirmasi persisten di bawah layar, tombol emas di hero,
+// dan entri emas di drawer menu — semuanya hanya saat RSVP dibuka.
+// Kontrol sekunder (musik, menu) ada di kanan atas, bukan bawah, supaya
+// tidak menutupi bar konfirmasi.
 // Seksi v2 (kisah, tanda kasih, acara kedua, galeri tambahan) hanya
 // tampil kalau datanya diisi lewat editor; undangan lama tanpa data itu
 // tetap tampil seperti v1. Yang masih belum ada: ganti tema dan like
@@ -21,6 +26,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Great_Vibes } from "next/font/google";
 import { kirimRsvp } from "@/lib/aksiRsvp";
+import BarKonfirmasi from "@/komponen/BarKonfirmasi";
 import {
   buatPesanBagikanUndangan,
   buatTautanWhatsApp,
@@ -232,6 +238,12 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
 
   const fotoHero = data.fotoUndangan ?? data.fotoSampul ?? ASET_GALERI[0];
 
+  // Bar konfirmasi tampil selama RSVP dibuka. Bar tidak perlu menunggu
+  // tahap "terbuka": selama intro/sampul, sampul (z-70) sudah menutupi
+  // bar (z-40) secara visual, jadi bar baru terlihat setelah undangan
+  // terbuka — tanpa logika tahap yang membuat bar hilang dari HTML server.
+  const barTampil = data.statusAktif;
+
   // Reveal: elemen [data-tampil] mendapat kelas tampil-aktif saat masuk layar.
   useEffect(() => {
     const elemen = Array.from(document.querySelectorAll("[data-tampil]"));
@@ -433,7 +445,7 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
           style={{ backgroundImage: `url(${fotoHero})` }}
         />
         <div className="absolute inset-0 bg-emerald-950/60" />
-        <div className="relative flex h-full flex-col items-center justify-center px-8 pt-24 text-center text-krem-50">
+        <div className="relative flex h-full flex-col items-center justify-center px-8 text-center text-krem-50">
           <p className="flex h-28 w-28 items-center justify-center rounded-full border-2 border-emas-300/70 font-script text-4xl">
             {monogram(data)}
           </p>
@@ -441,12 +453,15 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
           <p className="mt-6 rounded-full bg-krem-50/15 px-5 py-2 text-xs font-bold uppercase tracking-[0.25em]">
             {formatTanggalIndonesia(data.tanggal)}
           </p>
+          <p className="mt-4 max-w-xs text-sm font-semibold text-krem-100/85">
+            {data.lokasi}
+          </p>
         </div>
       </aside>
 
-      <div className="relative lg:ml-[42%]">
+      <div className={`relative lg:ml-[42%] ${barTampil ? "pb-28" : ""}`}>
         {/* Hero ponsel + pembuka kolom kanan */}
-        <section id="beranda" data-tampil className="tampil relative flex min-h-[85vh] scroll-mt-28 flex-col items-center justify-center overflow-hidden px-6 py-16 text-center text-krem-50 lg:min-h-0 lg:py-20">
+        <section id="beranda" data-tampil className="tampil relative flex min-h-[85vh] scroll-mt-6 flex-col items-center justify-center overflow-hidden px-6 py-16 text-center text-krem-50 lg:min-h-0 lg:py-20">
           <div
             className="absolute inset-0 bg-cover bg-center lg:hidden"
             style={{ backgroundImage: `url(${fotoHero})` }}
@@ -466,17 +481,31 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
             <p className="mt-6 text-sm font-bold uppercase tracking-[0.25em]">
               {formatTanggalIndonesia(data.tanggal)}
             </p>
-            <a
-              href="#mempelai"
-              className="mt-10 inline-flex min-h-[48px] items-center rounded-full bg-emerald-800 px-7 text-sm font-bold text-white hover:bg-emerald-900"
-            >
-              Lihat Undangan
-            </a>
+            {/* Lokasi masuk hero: sebelumnya tamu baru tahu tempat acara
+                setelah menggulir ke seksi Acara, padahal nama, tanggal,
+                dan lokasi adalah informasi terpenting undangan. */}
+            <p className="mt-3 text-[15px] font-semibold">{data.lokasi}</p>
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+              {data.statusAktif && (
+                <a
+                  href="#rsvp"
+                  className="inline-flex min-h-[48px] items-center rounded-full bg-emas-500 px-7 text-sm font-bold text-emerald-950 hover:bg-emas-300"
+                >
+                  Konfirmasi Kehadiran
+                </a>
+              )}
+              <a
+                href="#mempelai"
+                className="inline-flex min-h-[48px] items-center rounded-full border-2 border-krem-50/50 px-7 text-sm font-bold text-krem-50 hover:bg-white/10 lg:border-emerald-800/40 lg:text-emerald-900 lg:hover:bg-emerald-800/5"
+              >
+                Lihat Undangan
+              </a>
+            </div>
           </div>
         </section>
 
         {/* Mempelai */}
-        <section id="mempelai" data-tampil className="tampil scroll-mt-28 bg-emerald-950 px-6 py-16 text-krem-50">
+        <section id="mempelai" data-tampil className="tampil scroll-mt-6 bg-emerald-950 px-6 py-16 text-krem-50">
           <p className="text-center text-xs font-bold uppercase tracking-[0.35em] text-emas-300">
             Mempelai
           </p>
@@ -507,7 +536,7 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
         </section>
 
         {/* Ayat & doa */}
-        <section id="ayat" data-tampil className="tampil scroll-mt-28 bg-krem-50 px-6 py-16 text-center">
+        <section id="ayat" data-tampil className="tampil scroll-mt-6 bg-krem-50 px-6 py-16 text-center">
           <p lang="ar" dir="rtl" className="font-serif text-3xl leading-relaxed text-emerald-900">
             بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
           </p>
@@ -531,7 +560,7 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
 
         {/* Kisah perjalanan (v2): hanya tampil kalau ada babak atau video. */}
         {adaKisah && (
-          <section id="kisah" data-tampil className="tampil scroll-mt-28 bg-emerald-950 px-6 py-16 text-krem-50">
+          <section id="kisah" data-tampil className="tampil scroll-mt-6 bg-emerald-950 px-6 py-16 text-krem-50">
             <p className="text-center text-xs font-bold uppercase tracking-[0.35em] text-emas-300">
               Kisah Kami
             </p>
@@ -566,7 +595,7 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
         )}
 
         {/* Acara: satu kartu utama, ditambah kartu kedua kalau diisi. */}
-        <section id="acara" data-tampil className="tampil scroll-mt-28 bg-emerald-950 px-6 py-16 text-krem-50">
+        <section id="acara" data-tampil className="tampil scroll-mt-6 bg-emerald-950 px-6 py-16 text-krem-50">
           <p className="text-center text-xs font-bold uppercase tracking-[0.35em] text-emas-300">
             Acara {data.jenisAcara}
           </p>
@@ -605,7 +634,7 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
         </section>
 
         {/* Hitung mundur */}
-        <section id="hitung-mundur" data-tampil className="tampil scroll-mt-28 bg-krem-50 px-6 py-16 text-center">
+        <section id="hitung-mundur" data-tampil className="tampil scroll-mt-6 bg-krem-50 px-6 py-16 text-center">
           <p className="text-xs font-bold uppercase tracking-[0.35em] text-emerald-800">
             Menuju Hari Bahagia
           </p>
@@ -619,24 +648,33 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
               Hari ini adalah hari bahagianya!
             </p>
           ) : (
-            <div className="mx-auto mt-8 grid max-w-xl grid-cols-4 gap-3">
-              {[
-                { nilai: hitungMundur.hari, label: "Hari" },
-                { nilai: hitungMundur.jam, label: "Jam" },
-                { nilai: hitungMundur.menit, label: "Menit" },
-                { nilai: hitungMundur.detik, label: "Detik" },
-              ].map((kotak) => (
-                <div key={kotak.label} className="rounded-[1.5rem] bg-emerald-950 px-2 py-5 text-krem-50">
-                  <p className="font-serif text-3xl font-bold tabular-nums sm:text-4xl">{kotak.nilai}</p>
-                  <p className="mt-1 text-xs font-bold uppercase tracking-widest text-emas-300">{kotak.label}</p>
-                </div>
-              ))}
-            </div>
+            <>
+              {/* Angka berdetak tiap detik disembunyikan dari pembaca
+                  layar (aria-hidden) supaya tidak dibacakan berulang;
+                  sebagai gantinya ada ringkasan statis untuk pembaca
+                  layar. Tanggal lengkap sudah ada di seksi Acara. */}
+              <p className="sr-only">
+                Hitung mundur menuju {formatTanggalIndonesia(data.tanggal)}.
+              </p>
+              <div aria-hidden="true" className="mx-auto mt-8 grid max-w-xl grid-cols-4 gap-3">
+                {[
+                  { nilai: hitungMundur.hari, label: "Hari" },
+                  { nilai: hitungMundur.jam, label: "Jam" },
+                  { nilai: hitungMundur.menit, label: "Menit" },
+                  { nilai: hitungMundur.detik, label: "Detik" },
+                ].map((kotak) => (
+                  <div key={kotak.label} className="rounded-[1.5rem] bg-emerald-950 px-2 py-5 text-krem-50">
+                    <p className="font-serif text-3xl font-bold tabular-nums sm:text-4xl">{kotak.nilai}</p>
+                    <p className="mt-1 text-xs font-bold uppercase tracking-widest text-emas-300">{kotak.label}</p>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </section>
 
         {/* Busana */}
-        <section id="busana" data-tampil className="tampil scroll-mt-28 bg-emerald-950 px-6 py-16 text-center text-krem-50">
+        <section id="busana" data-tampil className="tampil scroll-mt-6 bg-emerald-950 px-6 py-16 text-center text-krem-50">
           <p className="text-xs font-bold uppercase tracking-[0.35em] text-emas-300">Busana</p>
           <h2 className="mt-3 font-serif text-3xl font-bold">Berpakaian Sopan & Nyaman</h2>
           <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-krem-100/85">
@@ -660,7 +698,7 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
         </section>
 
         {/* Galeri */}
-        <section id="galeri" data-tampil className="tampil scroll-mt-28 bg-krem-50 px-6 py-16">
+        <section id="galeri" data-tampil className="tampil scroll-mt-6 bg-krem-50 px-6 py-16">
           <p className="text-center text-xs font-bold uppercase tracking-[0.35em] text-emerald-800">
             Galeri
           </p>
@@ -687,11 +725,11 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
         </section>
 
         {/* RSVP */}
-        <section id="rsvp" data-tampil className="tampil scroll-mt-28 bg-emerald-950 px-6 py-16 text-krem-50">
+        <section id="rsvp" data-tampil className="tampil scroll-mt-6 bg-emerald-950 px-6 py-16 text-krem-50">
           <p className="text-xs font-bold uppercase tracking-[0.35em] text-emas-300">
-            Konfirmasi Kehadiran
+            RSVP
           </p>
-          <h2 className="mt-3 font-serif text-3xl font-bold">RSVP</h2>
+          <h2 className="mt-3 font-serif text-3xl font-bold">Konfirmasi Kehadiran</h2>
           <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-krem-100/85">
             {data.ringkasan.totalBalasan === 0
               ? "Belum ada yang mengonfirmasi. Jadilah yang pertama."
@@ -723,6 +761,7 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
                   required
                   minLength={2}
                   maxLength={100}
+                  autoComplete="name"
                   placeholder="Tulis nama lengkapmu"
                   className="mt-2 min-h-[48px] w-full rounded-2xl border border-emerald-900/20 bg-white px-4 py-3 text-[15px] text-tinta"
                 />
@@ -751,13 +790,14 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
                   id="jumlah-zamrud"
                   name="jumlahTamu"
                   defaultValue="1"
+                  aria-describedby="jumlah-keterangan-zamrud"
                   className="mt-2 min-h-[48px] w-full rounded-2xl border border-emerald-900/20 bg-white px-4 py-3 text-[15px] text-tinta"
                 >
                   {Array.from({ length: 10 }, (_, i) => i + 1).map((jumlah) => (
                     <option key={jumlah} value={jumlah}>{jumlah} orang</option>
                   ))}
                 </select>
-                <p className="mt-1 text-sm text-krem-100/75">Maksimal 10 orang per balasan. Kalau memilih tidak bisa hadir, jumlah ini tidak dihitung.</p>
+                <p id="jumlah-keterangan-zamrud" className="mt-1 text-sm text-krem-100/75">Maksimal 10 orang per balasan. Kalau memilih tidak bisa hadir, jumlah ini tidak dihitung.</p>
               </div>
               <div>
                 <label htmlFor="pesan-zamrud" className="text-sm font-bold">Pesan atau doa (opsional)</label>
@@ -779,14 +819,14 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
             </form>
           ) : (
             <p className="mt-5 max-w-xl rounded-2xl bg-krem-200 px-4 py-3 text-sm font-bold text-tinta">
-              RSVP untuk undangan ini sudah ditutup karena acaranya sudah selesai.
+              Konfirmasi kehadiran untuk undangan ini sudah ditutup. Terima kasih atas doa dan perhatiannya.
             </p>
           )}
         </section>
 
         {/* Ucapan & doa */}
         {data.ucapan.length > 0 && (
-          <section id="ucapan" data-tampil className="tampil scroll-mt-28 bg-krem-50 px-6 py-16">
+          <section id="ucapan" data-tampil className="tampil scroll-mt-6 bg-krem-50 px-6 py-16">
             <p className="text-xs font-bold uppercase tracking-[0.35em] text-emerald-800">
               Ucapan & Doa
             </p>
@@ -811,7 +851,7 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
 
         {/* Tanda kasih (v2): hanya tampil kalau rekening atau alamat diisi. */}
         {adaTandaKasih && (
-          <section id="tanda-kasih" data-tampil className="tampil scroll-mt-28 bg-krem-50 px-6 py-16">
+          <section id="tanda-kasih" data-tampil className="tampil scroll-mt-6 bg-krem-50 px-6 py-16">
             <p className="text-center text-xs font-bold uppercase tracking-[0.35em] text-emerald-800">
               Tanda Kasih
             </p>
@@ -860,7 +900,7 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
         )}
 
         {/* Penutup + bagikan */}
-        <section id="penutup" data-tampil className="tampil scroll-mt-28 bg-emerald-950 px-6 py-16 text-center text-krem-50">
+        <section id="penutup" data-tampil className="tampil scroll-mt-6 bg-emerald-950 px-6 py-16 text-center text-krem-50">
           <p className="font-script text-5xl leading-tight">{namaTampil(data)}</p>
           <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-krem-100/85">
             Terima kasih atas doa, kehadiran, dan semua kebaikan yang menyertai
@@ -893,8 +933,11 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
         </section>
       </div>
 
-      {/* Tombol mengambang: musik (kalau ada) + menu */}
-      <div className="fixed bottom-5 right-5 z-40 flex gap-2">
+      {/* Tombol mengambang: musik (kalau ada) + menu. Dipindah ke kanan
+          atas karena bar konfirmasi kini menempati bawah layar; header
+          platform sudah disembunyikan di halaman tamu, jadi pojok kanan
+          atas bebas dan tidak menutupi konten maupun bar. */}
+      <div className="fixed right-4 top-4 z-40 flex gap-2">
         {data.musikSrc && (
           <button
             type="button"
@@ -914,6 +957,9 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
           ☰
         </button>
       </div>
+
+      {/* Bar konfirmasi persisten (hanya setelah terbuka & RSVP dibuka). */}
+      <BarKonfirmasi tampil={barTampil} />
 
       {/* Drawer menu */}
       {menuTerbuka && (
@@ -942,6 +988,17 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
         </div>
         <nav aria-label="Menu undangan" className="flex-1 overflow-y-auto px-3 pb-4">
           <ul className="space-y-1">
+            {data.statusAktif && (
+              <li>
+                <a
+                  href="#rsvp"
+                  onClick={() => setMenuTerbuka(false)}
+                  className="block min-h-[48px] rounded-2xl bg-emas-500 px-4 py-3 text-center text-[15px] font-bold text-emerald-950"
+                >
+                  Konfirmasi Kehadiran
+                </a>
+              </li>
+            )}
             {menuTampil.map((item) => (
               <li key={item.href}>
                 <a

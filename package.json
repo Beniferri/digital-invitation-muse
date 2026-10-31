@@ -29,7 +29,8 @@
     "lint": "next lint",
     "start": "next start",
     "db:seed": "tsx scripts/seed.ts",
-    "buat-admin": "tsx scripts/buat-admin.ts"
+    "buat-admin": "tsx scripts/buat-admin.ts",
+    "uji:tamu": "tsx tests/halaman-tamu.tsx"
   },
   "version": "0.1.0"
 }
