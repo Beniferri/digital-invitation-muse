@@ -78,7 +78,7 @@ export async function simpanTemplat(formulir: FormData) {
 
   if (!nama || !slugValid(slug)) redirect(tujuanGalat);
 
-  const yangSudahAda = satuBaris<Baris>("SELECT slug FROM templat WHERE slug = ?", slug);
+  const yangSudahAda = await satuBaris<Baris>("SELECT slug FROM templat WHERE slug = ?", slug);
   if (yangSudahAda && String(yangSudahAda.slug) !== slugLama) redirect(tujuanGalat);
 
   const warnaMentah = teks(formulir, "warna") as Templat["warna"];
@@ -93,7 +93,7 @@ export async function simpanTemplat(formulir: FormData) {
   const berkasFoto = formulir.get("fotoSampul");
   const fotoBaru = berkasFoto instanceof File ? await simpanFoto(berkasFoto) : null;
   const fotoLama = slugLama
-    ? (satuBaris<Baris>("SELECT foto_sampul FROM templat WHERE slug = ?", slugLama)?.foto_sampul as string | null) ?? null
+    ? ((await satuBaris<Baris>("SELECT foto_sampul FROM templat WHERE slug = ?", slugLama))?.foto_sampul as string | null) ?? null
     : null;
 
   const gayaJson = JSON.stringify(gayaDariPilihan(warnaBersih, nuansaBersih));
@@ -111,7 +111,7 @@ export async function simpanTemplat(formulir: FormData) {
   const fotoSampul = fotoBaru ?? fotoLama;
 
   if (slugLama) {
-    jalankan(
+    await jalankan(
       "UPDATE templat SET slug = ?, nama = ?, jenis_acara = ?, warna = ?, nuansa = ?, deskripsi = ?, aktif = ?, gaya_json = ?, contoh_json = ?, foto_sampul = ?, diubah_pada = ? WHERE slug = ?",
       slug,
       nama,
@@ -128,7 +128,7 @@ export async function simpanTemplat(formulir: FormData) {
     );
   } else {
     const sekarang = sekarangIso();
-    jalankan(
+    await jalankan(
       "INSERT INTO templat (id, slug, nama, jenis_acara, warna, nuansa, deskripsi, aktif, gaya_json, contoh_json, foto_sampul, dibuat_pada, diubah_pada) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       idBaru(),
       slug,
@@ -152,9 +152,9 @@ export async function simpanTemplat(formulir: FormData) {
 export async function ubahStatusTemplat(formulir: FormData) {
   await wajibAdmin();
   const slug = teks(formulir, "slug");
-  const templat = satuBaris<Baris>("SELECT aktif FROM templat WHERE slug = ?", slug);
+  const templat = await satuBaris<Baris>("SELECT aktif FROM templat WHERE slug = ?", slug);
   if (templat) {
-    jalankan("UPDATE templat SET aktif = ?, diubah_pada = ? WHERE slug = ?", Number(templat.aktif) === 1 ? 0 : 1, sekarangIso(), slug);
+    await jalankan("UPDATE templat SET aktif = ?, diubah_pada = ? WHERE slug = ?", Number(templat.aktif) === 1 ? 0 : 1, sekarangIso(), slug);
   }
   await perbaruiSemuaJalur(slug);
   redirect("/admin/templat");
@@ -163,7 +163,7 @@ export async function ubahStatusTemplat(formulir: FormData) {
 export async function hapusTemplat(formulir: FormData) {
   await wajibAdmin();
   const slug = teks(formulir, "slug");
-  jalankan("DELETE FROM templat WHERE slug = ?", slug);
+  await jalankan("DELETE FROM templat WHERE slug = ?", slug);
   await perbaruiSemuaJalur(slug);
   redirect("/admin/templat");
 }
@@ -175,10 +175,10 @@ export async function tambahUndangan(formulir: FormData) {
   const namaPertama = teks(formulir, "namaPertama");
   if (!namaPertama) redirect("/admin/undangan/baru?galat=1");
   let kodeTamu = buatKodeTamu();
-  while (satuBaris<Baris>("SELECT id FROM undangan WHERE kode_tamu = ?", kodeTamu)) {
+  while (await satuBaris<Baris>("SELECT id FROM undangan WHERE kode_tamu = ?", kodeTamu)) {
     kodeTamu = buatKodeTamu();
   }
-  jalankan(
+  await jalankan(
     "INSERT INTO undangan (id, nama_pertama, nama_kedua, jenis_acara, tanggal, lokasi, slug_templat, status, dibuat_pada, kode_tamu) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     idBaru(),
     namaPertama,
@@ -198,8 +198,8 @@ export async function tambahUndangan(formulir: FormData) {
 export async function hapusRsvp(formulir: FormData) {
   await wajibAdmin();
   const id = teks(formulir, "id");
-  const baris = satuBaris<Baris>("SELECT undangan_id FROM rsvp WHERE id = ?", id);
-  jalankan("DELETE FROM rsvp WHERE id = ?", id);
+  const baris = await satuBaris<Baris>("SELECT undangan_id FROM rsvp WHERE id = ?", id);
+  await jalankan("DELETE FROM rsvp WHERE id = ?", id);
   await perbaruiSemuaJalur();
   redirect(baris ? `/admin/undangan/${String(baris.undangan_id)}` : "/admin/undangan");
 }
@@ -208,7 +208,7 @@ export async function ubahStatusUndangan(formulir: FormData) {
   await wajibAdmin();
   const id = teks(formulir, "id");
   const status = teks(formulir, "status") as StatusUndangan;
-  jalankan("UPDATE undangan SET status = ? WHERE id = ?", status, id);
+  await jalankan("UPDATE undangan SET status = ? WHERE id = ?", status, id);
   await perbaruiSemuaJalur();
   redirect("/admin/undangan");
 }
@@ -216,7 +216,7 @@ export async function ubahStatusUndangan(formulir: FormData) {
 export async function hapusUndangan(formulir: FormData) {
   await wajibAdmin();
   const id = teks(formulir, "id");
-  jalankan("DELETE FROM undangan WHERE id = ?", id);
+  await jalankan("DELETE FROM undangan WHERE id = ?", id);
   await perbaruiSemuaJalur();
   redirect("/admin/undangan");
 }
@@ -225,12 +225,12 @@ export async function hapusUndangan(formulir: FormData) {
 
 export async function simpanHarga(formulir: FormData) {
   await wajibAdmin();
-  const daftar = semuaBaris("SELECT * FROM paket_harga ORDER BY urutan ASC");
+  const daftar = await semuaBaris("SELECT * FROM paket_harga ORDER BY urutan ASC");
   for (let indeks = 0; indeks < daftar.length; indeks += 1) {
     const paket = daftar[indeks];
     const bulanan = Number(formulir.get(`bulanan-${indeks}`));
     const tahunan = Number(formulir.get(`tahunan-${indeks}`));
-    jalankan(
+    await jalankan(
       "UPDATE paket_harga SET harga_bulanan = ?, harga_tahunan = ? WHERE id = ?",
       Number.isFinite(bulanan) && bulanan > 0 ? bulanan : Number(paket.harga_bulanan),
       Number.isFinite(tahunan) && tahunan > 0 ? tahunan : Number(paket.harga_tahunan),

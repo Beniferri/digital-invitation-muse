@@ -22,11 +22,15 @@ Sudah selesai:
 Masih bolong (ini yang diselesaikan rencana ini):
 - Editor belum menyimpan apa pun — undangan yang tersimpan hari ini dibuat
   lewat formulir dasbor, bukan dari editor yang dilihat pengunjung
+  (selesai Tahap 1)
 - Belum ada pembayaran sungguhan — paket harga baru pajangan
+  (selesai di kode Tahap 2; uji Sandbox Midtrans masih menunggu kunci)
 - Belum ada batas paket yang ditegakkan (jumlah undangan aktif, masa aktif)
+  (selesai Tahap 2)
 - Database masih SQLite berkas lokal + foto sampul di dalam container
-  (butuh volume terpisah supaya tidak hilang saat redeploy)
-- Belum ada halaman syarat/ketentuan, privasi, dan bantuan
+  (selesai di kode Tahap 4: backend Postgres opsional + foto ke volume
+  /data; verifikasi Postgres sungguhan dan redeploy masih tertunda)
+- Belum ada halaman syarat/ketentuan, privasi, dan bantuan (Tahap 5)
 
 ## Tahap 1 — Editor yang benar-benar menyimpan (inti produk) — SELESAI 31 Okt 2026
 
@@ -187,26 +191,81 @@ memakai produk ini sampai hari H, bukan sekadar formulir.
   persis dengan angka di dasbor, dan bisa menemukan semua tamu yang
   "Masih ragu" dalam satu filter
 
-## Tahap 4 — Fondasi produksi yang benar (sebelum scale, sesudah ada pembeli)
+## Tahap 4 — Fondasi produksi yang benar (sebelum scale, sesudah ada pembeli) — SELESAI DI KODE 31 Okt 2026, BELUM di-push; verifikasi Postgres sungguhan + jadwal cadangan otomatis masih tertunda (lihat bawah)
 
 Tujuan: produk tidak rapuh saat dipakai banyak orang. Sengaja diletakkan
 sesudah pembayaran supaya monetisasi tidak tertunda oleh pekerjaan
 infrastruktur.
 
-- Migrasi SQLite → Postgres yang di-hosting (mis. layanan Postgres di
-  Coolify atau Supabase) dengan mengganti lapisan `lib/db.ts` saja;
-  skrip migrasi memindahkan template, undangan, RSVP, dan pengguna yang
-  sudah ada (hash kata sandi bisa ikut pindah; sesi lama hangus dan
-  pengguna login ulang sekali)
-- Penyimpanan foto sampul yang tahan redeploy (volume khusus untuk
-  `public/unggahan/` sebagai langkah cepat, atau storage objek sebagai
-  langkah final)
-- Cadangan otomatis database (dump berkala + cara restore yang sudah
-  pernah dites sekali) dan healthcheck Coolify
-- Pengaman RSVP dasar: batas kirim per undangan per jam untuk menahan spam
-- Kriteria selesai: deploy di Coolify dengan Postgres, data lama terbawa,
-  foto sampul tidak hilang setelah redeploy, dan restore dari cadangan
-  pernah dibuktikan sekali
+Yang dibangun (31 Okt 2026):
+
+- **Dua backend database di `lib/db.ts` (bukan "ganti berkas saja"):**
+  SQLite tetap default; Postgres aktif kalau `DATABASE_URL` diawali
+  `postgres://`/`postgresql://` (driver `pg`, Pool). Skema dan kueri sama
+  di kedua backend; placeholder `?` diterjemahkan ke `$1, $2, ...` dengan
+  pemindai literal string yang benar. Konsekuensi yang tidak bisa
+  dihindari: semua fungsi lapisan database menjadi ASINKRON (Postgres
+  tidak punya API sinkron), jadi seluruh pemanggil dikonversi ke
+  await — TypeScript menandai pemanggil yang lupa await sebagai galat,
+  dan build lolos bersih setelah konversi. `DATABASE_URL="pg-mem://"`
+  memakai emulator Postgres di memori, KHUSUS pengujian, dan ditolak
+  di produksi (`NODE_ENV=production`) supaya tidak ada yang tidak
+  sengaja mengetes di produksi (penolakan ini terbukti bekerja saat
+  server produksi tidak sengaja dijalankan dengan `pg-mem://`).
+- **Skrip migrasi `scripts/migrasi-ke-postgres.ts`:** menyalin pengguna,
+  templat, paket_harga, undangan, pesanan, langganan, RSVP, dan
+  percobaan_rsvp dalam urutan foreign key; menolak jalan kalau target
+  sudah berisi data; tabel `sesi` sengaja dilewati (sesi lama hangus,
+  pengguna login ulang sekali); hash kata sandi ikut pindah apa adanya;
+  jumlah baris sumber vs tujuan diverifikasi per tabel.
+- **Foto tahan redeploy (tanpa volume tambahan):** `UNGGAHAN_DIR` di
+  image diatur ke `/data/unggahan` — di dalam volume persisten yang
+  sudah dipasang untuk database. Jalur publik tetap `/unggahan/<nama>`
+  lewat route `/api/unggahan/[nama]` + rewrite beforeFiles, dengan
+  fallback ke `public/unggahan` untuk berkas lama. Storage objek tetap
+  menjadi langkah final kalau nanti pindah ke serverless murni.
+- **Cadangan SQLite + restore yang sudah dibuktikan:** skrip
+  `scripts/cadangkan-db.mjs` (VACUUM INTO — boleh jalan saat server
+  hidup, verifikasi salinan, retensi default 7) dan
+  `scripts/pulihkan-db.mjs` (verifikasi cadangan, tolak kalau ada berkas
+  jurnal, salinan pengaman sebelum menimpa). Restore dites: baris palsu
+  yang ditambahkan setelah cadangan hilang setelah pulih.
+- **Healthcheck:** `GET /api/sehat` (200 kalau aplikasi + database hidup,
+  500 kalau tidak, dengan log penyebab di server) + HEALTHCHECK di
+  Dockerfile. Di Coolify, pakai path `/api/sehat`.
+- **Pengaman spam RSVP:** honeypot (`situs_web` tersembunyi), jeda
+  minimum 3 detik dari render halaman, dan batas 20 kiriman per jam per
+  IP per undangan (tabel `percobaan_rsvp`, hanya hash IP — garam dari
+  `RSVP_IP_SALT`; baris >1 jam terhapus otomatis di setiap pengecekan).
+- **Entrypoint:** `scripts/perlu-seed.mjs` kini bercabang SQLite dan
+  Postgres (memakai `pg`); untuk `pg-mem://` selalu menjawab "ya".
+
+Catatan pengujian Tahap 4 (31 Okt 2026): build lolos; tes paritas alur
+penuh (seed, paket, langganan + kedaluwarsa, RSVP + ringkasan + CSV,
+anti-spam, placeholder) LULUS IDENTIK di SQLite dan di emulator
+Postgres (pg-mem); skrip migrasi SQLite→pg-mem lolos dengan verifikasi
+jumlah baris per tabel; regresi HTTP di server produksi lokal (SQLite):
+sehat 200, formulir tamu mengandung honeypot + waktu_muat, /akun/paket
+render, webhook settlement → Lunas + langganan Populer aktif, matriks
+CSV (pemilik 200, admin 200, bukan pemilik 403); server dev dengan
+pg-mem: sehat 200 + beranda 200; perlu-seed tiga cabang lolos.
+Yang BELUM terverifikasi (jujur dicatat, bukan diklaim):
+(1) server Postgres SUNGGUHAN — di lingkungan ini tidak ada server
+Postgres (Docker tidak tersedia; `apt-get update` menggantung >10 menit
+lalu dimatikan; registry npm justru bisa dijangkau, jadi pengujian
+memakai pg-mem). Sebelum produksi pindah ke Postgres: buat database
+Postgres kosong, jalankan skrip migrasi, ganti `DATABASE_URL`, redeploy,
+lalu verifikasi login pengguna lama + undangan/RSVP lama + satu
+pembelian baru. Sampai itu lolos, SQLite tetap backend produksi yang
+didukung. (2) Jadwal cadangan OTOMATIS — skrip + retensi + restore
+sudah ada dan dites, tapi cron hariannya belum terpasang di mana pun
+(pasang satu cron host/Coolify yang menjalankan skrip di dalam container).
+(3) Foto setelah redeploy di Coolify — kodenya sudah siap dan route-nya
+dites lokal, tapi redeploy sungguhan belum dijalankan.
+Kriteria selesai asli ("deploy di Coolify dengan Postgres...") karena
+itu BELUM terpenuhi penuh: Tahap 4 selesai di kode, bukan selesai
+di produksi. Tahap 5 boleh jalan tanpa menunggu Postgres, karena
+SQLite tetap didukung penuh.
 
 ## Tahap 5 — Rilis
 

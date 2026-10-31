@@ -33,22 +33,22 @@ export async function tambahUndanganPengguna(formulir: FormData) {
   const namaPertama = teks(formulir, "namaPertama");
   if (!namaPertama) redirect("/akun/undangan/baru?galat=1");
   const slugTemplat = teks(formulir, "slugTemplat");
-  const templat = satuBaris<Baris>("SELECT slug FROM templat WHERE slug = ? AND aktif = 1", slugTemplat);
+  const templat = await satuBaris<Baris>("SELECT slug FROM templat WHERE slug = ? AND aktif = 1", slugTemplat);
   if (!templat) redirect("/akun/undangan/baru?galat=1");
   // Penegakan Tahap 2: membuat undangan dengan status Aktif langsung
   // butuh langganan aktif + slot tersisa. Membuat Draft selalu gratis
   // (penegakannya nanti saat status diubah jadi Aktif).
   const statusDiminta = statusBersih(teks(formulir, "status"));
   if (statusDiminta === "Aktif") {
-    const cek = bolehAktifkanUndangan(sesi.id);
+    const cek = await bolehAktifkanUndangan(sesi.id);
     if (!cek.boleh) redirect(`/akun/undangan/baru?galat=${cek.alasan}`);
   }
 
   let kodeTamu = buatKodeTamu();
-  while (satuBaris<Baris>("SELECT id FROM undangan WHERE kode_tamu = ?", kodeTamu)) {
+  while (await satuBaris<Baris>("SELECT id FROM undangan WHERE kode_tamu = ?", kodeTamu)) {
     kodeTamu = buatKodeTamu();
   }
-  jalankan(
+  await jalankan(
     "INSERT INTO undangan (id, nama_pertama, nama_kedua, jenis_acara, tanggal, lokasi, slug_templat, status, dibuat_pada, pengguna_id, kode_tamu) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     idBaru(),
     namaPertama,
@@ -84,7 +84,7 @@ export async function tambahUndanganDariEditor(formulir: FormData) {
   const namaPertama = teks(formulir, "namaPertama");
   if (!namaPertama) redirect("/editor?galat=nama");
   const slugTemplat = teks(formulir, "slugTemplat");
-  const templat = satuBaris<Baris>(
+  const templat = await satuBaris<Baris>(
     "SELECT slug, jenis_acara FROM templat WHERE slug = ? AND aktif = 1",
     slugTemplat,
   );
@@ -102,10 +102,10 @@ export async function tambahUndanganDariEditor(formulir: FormData) {
   }
 
   let kodeTamu = buatKodeTamu();
-  while (satuBaris<Baris>("SELECT id FROM undangan WHERE kode_tamu = ?", kodeTamu)) {
+  while (await satuBaris<Baris>("SELECT id FROM undangan WHERE kode_tamu = ?", kodeTamu)) {
     kodeTamu = buatKodeTamu();
   }
-  jalankan(
+  await jalankan(
     "INSERT INTO undangan (id, nama_pertama, nama_kedua, jenis_acara, tanggal, lokasi, slug_templat, status, dibuat_pada, pengguna_id, kode_tamu, foto_undangan) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     idBaru(),
     namaPertama,
@@ -125,7 +125,7 @@ export async function tambahUndanganDariEditor(formulir: FormData) {
 }
 
 async function undanganMilikPengguna(id: string, penggunaId: string): Promise<boolean> {
-  const baris = satuBaris<Baris>("SELECT pengguna_id FROM undangan WHERE id = ?", id);
+  const baris = await satuBaris<Baris>("SELECT pengguna_id FROM undangan WHERE id = ?", id);
   return !!baris && String(baris.pengguna_id) === penggunaId;
 }
 
@@ -139,13 +139,13 @@ export async function ubahStatusUndanganPengguna(formulir: FormData) {
   // menyimpan ulang status Aktif yang sudah Aktif, selalu diizinkan
   // (tidak menghabiskan slot baru).
   if (statusBaru === "Aktif") {
-    const statusLama = satuBaris<Baris>("SELECT status FROM undangan WHERE id = ?", id);
+    const statusLama = await satuBaris<Baris>("SELECT status FROM undangan WHERE id = ?", id);
     if (String(statusLama?.status ?? "") !== "Aktif") {
-      const cek = bolehAktifkanUndangan(sesi.id);
+      const cek = await bolehAktifkanUndangan(sesi.id);
       if (!cek.boleh) redirect(`/akun?galat=${cek.alasan}`);
     }
   }
-  jalankan("UPDATE undangan SET status = ? WHERE id = ?", statusBaru, id);
+  await jalankan("UPDATE undangan SET status = ? WHERE id = ?", statusBaru, id);
   revalidatePath("/akun", "page");
   redirect("/akun");
 }
@@ -154,7 +154,7 @@ export async function hapusUndanganPengguna(formulir: FormData) {
   const sesi = await wajibPengguna();
   const id = teks(formulir, "id");
   if (!(await undanganMilikPengguna(id, sesi.id))) redirect("/akun");
-  jalankan("DELETE FROM undangan WHERE id = ?", id);
+  await jalankan("DELETE FROM undangan WHERE id = ?", id);
   revalidatePath("/akun", "page");
   redirect("/akun");
 }

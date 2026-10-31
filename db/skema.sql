@@ -68,6 +68,13 @@ CREATE TABLE IF NOT EXISTS rsvp (
   dibuat_pada TEXT NOT NULL,
   diubah_pada TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS percobaan_rsvp (
+  id TEXT PRIMARY KEY,
+  undangan_id TEXT NOT NULL REFERENCES undangan(id) ON DELETE CASCADE,
+  ip_hash TEXT NOT NULL,
+  dibuat_pada TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_percobaan_rsvp ON percobaan_rsvp(undangan_id, ip_hash, dibuat_pada);
 CREATE TABLE IF NOT EXISTS pesanan (
   id TEXT PRIMARY KEY,
   order_id TEXT UNIQUE NOT NULL,

@@ -24,7 +24,7 @@ export default async function Pembayaran({
 }) {
   const sesi = await ambilSesiSaatIni();
   if (!sesi) redirect("/masuk");
-  const pesanan = cariPesananOlehIdDanPengguna(params.id, sesi.id);
+  const pesanan = await cariPesananOlehIdDanPengguna(params.id, sesi.id);
   if (!pesanan) redirect("/akun");
   const galat = searchParams?.galat ? pesanGalat[searchParams.galat] : undefined;
 

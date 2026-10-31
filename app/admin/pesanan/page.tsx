@@ -15,8 +15,8 @@ export const dynamic = "force-dynamic";
 // ada kasus khusus, urus lewat database langsung dengan dicatat).
 export default async function PesananAdmin() {
   await wajibAdmin();
-  const daftarPesanan = bacaSemuaPesananDenganEmail();
-  const daftarLangganan = bacaSemuaLanggananDenganEmail();
+  const daftarPesanan = await bacaSemuaPesananDenganEmail();
+  const daftarLangganan = await bacaSemuaLanggananDenganEmail();
   const totalLunas = daftarPesanan
     .filter((pesanan) => pesanan.status === "Lunas")
     .reduce((jumlah, pesanan) => jumlah + pesanan.nominal, 0);

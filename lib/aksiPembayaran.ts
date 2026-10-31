@@ -37,7 +37,7 @@ export async function buatPesananDanBayar(formulir: FormData) {
   const periode = periodeBersih(teks(formulir, "periode"));
   let pesananId: string | null = null;
   try {
-    const pesanan = buatPesanan(sesi.id, namaPaket, periode);
+    const pesanan = await buatPesanan(sesi.id, namaPaket, periode);
     pesananId = pesanan.id;
     const { token, redirectUrl } = await buatTokenSnap(
       pesanan.orderId,
@@ -47,7 +47,7 @@ export async function buatPesananDanBayar(formulir: FormData) {
       sesi.email,
       sesi.nama,
     );
-    simpanTokenSnap(pesanan.id, token, redirectUrl);
+    await simpanTokenSnap(pesanan.id, token, redirectUrl);
   } catch {
     // Paket tidak ditemukan / nominal tidak valid: kembali ke halaman paket.
     // Midtrans gagal: pesanan sudah dibuat (kalau sempat), arahkan ke
@@ -61,7 +61,7 @@ export async function buatPesananDanBayar(formulir: FormData) {
 
 export async function cobaLagiToken(formulir: FormData) {
   const sesi = await wajibPengguna();
-  const pesanan = cariPesananOlehIdDanPengguna(teks(formulir, "id"), sesi.id);
+  const pesanan = await cariPesananOlehIdDanPengguna(teks(formulir, "id"), sesi.id);
   if (!pesanan || pesanan.status !== "Menunggu") redirect("/akun");
   try {
     const { token, redirectUrl } = await buatTokenSnap(
@@ -72,7 +72,7 @@ export async function cobaLagiToken(formulir: FormData) {
       sesi.email,
       sesi.nama,
     );
-    simpanTokenSnap(pesanan.id, token, redirectUrl);
+    await simpanTokenSnap(pesanan.id, token, redirectUrl);
   } catch {
     redirect(`/akun/pembayaran/${pesanan.id}?galat=midtrans`);
   }

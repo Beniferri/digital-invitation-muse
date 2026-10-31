@@ -17,16 +17,16 @@ async function utama() {
     console.error("Kata sandi minimal 8 karakter.");
     process.exit(1);
   }
-  const sudahAda = satuBaris<Baris>("SELECT id FROM pengguna WHERE email = ?", email);
+  const sudahAda = await satuBaris<Baris>("SELECT id FROM pengguna WHERE email = ?", email);
   if (sudahAda) {
-    jalankan(
+    await jalankan(
       "UPDATE pengguna SET kata_sandi_hash = ?, peran = ? WHERE email = ?",
       hashKataSandi(kataSandi),
       "admin",
       email,
     );
   } else {
-    jalankan(
+    await jalankan(
       "INSERT INTO pengguna (id, email, nama, kata_sandi_hash, peran, dibuat_pada) VALUES (?, ?, ?, ?, ?, ?)",
       idBaru(),
       email,

@@ -26,7 +26,7 @@ export interface SesiPengguna {
 export async function buatSesi(penggunaId: string): Promise<string> {
   const token = randomBytes(32).toString("hex");
   const kedaluwarsa = new Date(Date.now() + MASA_BERLAKU_JAM * 60 * 60 * 1000).toISOString();
-  jalankan(
+  await jalankan(
     "INSERT INTO sesi (id, token_hash, pengguna_id, kedaluwarsa, dibuat_pada) VALUES (?, ?, ?, ?, ?)",
     idBaru(),
     hashToken(token),
@@ -46,12 +46,12 @@ export async function buatSesi(penggunaId: string): Promise<string> {
 export async function ambilSesiSaatIni(): Promise<SesiPengguna | null> {
   const token = cookies().get(NAMA_COOKIE_SESI)?.value;
   if (!token) return null;
-  const baris = satuBaris<Baris & { kedaluwarsa: string; pengguna_id: string }>(
+  const baris = await satuBaris<Baris & { kedaluwarsa: string; pengguna_id: string }>(
     "SELECT s.kedaluwarsa, s.id AS sesi_id, p.id, p.email, p.nama, p.peran FROM sesi s JOIN pengguna p ON p.id = s.pengguna_id WHERE s.token_hash = ?",
     hashToken(token),
   );
   if (!baris || String(baris.kedaluwarsa) < sekarangIso()) {
-    if (baris) jalankan("DELETE FROM sesi WHERE id = ?", String(baris.sesi_id));
+    if (baris) await jalankan("DELETE FROM sesi WHERE id = ?", String(baris.sesi_id));
     return null;
   }
   return {
@@ -65,7 +65,7 @@ export async function ambilSesiSaatIni(): Promise<SesiPengguna | null> {
 export async function hapusSesiSaatIni(): Promise<void> {
   const token = cookies().get(NAMA_COOKIE_SESI)?.value;
   if (token) {
-    jalankan("DELETE FROM sesi WHERE token_hash = ?", hashToken(token));
+    await jalankan("DELETE FROM sesi WHERE token_hash = ?", hashToken(token));
   }
   cookies().delete(NAMA_COOKIE_SESI);
 }

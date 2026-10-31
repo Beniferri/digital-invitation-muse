@@ -4,14 +4,22 @@ import { kirimRsvp } from "@/lib/aksiRsvp";
 // action kirimRsvp, jadi tidak butuh JavaScript di sisi tamu.
 // Jumlah tamu tidak dihitung kalau tamu memilih "Tidak bisa hadir"
 // (diatur di server), dan itu dijelaskan di bawah kolom jumlah.
+// Pengaman spam Tahap 4: waktu_muat (waktu render halaman dari server,
+// dipakai cek jeda minimum) dan kolom honeypot situs_web (tersembunyi
+// dari manusia, hanya diisi bot — lihat aksiRsvp).
 const gayaInput =
   "mt-2 min-h-[48px] w-full rounded-2xl border border-tanah-900/15 bg-white/80 px-4 py-3 text-[15px]";
 const gayaLabel = "text-sm font-bold";
 
-export default function FormulirRsvp({ kode }: { kode: string }) {
+export default function FormulirRsvp({ kode, waktuMuat }: { kode: string; waktuMuat: number }) {
   return (
     <form action={kirimRsvp} className="mt-5 space-y-4">
       <input type="hidden" name="kode" value={kode} />
+      <input type="hidden" name="waktu_muat" value={String(waktuMuat)} />
+      <div aria-hidden="true" style={{ display: "none" }}>
+        <label htmlFor="situs-web-rsvp">Situs web</label>
+        <input id="situs-web-rsvp" name="situs_web" tabIndex={-1} autoComplete="off" />
+      </div>
       <div>
         <label htmlFor="nama-rsvp" className={gayaLabel}>Nama kamu</label>
         <input id="nama-rsvp" name="nama" required minLength={2} maxLength={100} className={gayaInput} placeholder="Tulis nama lengkapmu" />

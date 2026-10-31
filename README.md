@@ -39,14 +39,19 @@ data acara, dan membagikan undangan lewat WhatsApp dalam beberapa menit.
 Mulai tahap ini, data tidak lagi disimpan di `data/toko.json` saat aplikasi
 jalan. Berkas itu hanya dipakai sekali sebagai sumber seed awal.
 
-- **Database:** SQLite bawaan Node (`node:sqlite`, berkas `dev.db` lewat
-  `DATABASE_URL`). Skema ada di `db/skema.sql` dan dibuat otomatis oleh
-  `lib/db.ts` saat database pertama dibuka: Pengguna, Sesi, Templat,
-  Undangan, PaketHarga, Pesanan, Langganan. Tidak ada dependensi biner eksternal, jadi proyek
-  langsung jalan tanpa akun layanan luar. Untuk Postgres yang di-hosting
-  (misalnya Supabase), ganti lapisan `lib/db.ts` dengan driver Postgres —
-  pemanggilnya tidak berubah, karena mereka hanya memakai fungsi baca/
-  tulis di lapisan itu.
+- **Database (Tahap 4: dua backend):** defaultnya SQLite bawaan Node
+  (`node:sqlite`, berkas `dev.db` lewat `DATABASE_URL`). Kalau
+  `DATABASE_URL` diawali `postgres://`/`postgresql://`, aplikasi memakai
+  Postgres yang di-hosting (mis. layanan Postgres di Coolify atau
+  Supabase) lewat driver `pg` — skema dan kuerinya sama, placeholder
+  `?` diterjemahkan ke `$1, $2, ...` di `lib/db.ts`, dan semua fungsi
+  lapisan itu asinkron. Skema ada di `db/skema.sql` dan dibuat otomatis
+  oleh `lib/db.ts` saat database pertama dibuka: Pengguna, Sesi,
+  Templat, Undangan, PaketHarga, Pesanan, Langganan, PercobaanRsvp.
+  Catatan jujur: dukungan Postgres di kode sudah paritas dengan SQLite
+  (tes alur penuh lolos di keduanya, lihat RENCANA-PENYELESAIAN Tahap 4),
+  tapi belum pernah dites ke server Postgres sungguhan — sebelum
+  memindah produksi, baca dulu bagian migrasi di bawah.
 - **Auth sungguhan:** kata sandi di-hash dengan scrypt (`lib/kataSandi.ts`),
   sesi disimpan di tabel Sesi dan dikirim sebagai cookie httpOnly
   (`lib/sesi.ts`). Tidak ada lagi kata sandi bawaan `admin123` dan tidak
@@ -55,12 +60,16 @@ jalan. Berkas itu hanya dipakai sekali sebagai sumber seed awal.
 - **Akun:** daftar lewat `/daftar`, masuk lewat `/masuk`, halaman akun di
   `/akun`, masuk admin lewat `/admin/login` (hanya akun berperang admin).
 - **Foto sampul template:** admin bisa mengunggah foto sampul di formulir
-  template (maksimal 5 MB, JPG/PNG/WebP). Berkas disimpan di
-  `public/unggahan/` lewat `lib/penyimpananFoto.ts`. Batasnya: di platform
-  serverless dengan sistem berkas sementara, unggahan bisa hilang saat
-  deployment ulang — untuk produksi di platform seperti itu, ganti
-  `simpanFoto` dengan penyimpanan objek (Supabase Storage/S3) tanpa mengubah
-  pemanggilnya.
+  template (maksimal 5 MB, JPG/PNG/WebP). Berkas disimpan lewat
+  `lib/penyimpananFoto.ts` ke folder `UNGGAHAN_DIR` (default
+  `public/unggahan` untuk lokal; di image Docker, `/data/unggahan` di
+  dalam volume persisten yang sama dengan database, jadi foto tidak
+  hilang saat redeploy). Jalur publiknya tetap `/unggahan/<nama>`,
+  dilayani route `/api/unggahan/[nama]` (dengan fallback ke
+  `public/unggahan` untuk berkas lama). Batasnya: di platform serverless
+  murni tanpa volume, unggahan tetap bisa hilang — untuk itu, ganti
+  `simpanFoto` dengan penyimpanan objek (Supabase Storage/S3) tanpa
+  mengubah pemanggilnya.
 
 ### Menjalankan fondasi dari nol
 
@@ -264,6 +273,46 @@ Alur uang sudah jalan di kode (uji Sandbox masih menunggu kunci, lihat di bawah)
    undangan berhasil, dan aktivasi di luar slot ditolak dengan pesan jelas.
    Setelah lolos, ganti ke kunci Production + `MIDTRANS_IS_PRODUCTION="true"`
    dan ulangi konfigurasi dasbor di akun Production.
+
+## Fondasi produksi (Tahap 4 rencana penyelesaian)
+
+- **Migrasi ke Postgres (opsional, belum aktif di produksi):**
+  1. Buat database Postgres kosong (layanan Postgres di Coolify atau Supabase).
+  2. Dari mesin yang bisa menjangkau KEDUA database, jalankan:
+     `SUMBER_DATABASE_URL="file:/data/dev.db" TUJUAN_DATABASE_URL="postgresql://..." npx tsx scripts/migrasi-ke-postgres.ts`
+     (skrip menolak jalan kalau target sudah berisi data; tabel `sesi`
+     sengaja tidak disalin — pengguna login ulang sekali; hash kata sandi
+     ikut pindah apa adanya).
+  3. Ganti `DATABASE_URL` di Coolify ke URL Postgres, lalu redeploy.
+  4. Verifikasi: masuk sebagai pengguna lama (kata sandi sama), buka
+     undangan lama + RSVP-nya, lalu cek satu pembelian baru end-to-end.
+  5. Cadangan Postgres: pakai `pg_dump` (skrip `cadangkan-db.mjs` di bawah
+     khusus SQLite dan akan menolak URL Postgres dengan pesan jelas).
+  6. Yang belum terverifikasi: migrasi ini sudah dites ke emulator
+     Postgres (pg-mem) dan paritas alurnya lolos, tapi belum pernah dites
+     ke server Postgres sungguhan. Jangan jadikan Postgres sebagai satu-
+     satunya salinan data sebelum langkah 4 di atas lolos.
+- **Cadangan SQLite (sudah dites pulihnya):**
+  `node scripts/cadangkan-db.mjs [folder]` membuat salinan konsisten
+  (VACUUM INTO, boleh jalan saat server hidup), memeriksa salinannya,
+  dan menghapus cadangan di luar retensi (default 7, `CADANGAN_RETENSI`).
+  Folder default: `CADANGAN_DIR`, atau `/data/cadangan` kalau database di
+  `/data`, atau `./cadangan`. Pulihkan dengan (server HARUS berhenti dulu):
+  `node scripts/pulihkan-db.mjs <file-cadangan>` — skrip menolak jalan
+  kalau ada berkas jurnal (tanda server masih jalan), menyimpan salinan
+  pengaman database aktif, lalu menimpa. Jadwal otomatis belum terpasang
+  di dalam image: pasang satu cron di host/Coolify yang menjalankan
+  skrip cadangan di dalam container setiap hari (mis. lewat
+  `docker exec <container> node scripts/cadangkan-db.mjs`).
+- **Pengaman spam RSVP:** honeypot (`situs_web` tersembunyi), jeda minimum
+  3 detik dari render halaman, dan batas 20 kiriman per jam per IP per
+  undangan (tabel `percobaan_rsvp`, hanya hash IP yang disimpan — pasang
+  `RSVP_IP_SALT` acak di produksi; baris >1 jam terhapus otomatis di
+  setiap pengecekan). Kalau spam lolos juga, langkah berikut adalah
+  CAPTCHA (mis. Turnstile/hCaptcha) — belum dibangun.
+- **Healthcheck:** `GET /api/sehat` menjawab 200 kalau aplikasi hidup dan
+  database bisa dijangkau (500 kalau tidak). Dockerfile memasang
+  HEALTHCHECK ke endpoint ini; di Coolify, pakai path `/api/sehat`.
 
 ## Yang sengaja tidak ada di MVP
 

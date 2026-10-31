@@ -28,9 +28,9 @@ export default async function Paket({
 }) {
   const sesi = await ambilSesiSaatIni();
   if (!sesi) redirect("/masuk?lanjut=/akun/paket");
-  const daftarPaket = bacaDaftarPaketJual();
-  const langganan = langgananAktifPengguna(sesi.id);
-  const terpakai = jumlahUndanganAktifPengguna(sesi.id);
+  const daftarPaket = await bacaDaftarPaketJual();
+  const langganan = await langgananAktifPengguna(sesi.id);
+  const terpakai = await jumlahUndanganAktifPengguna(sesi.id);
   const galat = searchParams?.galat ? pesanGalat[searchParams.galat] : undefined;
 
   return (

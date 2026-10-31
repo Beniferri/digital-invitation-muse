@@ -16,6 +16,9 @@ export const dynamic = "force-dynamic";
 const pesanGalat: Record<string, string> = {
   tutup: "RSVP untuk undangan ini sudah ditutup.",
   nama: "Nama wajib diisi, minimal 2 huruf.",
+  cepat: "Kirim terlalu cepat — tunggu sebentar lalu coba lagi.",
+  batas: "Terlalu banyak percobaan dari perangkat ini dalam satu jam terakhir. Tunggu sebentar lalu coba lagi.",
+  robot: "Gagal mengirim. Coba lagi.",
 };
 
 export default async function HalamanTamu({
@@ -32,7 +35,7 @@ export default async function HalamanTamu({
   // halaman ini menampilkan status yang benar (tamu tetap bisa melihat,
   // tapi RSVP sudah ditutup — aturan yang sama dengan undangan Selesai).
   if (undangan.penggunaId) {
-    periksaKedaluwarsaPengguna(undangan.penggunaId);
+    await periksaKedaluwarsaPengguna(undangan.penggunaId);
     undangan = await cariUndanganOlehKode(params.kode);
     if (!undangan || undangan.status === "Draft") notFound();
   }
@@ -102,7 +105,7 @@ export default async function HalamanTamu({
           </p>
         )}
         {undangan.status === "Aktif" ? (
-          <FormulirRsvp kode={undangan.kodeTamu} />
+          <FormulirRsvp kode={undangan.kodeTamu} waktuMuat={Date.now()} />
         ) : (
           <p className="mt-4 rounded-2xl bg-krem-200 px-4 py-3 text-sm font-bold text-tinta">
             RSVP untuk undangan ini sudah ditutup karena acaranya sudah selesai.

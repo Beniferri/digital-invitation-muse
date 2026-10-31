@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ diterima: false, alasan: "tanda tangan tidak cocok" }, { status: 400 });
   }
 
-  const pesanan = cariPesananOlehOrderId(orderId);
+  const pesanan = await cariPesananOlehOrderId(orderId);
   if (!pesanan) {
     return NextResponse.json({ diterima: true, alasan: "pesanan tidak dikenal, diabaikan" });
   }
@@ -74,9 +74,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ diterima: true, alasan: "status tidak dipetakan, diabaikan" });
   }
 
-  const diperbarui = ubahStatusPesanan(orderId, statusBaru, paymentType);
+  const diperbarui = await ubahStatusPesanan(orderId, statusBaru, paymentType);
   if (diperbarui && statusBaru === "Lunas") {
-    aktifkanLanggananDariPesanan(diperbarui);
+    await aktifkanLanggananDariPesanan(diperbarui);
   }
   return NextResponse.json({ diterima: true, status: statusBaru });
 }

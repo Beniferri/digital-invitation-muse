@@ -81,8 +81,8 @@ function petakanLangganan(baris: Baris): Langganan {
   };
 }
 
-export function cariPaket(nama: string): PaketJual | null {
-  const baris = satuBaris<Baris>("SELECT * FROM paket_harga WHERE nama = ?", nama);
+export async function cariPaket(nama: string): Promise<PaketJual | null> {
+  const baris = await satuBaris<Baris>("SELECT * FROM paket_harga WHERE nama = ?", nama);
   if (!baris) return null;
   return {
     nama: String(baris.nama),
@@ -93,8 +93,8 @@ export function cariPaket(nama: string): PaketJual | null {
   };
 }
 
-export function bacaDaftarPaketJual(): PaketJual[] {
-  return semuaBaris("SELECT * FROM paket_harga ORDER BY urutan ASC").map((baris) => ({
+export async function bacaDaftarPaketJual(): Promise<PaketJual[]> {
+  return (await semuaBaris("SELECT * FROM paket_harga ORDER BY urutan ASC")).map((baris) => ({
     nama: String(baris.nama),
     keterangan: String(baris.keterangan),
     hargaBulanan: Number(baris.harga_bulanan),
@@ -116,19 +116,19 @@ export function buatOrderId(): string {
 /** Membuat pesanan baru berstatus Menunggu. Tidak memanggil Midtrans —
  *  token Snap dibuat terpisah oleh aksi pembayaran, supaya kegagalan
  *  Midtrans tidak menghapus pesanan yang sudah dibuat. */
-export function buatPesanan(
+export async function buatPesanan(
   penggunaId: string,
   namaPaket: string,
   periode: PeriodePembayaran,
-): Pesanan {
-  const paket = cariPaket(namaPaket);
+): Promise<Pesanan> {
+  const paket = await cariPaket(namaPaket);
   if (!paket) throw new Error("Paket tidak ditemukan.");
   const nominal = nominalPaket(paket, periode);
   if (nominal <= 0) throw new Error("Nominal paket tidak valid.");
   const sekarang = sekarangIso();
   const id = idBaru();
   const orderId = buatOrderId();
-  jalankan(
+  await jalankan(
     "INSERT INTO pesanan (id, order_id, pengguna_id, nama_paket, periode, nominal, status, dibuat_pada, diubah_pada) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
     id,
     orderId,
@@ -140,34 +140,34 @@ export function buatPesanan(
     sekarang,
     sekarang,
   );
-  const baris = satuBaris<Baris>("SELECT * FROM pesanan WHERE id = ?", id);
+  const baris = await satuBaris<Baris>("SELECT * FROM pesanan WHERE id = ?", id);
   if (!baris) throw new Error("Pesanan gagal dibuat.");
   return petakanPesanan(baris);
 }
 
-export function cariPesananOlehOrderId(orderId: string): Pesanan | null {
-  const baris = satuBaris<Baris>("SELECT * FROM pesanan WHERE order_id = ?", orderId);
+export async function cariPesananOlehOrderId(orderId: string): Promise<Pesanan | null> {
+  const baris = await satuBaris<Baris>("SELECT * FROM pesanan WHERE order_id = ?", orderId);
   return baris ? petakanPesanan(baris) : null;
 }
 
-export function cariPesananOlehIdDanPengguna(id: string, penggunaId: string): Pesanan | null {
-  const baris = satuBaris<Baris>("SELECT * FROM pesanan WHERE id = ? AND pengguna_id = ?", id, penggunaId);
+export async function cariPesananOlehIdDanPengguna(id: string, penggunaId: string): Promise<Pesanan | null> {
+  const baris = await satuBaris<Baris>("SELECT * FROM pesanan WHERE id = ? AND pengguna_id = ?", id, penggunaId);
   return baris ? petakanPesanan(baris) : null;
 }
 
-export function bacaDaftarPesananOlehPengguna(penggunaId: string): Pesanan[] {
-  return semuaBaris(
+export async function bacaDaftarPesananOlehPengguna(penggunaId: string): Promise<Pesanan[]> {
+  return (await semuaBaris(
     "SELECT * FROM pesanan WHERE pengguna_id = ? ORDER BY dibuat_pada DESC",
     penggunaId,
-  ).map(petakanPesanan);
+  )).map(petakanPesanan);
 }
 
-export function bacaSemuaPesanan(): Pesanan[] {
-  return semuaBaris("SELECT * FROM pesanan ORDER BY dibuat_pada DESC").map(petakanPesanan);
+export async function bacaSemuaPesanan(): Promise<Pesanan[]> {
+  return (await semuaBaris("SELECT * FROM pesanan ORDER BY dibuat_pada DESC")).map(petakanPesanan);
 }
 
-export function bacaSemuaLangganan(): Langganan[] {
-  return semuaBaris("SELECT * FROM langganan ORDER BY dibuat_pada DESC").map(petakanLangganan);
+export async function bacaSemuaLangganan(): Promise<Langganan[]> {
+  return (await semuaBaris("SELECT * FROM langganan ORDER BY dibuat_pada DESC")).map(petakanLangganan);
 }
 
 export interface PesananDenganEmail extends Pesanan {
@@ -179,31 +179,31 @@ export interface LanggananDenganEmail extends Langganan {
 }
 
 /** Daftar pesanan + langganan untuk dasbor admin (dengan email pembeli). */
-export function bacaSemuaPesananDenganEmail(): PesananDenganEmail[] {
-  return semuaBaris(
+export async function bacaSemuaPesananDenganEmail(): Promise<PesananDenganEmail[]> {
+  return (await semuaBaris(
     "SELECT p.*, u.email AS email FROM pesanan p JOIN pengguna u ON u.id = p.pengguna_id ORDER BY p.dibuat_pada DESC",
-  ).map((baris) => ({ ...petakanPesanan(baris), email: String(baris.email) }));
+  )).map((baris) => ({ ...petakanPesanan(baris), email: String(baris.email) }));
 }
 
-export function bacaSemuaLanggananDenganEmail(): LanggananDenganEmail[] {
-  return semuaBaris(
+export async function bacaSemuaLanggananDenganEmail(): Promise<LanggananDenganEmail[]> {
+  return (await semuaBaris(
     "SELECT l.*, u.email AS email FROM langganan l JOIN pengguna u ON u.id = l.pengguna_id ORDER BY l.dibuat_pada DESC",
-  ).map((baris) => ({ ...petakanLangganan(baris), email: String(baris.email) }));
+  )).map((baris) => ({ ...petakanLangganan(baris), email: String(baris.email) }));
 }
 
-export function bacaLanggananOlehPengguna(penggunaId: string): Langganan[] {
-  return semuaBaris(
+export async function bacaLanggananOlehPengguna(penggunaId: string): Promise<Langganan[]> {
+  return (await semuaBaris(
     "SELECT * FROM langganan WHERE pengguna_id = ? ORDER BY dibuat_pada DESC",
     penggunaId,
-  ).map(petakanLangganan);
+  )).map(petakanLangganan);
 }
 
-export function simpanTokenSnap(
+export async function simpanTokenSnap(
   pesananId: string,
   token: string,
   redirectUrl: string,
-): void {
-  jalankan(
+): Promise<void> {
+  await jalankan(
     "UPDATE pesanan SET snap_token = ?, snap_redirect_url = ?, diubah_pada = ? WHERE id = ?",
     token,
     redirectUrl,
@@ -212,19 +212,19 @@ export function simpanTokenSnap(
   );
 }
 
-export function ubahStatusPesanan(
+export async function ubahStatusPesanan(
   orderId: string,
   status: StatusPesanan,
   metodePembayaran: string | null,
-): Pesanan | null {
-  jalankan(
+): Promise<Pesanan | null> {
+  await jalankan(
     "UPDATE pesanan SET status = ?, metode_pembayaran = COALESCE(?, metode_pembayaran), diubah_pada = ? WHERE order_id = ?",
     status,
     metodePembayaran,
     sekarangIso(),
     orderId,
   );
-  return cariPesananOlehOrderId(orderId);
+  return await cariPesananOlehOrderId(orderId);
 }
 
 /**
@@ -235,24 +235,24 @@ export function ubahStatusPesanan(
  * ada pemeriksaan; dalam kasus itu undangannya tetap hidup di bawah
  * langganan baru).
  */
-export function periksaKedaluwarsaPengguna(penggunaId: string): boolean {
+export async function periksaKedaluwarsaPengguna(penggunaId: string): Promise<boolean> {
   const sekarang = sekarangIso();
-  const kedaluwarsa = semuaBaris(
+  const kedaluwarsa = await semuaBaris(
     "SELECT * FROM langganan WHERE pengguna_id = ? AND status = 'Aktif' AND berakhir_pada < ?",
     penggunaId,
     sekarang,
   );
   if (kedaluwarsa.length === 0) return false;
-  const masihBerlaku = satuBaris<Baris>(
+  const masihBerlaku = await satuBaris<Baris>(
     "SELECT id FROM langganan WHERE pengguna_id = ? AND status = 'Aktif' AND berakhir_pada >= ? LIMIT 1",
     penggunaId,
     sekarang,
   );
   for (const baris of kedaluwarsa) {
-    jalankan("UPDATE langganan SET status = 'Selesai' WHERE id = ?", String(baris.id));
+    await jalankan("UPDATE langganan SET status = 'Selesai' WHERE id = ?", String(baris.id));
   }
   if (!masihBerlaku) {
-    jalankan(
+    await jalankan(
       "UPDATE undangan SET status = 'Selesai' WHERE pengguna_id = ? AND status = 'Aktif'",
       penggunaId,
     );
@@ -261,17 +261,17 @@ export function periksaKedaluwarsaPengguna(penggunaId: string): boolean {
 }
 
 /** Langganan aktif pengguna (sudah melewati pemeriksaan kedaluwarsa dulu). */
-export function langgananAktifPengguna(penggunaId: string): Langganan | null {
-  periksaKedaluwarsaPengguna(penggunaId);
-  const baris = satuBaris<Baris>(
+export async function langgananAktifPengguna(penggunaId: string): Promise<Langganan | null> {
+  await periksaKedaluwarsaPengguna(penggunaId);
+  const baris = await satuBaris<Baris>(
     "SELECT * FROM langganan WHERE pengguna_id = ? AND status = 'Aktif' ORDER BY berakhir_pada DESC LIMIT 1",
     penggunaId,
   );
   return baris ? petakanLangganan(baris) : null;
 }
 
-export function jumlahUndanganAktifPengguna(penggunaId: string): number {
-  const baris = satuBaris<Baris>(
+export async function jumlahUndanganAktifPengguna(penggunaId: string): Promise<number> {
+  const baris = await satuBaris<Baris>(
     "SELECT COUNT(*) AS jumlah FROM undangan WHERE pengguna_id = ? AND status = 'Aktif'",
     penggunaId,
   );
@@ -287,12 +287,12 @@ export interface HasilCekSlot {
 }
 
 /** Apakah pengguna ini boleh mengaktifkan satu undangan lagi? */
-export function bolehAktifkanUndangan(penggunaId: string): HasilCekSlot {
-  const langganan = langgananAktifPengguna(penggunaId);
+export async function bolehAktifkanUndangan(penggunaId: string): Promise<HasilCekSlot> {
+  const langganan = await langgananAktifPengguna(penggunaId);
   if (!langganan) {
     return { boleh: false, alasan: "butuh-paket", langganan: null, terpakai: 0, maks: 0 };
   }
-  const terpakai = jumlahUndanganAktifPengguna(penggunaId);
+  const terpakai = await jumlahUndanganAktifPengguna(penggunaId);
   if (terpakai >= langganan.maksUndanganAktif) {
     return { boleh: false, alasan: "slot-habis", langganan, terpakai, maks: langganan.maksUndanganAktif };
   }
@@ -305,20 +305,20 @@ export function bolehAktifkanUndangan(penggunaId: string): HasilCekSlot {
  * membuat duplikat (webhook Midtrans bisa datang lebih dari sekali).
  * Langganan aktif lama diubah jadi Diganti — masa aktif tidak ditumpuk.
  */
-export function aktifkanLanggananDariPesanan(pesanan: Pesanan): Langganan | null {
+export async function aktifkanLanggananDariPesanan(pesanan: Pesanan): Promise<Langganan | null> {
   if (pesanan.status !== "Lunas") return null;
-  const sudahAda = satuBaris<Baris>("SELECT * FROM langganan WHERE pesanan_id = ?", pesanan.id);
+  const sudahAda = await satuBaris<Baris>("SELECT * FROM langganan WHERE pesanan_id = ?", pesanan.id);
   if (sudahAda) return petakanLangganan(sudahAda);
-  const paket = cariPaket(pesanan.namaPaket);
+  const paket = await cariPaket(pesanan.namaPaket);
   if (!paket) return null;
-  jalankan(
+  await jalankan(
     "UPDATE langganan SET status = 'Diganti' WHERE pengguna_id = ? AND status = 'Aktif'",
     pesanan.penggunaId,
   );
   const sekarang = new Date();
   const berakhir = new Date(sekarang.getTime() + durasiHariPeriode(pesanan.periode) * 24 * 3600 * 1000);
   const id = idBaru();
-  jalankan(
+  await jalankan(
     "INSERT INTO langganan (id, pengguna_id, pesanan_id, nama_paket, maks_undangan_aktif, mulai_pada, berakhir_pada, status, dibuat_pada) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
     id,
     pesanan.penggunaId,
@@ -330,6 +330,6 @@ export function aktifkanLanggananDariPesanan(pesanan: Pesanan): Langganan | null
     "Aktif",
     sekarang.toISOString(),
   );
-  const baris = satuBaris<Baris>("SELECT * FROM langganan WHERE id = ?", id);
+  const baris = await satuBaris<Baris>("SELECT * FROM langganan WHERE id = ?", id);
   return baris ? petakanLangganan(baris) : null;
 }

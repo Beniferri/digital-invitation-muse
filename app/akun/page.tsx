@@ -43,9 +43,9 @@ export default async function Akun({
   // tanggalnya (dan undangan Aktif di bawahnya) diubah jadi Selesai
   // sebelum dasbor dibaca, supaya angka di bawah tidak pernah
   // menampilkan langganan yang sebenarnya sudah habis.
-  periksaKedaluwarsaPengguna(sesi.id);
-  const langganan = langgananAktifPengguna(sesi.id);
-  const daftarPesanan = bacaDaftarPesananOlehPengguna(sesi.id);
+  await periksaKedaluwarsaPengguna(sesi.id);
+  const langganan = await langgananAktifPengguna(sesi.id);
+  const daftarPesanan = await bacaDaftarPesananOlehPengguna(sesi.id);
   const galat = searchParams?.galat ? pesanGalat[searchParams.galat] : undefined;
 
   const daftarDasar = await bacaDaftarUndanganOlehPengguna(sesi.id);
@@ -104,7 +104,7 @@ export default async function Akun({
               <p className="mt-1 text-[15px] leading-relaxed text-tintaLembut">
                 Paket <strong>{langganan.namaPaket}</strong> · aktif sampai{" "}
                 {formatTanggalIndonesia(langganan.berakhirPada)} ·{" "}
-                {jumlahUndanganAktifPengguna(sesi.id)} dari {langganan.maksUndanganAktif} slot undangan aktif terpakai.
+                {await jumlahUndanganAktifPengguna(sesi.id)} dari {langganan.maksUndanganAktif} slot undangan aktif terpakai.
               </p>
             ) : (
               <p className="mt-1 text-[15px] leading-relaxed text-tintaLembut">

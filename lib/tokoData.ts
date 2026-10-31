@@ -113,9 +113,9 @@ function petakanRsvp(baris: Baris): Rsvp {
 
 export async function bacaToko(): Promise<TokoData> {
   try {
-    const templat = semuaBaris("SELECT * FROM templat ORDER BY dibuat_pada ASC");
-    const undangan = semuaBaris("SELECT * FROM undangan ORDER BY dibuat_pada DESC");
-    const paketHarga = semuaBaris("SELECT * FROM paket_harga ORDER BY urutan ASC");
+    const templat = await semuaBaris("SELECT * FROM templat ORDER BY dibuat_pada ASC");
+    const undangan = await semuaBaris("SELECT * FROM undangan ORDER BY dibuat_pada DESC");
+    const paketHarga = await semuaBaris("SELECT * FROM paket_harga ORDER BY urutan ASC");
     return {
       templat: templat.map(petakanTemplat),
       undangan: undangan.map(petakanUndangan),
@@ -157,7 +157,7 @@ export async function bacaDaftarUndangan(): Promise<UndanganAdmin[]> {
 
 export async function cariUndanganOlehKode(kode: string): Promise<UndanganAdmin | null> {
   try {
-    const baris = satuBaris<Baris>("SELECT * FROM undangan WHERE kode_tamu = ?", kode);
+    const baris = await satuBaris<Baris>("SELECT * FROM undangan WHERE kode_tamu = ?", kode);
     return baris ? petakanUndangan(baris) : null;
   } catch {
     return null;
@@ -166,7 +166,7 @@ export async function cariUndanganOlehKode(kode: string): Promise<UndanganAdmin 
 
 export async function bacaDaftarUndanganOlehPengguna(penggunaId: string): Promise<UndanganAdmin[]> {
   try {
-    const baris = semuaBaris("SELECT * FROM undangan WHERE pengguna_id = ? ORDER BY dibuat_pada DESC", penggunaId);
+    const baris = await semuaBaris("SELECT * FROM undangan WHERE pengguna_id = ? ORDER BY dibuat_pada DESC", penggunaId);
     return baris.map(petakanUndangan);
   } catch {
     return [];
@@ -175,7 +175,7 @@ export async function bacaDaftarUndanganOlehPengguna(penggunaId: string): Promis
 
 export async function cariUndanganOlehId(id: string): Promise<UndanganAdmin | null> {
   try {
-    const baris = satuBaris<Baris>("SELECT * FROM undangan WHERE id = ?", id);
+    const baris = await satuBaris<Baris>("SELECT * FROM undangan WHERE id = ?", id);
     return baris ? petakanUndangan(baris) : null;
   } catch {
     return null;
@@ -184,7 +184,7 @@ export async function cariUndanganOlehId(id: string): Promise<UndanganAdmin | nu
 
 export async function bacaDaftarRsvp(undanganId: string): Promise<Rsvp[]> {
   try {
-    const baris = semuaBaris("SELECT * FROM rsvp WHERE undangan_id = ? ORDER BY dibuat_pada DESC", undanganId);
+    const baris = await semuaBaris("SELECT * FROM rsvp WHERE undangan_id = ? ORDER BY dibuat_pada DESC", undanganId);
     return baris.map(petakanRsvp);
   } catch {
     return [];
@@ -214,7 +214,7 @@ export async function bacaDaftarRsvpTersaring(
 ): Promise<Rsvp[]> {
   if (!kehadiran) return bacaDaftarRsvp(undanganId);
   try {
-    const baris = semuaBaris(
+    const baris = await semuaBaris(
       "SELECT * FROM rsvp WHERE undangan_id = ? AND kehadiran = ? ORDER BY dibuat_pada DESC",
       undanganId,
       kehadiran,
@@ -232,7 +232,7 @@ export interface RsvpTerbaru extends Rsvp {
 
 export async function bacaRsvpTerbaru(batas: number): Promise<RsvpTerbaru[]> {
   try {
-    const baris = semuaBaris(
+    const baris = await semuaBaris(
       "SELECT r.*, u.nama_pertama AS undangan_nama_pertama, u.nama_kedua AS undangan_nama_kedua, u.kode_tamu AS undangan_kode_tamu FROM rsvp r JOIN undangan u ON u.id = r.undangan_id ORDER BY r.dibuat_pada DESC LIMIT ?",
       batas,
     );

@@ -28,6 +28,12 @@ ENV HOSTNAME=0.0.0.0
 # ke /data dan biarkan variabel ini apa adanya; kalau volume dipasang di
 # tempat lain, ubah variabel ini di pengaturan Coolify (bukan di sini).
 ENV DATABASE_URL=file:/data/dev.db
+# Folder foto unggahan (Tahap 4): di dalam volume yang sama dengan
+# database, supaya foto tidak hilang saat redeploy. Jalur publiknya tetap
+# /unggahan/<nama> lewat route /api/unggahan (lihat next.config.mjs).
+ENV UNGGAHAN_DIR=/data/unggahan
+# Cadangan database (Tahap 4) default ke folder yang sama persistennya.
+ENV CADANGAN_DIR=/data/cadangan
 # node_modules ikut disalin lengkap (termasuk tsx) supaya perintah
 # `npm run db:seed` dan `npm run buat-admin` tetap bisa jalan dari
 # terminal container setelah deploy.
@@ -43,4 +49,7 @@ COPY --from=builder /app/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x docker-entrypoint.sh
 VOLUME /data
 EXPOSE 3000
+# Healthcheck (Tahap 4): Coolify/Docker menganggap container tidak sehat
+# kalau endpoint ini tidak menjawab 200. wget tersedia di image Alpine.
+HEALTHCHECK --interval=60s --timeout=5s --start-period=15s CMD wget -q -O /dev/null http://localhost:3000/api/sehat || exit 1
 ENTRYPOINT ["./docker-entrypoint.sh"]

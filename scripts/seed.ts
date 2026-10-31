@@ -47,9 +47,9 @@ async function utama() {
   const sekarang = sekarangIso();
 
   for (const templat of toko.templat) {
-    const sudahAda = satuBaris<Baris>("SELECT id FROM templat WHERE slug = ?", templat.slug);
+    const sudahAda = await satuBaris<Baris>("SELECT id FROM templat WHERE slug = ?", templat.slug);
     if (sudahAda) {
-      jalankan(
+      await jalankan(
         "UPDATE templat SET nama = ?, jenis_acara = ?, warna = ?, nuansa = ?, deskripsi = ?, aktif = ?, gaya_json = ?, contoh_json = ?, foto_sampul = ?, diubah_pada = ? WHERE slug = ?",
         templat.nama,
         templat.jenisAcara,
@@ -64,7 +64,7 @@ async function utama() {
         templat.slug,
       );
     } else {
-      jalankan(
+      await jalankan(
         "INSERT INTO templat (id, slug, nama, jenis_acara, warna, nuansa, deskripsi, aktif, gaya_json, contoh_json, foto_sampul, dibuat_pada, diubah_pada) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         idBaru(),
         templat.slug,
@@ -90,9 +90,9 @@ async function utama() {
   for (let indeks = 0; indeks < toko.paketHarga.length; indeks += 1) {
     const paket = toko.paketHarga[indeks];
     const maks = maksUndanganAktif[paket.nama] ?? 1;
-    const sudahAda = satuBaris<Baris>("SELECT id FROM paket_harga WHERE nama = ?", paket.nama);
+    const sudahAda = await satuBaris<Baris>("SELECT id FROM paket_harga WHERE nama = ?", paket.nama);
     if (sudahAda) {
-      jalankan(
+      await jalankan(
         "UPDATE paket_harga SET keterangan = ?, harga_bulanan = ?, harga_tahunan = ?, paling_populer = ?, fitur_json = ?, urutan = ?, maks_undangan_aktif = ? WHERE nama = ?",
         paket.keterangan,
         paket.hargaBulanan,
@@ -104,7 +104,7 @@ async function utama() {
         paket.nama,
       );
     } else {
-      jalankan(
+      await jalankan(
         "INSERT INTO paket_harga (id, nama, keterangan, harga_bulanan, harga_tahunan, paling_populer, fitur_json, urutan, maks_undangan_aktif) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         idBaru(),
         paket.nama,
@@ -119,11 +119,11 @@ async function utama() {
     }
   }
 
-  const jumlahUndangan = satuBaris<Baris>("SELECT COUNT(*) AS jumlah FROM undangan");
+  const jumlahUndangan = await satuBaris<Baris>("SELECT COUNT(*) AS jumlah FROM undangan");
   const sudahAdaUndangan = Number(jumlahUndangan?.jumlah ?? 0) > 0;
   if (!sudahAdaUndangan) {
     for (const undangan of toko.undangan) {
-      jalankan(
+      await jalankan(
         "INSERT INTO undangan (id, nama_pertama, nama_kedua, jenis_acara, tanggal, lokasi, slug_templat, status, dibuat_pada) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         idBaru(),
         undangan.namaPertama,

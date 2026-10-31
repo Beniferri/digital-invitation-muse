@@ -23,7 +23,7 @@ export async function masukPengguna(formulir: FormData, tujuanSukses = "/akun") 
   const email = teks(formulir, "email").toLowerCase();
   const kataSandi = String(formulir.get("kataSandi") ?? "");
   const lanjut = lanjutAman(teks(formulir, "lanjut"));
-  const pengguna = email ? satuBaris<Baris>("SELECT * FROM pengguna WHERE email = ?", email) : null;
+  const pengguna = email ? await satuBaris<Baris>("SELECT * FROM pengguna WHERE email = ?", email) : null;
   if (!pengguna || !periksaKataSandi(kataSandi, String(pengguna.kata_sandi_hash))) {
     redirect(`/masuk?gagal=1${lanjut ? `&lanjut=${lanjut}` : ""}`);
   }
@@ -34,7 +34,7 @@ export async function masukPengguna(formulir: FormData, tujuanSukses = "/akun") 
 export async function masukAdmin(formulir: FormData) {
   const email = teks(formulir, "email").toLowerCase();
   const kataSandi = String(formulir.get("kataSandi") ?? "");
-  const pengguna = email ? satuBaris<Baris>("SELECT * FROM pengguna WHERE email = ?", email) : null;
+  const pengguna = email ? await satuBaris<Baris>("SELECT * FROM pengguna WHERE email = ?", email) : null;
   if (!pengguna || String(pengguna.peran) !== "admin" || !periksaKataSandi(kataSandi, String(pengguna.kata_sandi_hash))) {
     redirect("/admin/login?gagal=1");
   }
@@ -51,10 +51,10 @@ export async function daftarPengguna(formulir: FormData) {
   if (!emailValid(email) || kataSandi.length < 8) {
     redirect(`/daftar?galat=1${akhiranLanjut}`);
   }
-  const sudahAda = satuBaris<Baris>("SELECT id FROM pengguna WHERE email = ?", email);
+  const sudahAda = await satuBaris<Baris>("SELECT id FROM pengguna WHERE email = ?", email);
   if (sudahAda) redirect(`/daftar?galat=sudah-ada${akhiranLanjut}`);
   const id = idBaru();
-  jalankan(
+  await jalankan(
     "INSERT INTO pengguna (id, email, nama, kata_sandi_hash, peran, dibuat_pada) VALUES (?, ?, ?, ?, ?, ?)",
     id,
     email,
