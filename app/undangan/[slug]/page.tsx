@@ -1,16 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { bacaDaftarTemplatAktif, cariTemplatAktif } from "@/lib/tokoData";
+import { cariTemplatAktif } from "@/lib/tokoData";
 import PratinjauUndangan from "@/komponen/PratinjauUndangan";
 import TombolWhatsApp from "@/komponen/TombolWhatsApp";
 
 // Route dinamis [slug] yang membaca data dari toko admin.
 // Halaman ini mobile-first: undangan ditampilkan seperti layar ponsel di tengah,
 // karena mayoritas penerima membukanya dari WhatsApp di ponsel.
-export async function generateStaticParams() {
-  const daftarTemplat = await bacaDaftarTemplatAktif();
-  return daftarTemplat.map((templat) => ({ slug: templat.slug }));
-}
+// Dinamis (bukan SSG): template bisa ditambah/diubah lewat admin setelah
+// build, jadi halaman contoh harus dibaca segar dari database runtime.
+export const dynamic = "force-dynamic";
 
 export default async function ContohUndangan({ params }: { params: { slug: string } }) {
   const templat = await cariTemplatAktif(params.slug);

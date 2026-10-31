@@ -3,6 +3,10 @@ import FormulirEditor from "@/komponen/FormulirEditor";
 import { bacaDaftarTemplatAktif } from "@/lib/tokoData";
 
 // Suspense diperlukan karena editor membaca parameter tautan (?templat=...).
+// Dinamis dengan alasan yang sama seperti landing: daftar template harus
+// dibaca segar dari database runtime, bukan dari hasil build.
+export const dynamic = "force-dynamic";
+
 export default async function Editor() {
   const daftarTemplat = await bacaDaftarTemplatAktif();
   return (

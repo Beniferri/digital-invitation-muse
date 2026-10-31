@@ -10,6 +10,13 @@ import PratinjauUndangan from "@/komponen/PratinjauUndangan";
 // Halaman landing (server component). Data diambil dari database
 // lewat toko admin, bukan dari CMS. Bagian interaktif (harga, FAQ)
 // dipisah ke komponen klien.
+// WAJIB dinamis: datanya berasal dari SQLite runtime yang berubah lewat
+// admin dan seed tanpa rebuild. Kalau halaman ini statis, hasil build
+// (yang databasenya masih kosong di builder Docker/Railpack) akan
+// membeku dalam keadaan kosong dan tidak pernah menampilkan template
+// walaupun database runtime sudah di-seed.
+export const dynamic = "force-dynamic";
+
 export default async function Beranda() {
   const daftarTemplat = await bacaDaftarTemplatAktif();
   const daftarPaketHarga = await bacaDaftarPaketHarga();

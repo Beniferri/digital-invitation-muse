@@ -1,0 +1,13 @@
+# Berkas yang tidak boleh masuk image Docker.
+# Terutama: database lokal dan environment lokal tidak boleh bocor ke image
+# (dan tidak boleh menimpa database volume di container).
+.git
+.github
+node_modules
+.next
+dev.db
+dev.db-journal
+.env
+.env.local
+*.log
+.DS_Store

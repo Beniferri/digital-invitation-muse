@@ -73,7 +73,45 @@ npm run dev
 Akun admin yang dibuat lewat skrip di atas dipakai untuk masuk ke
 `/admin/login`. Kata sandi tidak pernah ditulis ke berkas proyek.
 
-## Deploy di Coolify (Railpack)
+## Deploy di Coolify
+
+Ada dua penyebab situs deploy tampil kosong yang sudah diperbaiki di kode,
+bukan cuma di pengaturan Coolify. Keduanya harus dipahami supaya tidak
+terulang:
+
+1. **Database tidak ikut repo dan tidak pernah di-seed di container.**
+   `dev.db` masuk `.gitignore`, jadi container pertama selalu mulai dengan
+   tabel kosong.
+2. **Halaman publik dulunya statis.** Landing, katalog, editor, dan contoh
+   undangan dulunya di-prerender saat build — dan saat build di builder
+   (Railpack/Docker), databasenya masih kosong. Hasil build itu membeku
+   dalam keadaan kosong, jadi walaupun database runtime sudah di-seed,
+   halaman publik tetap menampilkan "Belum ada template aktif" sampai
+   rebuild berikutnya. Sekarang semua halaman publik itu dinamis
+   (`force-dynamic`), jadi selalu dibaca segar dari database runtime.
+
+### Cara Dockerfile (disarankan)
+
+Pakai Build Pack **Dockerfile** di Coolify (bukan Railpack), dengan
+`Dockerfile` di root repo ini. Dockerfile ini memakai Node 24 secara
+eksplisit, build, lalu jalan lewat `docker-entrypoint.sh`:
+
+- Entrypoint memeriksa database lewat `scripts/perlu-seed.mjs`: kalau
+  tabel template masih kosong, ia menjalankan `npm run db:seed` sekali.
+  Kalau database sudah berisi (mis. dari volume setelah redeploy), seed
+  **dilewati** supaya edit template/paket/undangan lewat dasbor tidak
+  tertimpa kembali ke data contoh.
+- Langkah di Coolify: pilih Build Pack Dockerfile, pasang volume persisten
+  ke `/data`, set environment variable `DATABASE_URL=file:/data/dev.db`,
+  lalu redeploy. Setelah container jalan, buat akun admin sekali lewat
+  terminal container (`npm run buat-admin -- email kata-sandi`) — seed
+  tidak membuat akun admin, jadi langkah ini tetap manual sekali saja.
+- Catatan: foto sampul yang diunggah lewat admin tersimpan di
+  `public/unggahan/` di dalam container dan ikut hilang saat redeploy
+  kalau folder itu tidak ikut di-volume-kan. Itu keterbatasan yang
+  diketahui, bukan bagian dari perbaikan database ini.
+
+### Cara Railpack
 
 Repo ini bisa di-deploy Railpack apa adanya (build `npm install` +
 `npm run build`, jalan `npm run start`). Yang perlu diperhatikan hanyalah
@@ -233,6 +271,10 @@ db/
 scripts/
   seed.ts                   # Pindahkan data/toko.json ke database
   buat-admin.ts             # Buat akun admin di database
+  perlu-seed.mjs            # Cek database kosong untuk entrypoint Docker (JS polos)
+Dockerfile                  # Image Coolify: Node 24, build, jalan via entrypoint
+docker-entrypoint.sh        # Seed sekali kalau database masih kosong, lalu jalan
+.dockerignore               # Berkas yang tidak masuk image (dev.db, .env, .next)
 lib/
   format.ts                 # Format tanggal Indonesia dan tautan WhatsApp
   tokoData.ts               # Baca data dari database (SQLite) untuk publik dan admin

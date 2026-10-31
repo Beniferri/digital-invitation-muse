@@ -2,6 +2,10 @@ import { bacaDaftarTemplatAktif } from "@/lib/tokoData";
 import FilterKatalog from "@/komponen/FilterKatalog";
 
 // Halaman katalog (server component): datanya dari toko admin, filternya komponen klien.
+// Dinamis dengan alasan yang sama seperti landing: database runtime bisa
+// berubah tanpa rebuild, jadi katalog harus selalu dibaca segar.
+export const dynamic = "force-dynamic";
+
 export default async function Katalog() {
   const daftarTemplat = await bacaDaftarTemplatAktif();
   return (
