@@ -180,6 +180,16 @@ yang panjang.
   balasan lengkap), dan bisa menghapus balasan spam atau salah isi.
 - **Data RSVP** tersimpan di tabel `rsvp` (lihat `db/skema.sql`), dengan
   foreign key ke undangan — menghapus undangan ikut menghapus balasan RSVP-nya.
+- **Tahap 3 (RSVP lebih berguna):** di detail RSVP admin dan pengguna ada
+  sorotan "Tamu yang akan datang" (jumlah tamu dari balasan Hadir saja —
+  Ragu belum dihitung, Tidak tidak dihitung), filter daftar berdasarkan
+  kehadiran (`?kehadiran=Hadir/Ragu/Tidak`, ringkasan tetap dari daftar
+  penuh), dan tombol Unduh CSV (`/api/rsvp/[id]/csv`, hanya admin dan
+  pemilik undangan). CSV selalu berisi semua balasan (bukan yang
+  terfilter) dengan urutan yang sama seperti dasbor, format RFC 4180 +
+  BOM UTF-8 supaya Excel membacanya benar — jumlah baris CSV sama dengan
+  total balasan di dasbor, dan jumlah tamu Hadir di CSV sama dengan angka
+  "Tamu yang akan datang".
 
 ## Dasbor admin dan dasbor pengguna
 
@@ -298,14 +308,15 @@ app/
   u/[kode]/page.tsx         # Halaman tamu + formulir RSVP + dinding ucapan
   admin/                    # Dasbor admin: ringkasan, template, undangan, harga, pesanan
   admin/login/page.tsx      # Halaman masuk admin (akun database)
-  admin/undangan/[id]/page.tsx  # Detail RSVP satu undangan (admin)
+  admin/undangan/[id]/page.tsx  # Detail RSVP satu undangan (admin) + filter + unduh CSV
+  api/rsvp/[id]/csv/route.ts  # Unduh CSV RSVP (admin atau pemilik undangan)
   admin/pesanan/page.tsx    # Daftar pesanan + langganan (hanya baca)
   api/midtrans/notifikasi/route.ts  # Webhook Midtrans (ubah status pesanan, aktifkan langganan)
   masuk/page.tsx            # Masuk pengguna biasa
   daftar/page.tsx           # Daftar pengguna biasa
   akun/page.tsx             # Dasbor pengguna: undangan milik sendiri + RSVP + langganan + riwayat bayar
   akun/undangan/baru/page.tsx   # Tambah undangan milik pengguna
-  akun/undangan/[id]/page.tsx   # Detail RSVP milik pengguna (hanya baca)
+  akun/undangan/[id]/page.tsx   # Detail RSVP milik pengguna (hanya baca) + filter + unduh CSV
   akun/paket/page.tsx       # Beli paket (Midtrans Snap Redirect)
   akun/pembayaran/[id]/page.tsx # Status satu pesanan + lanjut/coba lagi bayar
   layout.tsx                # Tata letak, huruf, navigasi, dan kaki halaman
@@ -342,7 +353,8 @@ docker-entrypoint.sh        # Seed sekali kalau database masih kosong, lalu jala
 .dockerignore               # Berkas yang tidak masuk image (dev.db, .env, .next)
 lib/
   format.ts                 # Format tanggal Indonesia dan tautan WhatsApp
-  tokoData.ts               # Baca data dari database (SQLite) untuk publik dan admin
+  tokoData.ts               # Baca data dari database (SQLite) untuk publik dan admin, termasuk filter RSVP
+  csvRsvp.ts                # Pembangun CSV RSVP (fungsi murni, RFC 4180 + BOM UTF-8)
   aksiAdmin.ts              # Server action admin: CRUD template/undangan/harga + hapus RSVP
   aksiPengguna.ts           # Server action pengguna: undangan milik sendiri (cek kepemilikan), termasuk simpan dari editor
   aksiRsvp.ts               # Server action RSVP tamu (publik, anti-ganda per nama)

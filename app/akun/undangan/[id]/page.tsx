@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ambilSesiSaatIni } from "@/lib/sesi";
-import { bacaDaftarRsvp, bacaDaftarTemplat, bacaRingkasanRsvp, cariUndanganOlehId } from "@/lib/tokoData";
+import {
+  bacaDaftarRsvpTersaring,
+  bacaDaftarTemplat,
+  bacaRingkasanRsvp,
+  cariUndanganOlehId,
+  kehadiranBersih,
+} from "@/lib/tokoData";
+import { labelKehadiran } from "@/lib/csvRsvp";
 import { formatTanggalIndonesia } from "@/lib/format";
 import PratinjauUndangan from "@/komponen/PratinjauUndangan";
 
@@ -11,8 +18,17 @@ export const dynamic = "force-dynamic";
 // undangan yang pemiliknya bukan pengguna yang masuk diarahkan kembali
 // ke /akun, supaya pengguna tidak bisa mengintip RSVP undangan orang lain
 // hanya dengan menebak id-nya. Daftar balasan di sini hanya baca; hapus
-// balasan dilakukan admin dari dasbor admin.
-export default async function DetailRsvpPengguna({ params }: { params: { id: string } }) {
+// balasan dilakukan admin dari dasbor admin. Tahap 3 menambah filter
+// kehadiran, tombol unduh CSV, dan sorotan total tamu yang akan datang.
+// Ringkasan SELALU dari daftar penuh — filter hanya mengubah daftar yang
+// tampil, bukan angka ringkasan.
+export default async function DetailRsvpPengguna({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams?: { kehadiran?: string };
+}) {
   const sesi = await ambilSesiSaatIni();
   if (!sesi) redirect("/masuk");
 
@@ -22,8 +38,10 @@ export default async function DetailRsvpPengguna({ params }: { params: { id: str
 
   const daftarTemplat = await bacaDaftarTemplat();
   const templat = daftarTemplat.find((item) => item.slug === undangan.slugTemplat);
+  const filter = kehadiranBersih(searchParams?.kehadiran);
   const ringkasan = await bacaRingkasanRsvp(undangan.id);
-  const daftar = await bacaDaftarRsvp(undangan.id);
+  const daftar = await bacaDaftarRsvpTersaring(undangan.id, filter);
+  const dasarFilter = `/akun/undangan/${undangan.id}`;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:py-10">
@@ -59,6 +77,14 @@ export default async function DetailRsvpPengguna({ params }: { params: { id: str
         </div>
       )}
 
+      <p role="status" className="mt-8 rounded-2xl bg-daun-100 px-4 py-3 text-[15px] font-bold text-daun-700">
+        Tamu yang akan datang: {ringkasan.totalTamuHadir} tamu
+        <span className="font-normal">
+          {" "}— dihitung dari {ringkasan.hadir} balasan Hadir saja. Balasan Masih ragu
+          ({ringkasan.totalTamuRagu} tamu potensial) belum dihitung, dan Tidak bisa hadir tidak dihitung.
+        </span>
+      </p>
+
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         {[
           { judul: "Total balasan", nilai: String(ringkasan.totalBalasan) },
@@ -73,7 +99,34 @@ export default async function DetailRsvpPengguna({ params }: { params: { id: str
         ))}
       </div>
 
-      <div className="mt-10 grid gap-4">
+      <div className="mt-10 flex flex-wrap items-center justify-between gap-4">
+        <nav aria-label="Filter RSVP berdasarkan kehadiran" className="flex flex-wrap gap-2 text-sm font-bold">
+          <Link href={dasarFilter} className={`min-h-[44px] rounded-full px-4 py-2 ${!filter ? "bg-tanah-600 text-white" : "border-2 border-tanah-600 text-tanah-700"}`}>
+            Semua ({ringkasan.totalBalasan})
+          </Link>
+          {([
+            { nilai: "Hadir", jumlah: ringkasan.hadir },
+            { nilai: "Ragu", jumlah: ringkasan.ragu },
+            { nilai: "Tidak", jumlah: ringkasan.tidak },
+          ] as const).map((pilihan) => (
+            <Link
+              key={pilihan.nilai}
+              href={`${dasarFilter}?kehadiran=${pilihan.nilai}`}
+              className={`min-h-[44px] rounded-full px-4 py-2 ${filter === pilihan.nilai ? "bg-tanah-600 text-white" : "border-2 border-tanah-600 text-tanah-700"}`}
+            >
+              {labelKehadiran(pilihan.nilai)} ({pilihan.jumlah})
+            </Link>
+          ))}
+        </nav>
+        <a href={`/api/rsvp/${undangan.id}/csv`} className="tombol-utama shrink-0 bg-tanah-600 text-sm text-white hover:bg-tanah-700">
+          Unduh CSV
+        </a>
+      </div>
+      <p className="mt-3 text-sm text-tintaLembut">
+        CSV berisi semua balasan (bukan yang terfilter), supaya jumlah barisnya sama dengan total balasan di atas.
+      </p>
+
+      <div className="mt-6 grid gap-4">
         {daftar.map((rsvp) => (
           <article key={rsvp.id} className="kartu-kaca rounded-[1.75rem] p-5">
             <p className="font-bold">
@@ -88,8 +141,10 @@ export default async function DetailRsvpPengguna({ params }: { params: { id: str
         ))}
       </div>
       {daftar.length === 0 && (
-        <p className="kartu-kaca mt-10 rounded-[2rem] p-6 text-center text-tintaLembut">
-          Belum ada balasan RSVP untuk undangan ini.
+        <p className="kartu-kaca mt-6 rounded-[2rem] p-6 text-center text-tintaLembut">
+          {filter
+            ? `Tidak ada balasan dengan status ${labelKehadiran(filter)} untuk undangan ini.`
+            : "Belum ada balasan RSVP untuk undangan ini."}
         </p>
       )}
     </div>

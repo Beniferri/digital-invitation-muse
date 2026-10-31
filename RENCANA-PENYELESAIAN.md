@@ -143,6 +143,37 @@ Masih terbuka (butuh user, menghambat uji Sandbox — bukan menghambat kode):
 
 ## Tahap 3 — RSVP yang lebih berguna untuk penyelenggara
 
+**Status: SELESAI 31 Okt 2026 (di kode; klik-tayang di peramban tetap
+perlu dicek di Coolify setelah push, karena POST server action tidak bisa
+dites di sandbox ini — tapi unduh CSV dan filter adalah GET, jadi keduanya
+sudah dites lewat curl di server produksi lokal, lihat catatan pengujian
+di bawah).**
+
+Yang dibangun:
+
+- Ekspor CSV (`/api/rsvp/[id]/csv`, tombol di detail admin + pengguna):
+  hanya admin dan pemilik undangan; tanpa sesi diarahkan ke `/masuk`.
+  CSV selalu berisi SEMUA balasan (bukan yang terfilter) dengan urutan
+  yang sama seperti dasbor, format RFC 4180 + BOM UTF-8, label kehadiran
+  sama seperti dasbor (Hadir / Masih ragu / Tidak bisa hadir).
+- Filter daftar RSVP (`?kehadiran=Hadir/Ragu/Tidak`) di detail admin dan
+  pengguna, dengan hitungan per status di tombol filter. Ringkasan tetap
+  dari daftar penuh — filter tidak mengubah angka ringkasan.
+- Sorotan "Tamu yang akan datang" di atas kartu ringkasan kedua halaman
+  detail: jumlah tamu dari balasan Hadir saja, dengan penjelasan bahwa
+  Ragu belum dihitung dan Tidak tidak dihitung.
+
+Catatan pengujian Tahap 3 (31 Okt 2026): build lolos; builder CSV dites
+via tsx (escaping koma/petik/baris baru, BOM, header, jumlah baris);
+filter + ringkasan dites via tsx di database uji (jumlah baris CSV =
+totalBalasan, jumlah tamu Hadir di CSV = totalTamuHadir); route CSV dites
+via curl di server produksi lokal dengan cookie sesi buatan (pemilik
+dapat 200 + attachment CSV, orang lain 403, tanpa sesi diarahkan ke
+/masuk, admin dapat 200); halaman detail terfilter dites via curl
+(?kehadiran=Ragu hanya menampilkan nama Ragu). Yang belum dites di
+peramban sungguhan: klik tombol Unduh CSV dan klik tombol filter (GET,
+risiko rendah — tapi tetap cek sekali di Coolify setelah push).
+
 Tujuan: dasbor RSVP yang sekarang sudah ada menjadi alasan orang tetap
 memakai produk ini sampai hari H, bukan sekadar formulir.
 

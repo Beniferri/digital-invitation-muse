@@ -191,6 +191,40 @@ export async function bacaDaftarRsvp(undanganId: string): Promise<Rsvp[]> {
   }
 }
 
+/**
+ * Nilai filter kehadiran dari parameter tautan. Hanya tiga nilai persis
+ * yang diterima; nilai lain (termasuk "Semua" atau kosong) berarti tanpa
+ * filter, supaya parameter buatan tidak bisa memunculkan status yang
+ * tidak ada.
+ */
+export function kehadiranBersih(nilai: string | string[] | undefined): KehadiranRsvp | null {
+  if (nilai === "Hadir" || nilai === "Tidak" || nilai === "Ragu") return nilai;
+  return null;
+}
+
+/**
+ * Daftar RSVP dengan filter kehadiran (Tahap 3). Tanpa filter, hasilnya
+ * sama persis dengan bacaDaftarRsvp. Ringkasan di halaman detail SELALU
+ * dihitung dari daftar penuh (bukan yang terfilter), supaya angka
+ * ringkasan tidak berubah saat pengguna memfilter daftar.
+ */
+export async function bacaDaftarRsvpTersaring(
+  undanganId: string,
+  kehadiran: KehadiranRsvp | null,
+): Promise<Rsvp[]> {
+  if (!kehadiran) return bacaDaftarRsvp(undanganId);
+  try {
+    const baris = semuaBaris(
+      "SELECT * FROM rsvp WHERE undangan_id = ? AND kehadiran = ? ORDER BY dibuat_pada DESC",
+      undanganId,
+      kehadiran,
+    );
+    return baris.map(petakanRsvp);
+  } catch {
+    return [];
+  }
+}
+
 export interface RsvpTerbaru extends Rsvp {
   namaUndangan: string;
   undanganKodeTamu: string;
