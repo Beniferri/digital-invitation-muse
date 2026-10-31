@@ -391,3 +391,21 @@ build lolos, semua halaman publik 200, penanda HTML baru terverifikasi
 di server produksi lokal (DB uji). Klik-tayang visual di ponsel
 sungguhan belum dites (keterbatasan sandbox) — cek sekali di HP
 setelah redeploy.
+
+## Navbar ponsel jadi drawer (31 Okt 2026, BELUM di-push)
+
+Umpan balik pengguna setelah redeploy (mode incognito, HP): navbar
+masih menumpuk. Penyebabnya: baris tautan kedua membungkus jadi dua
+baris di layar ~360px, dan pil navigasi sesak di 320px. Perbaikan:
+baris tautan kedua DIHAPUS; ponsel hanya menampilkan logo + tombol
+hamburger, semua tautan (Buat Undangan, Beranda, Katalog, Editor,
+Harga, Admin, Masuk) pindah ke drawer geser kanan dengan backdrop,
+Escape, dan tutup otomatis setelah memilih menu — pola yang sama
+dengan dasbor admin. Drawer tertutup memakai `invisible` (bukan cuma
+geser keluar layar) supaya tidak bisa difokus keyboard. Desktop tidak
+berubah. Tes: tsc + build lolos, HTML beranda memuat tombol hamburger
++ drawer + tautan desktop, baris tautan lama hilang, halaman publik
+200. Catatan: folder /tmp dibersihkan runtime sehingga DB uji lama
+hilang di tengah pengujian — DB uji kini di ~/workspace/dasbor-uji/
+(supaya awet) dan pemeriksaan server-wajib-hidup dulu sebelum klaim
+lulus, supaya hasil kosong tidak terbaca sebagai lulus.
