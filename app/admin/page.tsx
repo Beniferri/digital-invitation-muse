@@ -65,7 +65,7 @@ export default async function RingkasanAdmin({
     <div>
       <h1 className="font-serif text-4xl font-bold">Ringkasan</h1>
       <p className="mt-2 max-w-2xl text-[17px] leading-relaxed text-tintaLembut">
-        Langganan dan pendapatan UndanganKita, dihitung dari database — bukan angka contoh.
+        Langganan dan pendapatan BETA Storia, dihitung dari database — bukan angka contoh.
         Pendapatan rutin = langganan Aktif (tahunan dihitung nominal/12).
         Angka berhenti 30 hari tidak menghitung langganan yang diganti paket baru.
       </p>

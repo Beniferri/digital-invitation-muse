@@ -756,7 +756,7 @@ sampai ke image produksi (push + redeploy, aplikasi masih di SQLite)
 SEBELUM migrasi dijalankan, supaya yang dieksekusi di terminal
 container adalah versi yang sudah diperbaiki.
 
-## Perbaikan skrip migrasi Postgres, bagian 2: halaman_penuh (1 Nov 2026, belum di-push)
+## Perbaikan skrip migrasi Postgres, bagian 2: halaman_penuh (1 Nov 2026, sudah di-push, head 8922e25f)
 
 Percobaan migrasi pertama di produksi gagal dengan 42703
 (`column "halaman_penuh" of relation "templat" does not exist`).
@@ -788,3 +788,82 @@ sumbernya bukan database produksi (volume salah), dan migrasi
 tidak boleh dilanjutkan. Kalau hanya `pengguna` yang 0, produksi
 memang belum punya akun — setelah pindah, buat admin lewat
 `npm run buat-admin` di terminal container.
+
+## Eksekusi migrasi ke Postgres (1 Nov 2026, BERHASIL — pindah env masih menunggu)
+
+Eksekusi ulang skrip (head 8922e25f) di terminal container aplikasi
+berhasil dan terverifikasi oleh skrip sendiri (jumlah baris sumber =
+tujuan per tabel):
+- `templat.halaman_penuh: kolom ditambahkan` (langkah DDL idempotent
+  bekerja pada target dari eksekusi gagal sebelumnya — target tidak
+  dihapus dulu, sesuai rencana).
+- templat 4, paket_harga 3, undangan 2, foto_galeri 0,
+  pesanan/langganan/rsvp/percobaan_rsvp 0, pengguna 0, sesi 0 dilewati.
+- `pengguna` 0 terkonfirmasi sebagai fakta produksi (bukan volume
+  salah), karena `undangan` 2 baris ikut tersalin: produksi memang
+  belum punya akun pengguna. Konsekuensi: setelah DATABASE_URL
+  pindah ke Postgres, admin HARUS dibuat baru lewat
+  `npm run buat-admin` di terminal container (sesudah redeploy
+  dengan env Postgres, supaya tertulis ke Postgres bukan SQLite).
+
+Sisa langkah: putar kata sandi Postgres (disarankan — kata sandi
+sempat tertempel di chat), ganti DATABASE_URL ke URL internal
+Postgres (yang baru kalau kata sandi diputar), redeploy, verifikasi
+(/api/sehat, katalog, kedua undangan, login admin baru), lalu
+tindak lanjut cadangan pg_dump.
+
+## Rebrand ke BETA Storia + logo (1 Nov 2026, belum di-push)
+
+Keputusan user 1 Nov 2026: nama website menjadi **BETA Storia
+Digital Invitation** (sebelumnya UndanganKita; penyebutan "Beta
+Storia" di brief SAVENTIFY sebelumnya belum pernah dikonfirmasi
+sebagai rebrand — kini dikonfirmasi eksplisit). Domain tidak
+berubah (tetap inv.benifin.my.id); nama repo GitHub tidak berubah.
+
+Logo (kirim user 1 Nov 10:57 WIB, PNG transparan):
+- `public/logo/betastoria-ikon.png` (1000x1000, monogram BS) —
+  favicon via metadata `icons` (icon + apple).
+- `public/logo/betastoria-web.png` (1500x500, lockup horizontal) —
+  header situs, sidebar admin, header editor.
+- Keduanya disimpan di repo sebagai `.b64` (aturan aset biner) dan
+  didekode di tahap builder Dockerfile (pola decode diperluas ke
+  `public/logo/*.png.b64`). Berkas `.png` hasil decode TIDAK masuk
+  manifest push (biner), hanya `.b64` yang masuk.
+- Penyesuaian latar: logo cokelat transparan — di header situs
+  (pil kaca terang) dan header editor (latar krem) langsung pakai
+  gambar; di footer situs dan sidebar admin (latar tanah-900 gelap)
+  logo ditaruh dalam pil krem muda supaya kontrasnya terjaga
+  (bukan diutak-atik warnanya). Halaman tamu hanya ganti teks
+  kredit ("Dibuat dengan BETA Storia"), tanpa gambar logo.
+
+Sapuan rebrand: string `UndanganKita` -> `BETA Storia` di seluruh
+kode, Dockerfile, entrypoint, dan DAFTAR-PELUNCURAN.md (judul
+halaman, metadata, siteName, teks legal/FAQ/kredit, komentar).
+README ditulis ulang total (bukan lagi "Prototipe MVP": fitur
+aktual, stack, jalankan lokal, deploy Coolify, migrasi Postgres,
+struktur proyek, aturan aset biner). `.env.example` diperbarui:
+paragraf Postgres yang tadinya "nanti" kini menyatakan dukungan
+nyata + migrasi. RENCANA ini dan docs/halaman-tamu.md SENGAJA tidak
+disapu (dokumen riwayat — nama lama di sini adalah jejak sejarah,
+bukan merek berjalan).
+
+Beres-beres repo (audit 1 Nov 2026): TIDAK ada berkas kode mati —
+semua komponen/lib/data terimpor minimal satu kali. Yang benar-benar
+tidak perlu: `public/unggahan/.gitkeep` (folder dibuat otomatis
+oleh `lib/penyimpananFoto.ts` mkdir recursive). Skrip cadangan
+SQLite (`scripts/cadangkan-db.mjs`, `pulihkan-db.mjs`) masih
+berguna selama berkas SQLite jadi cadangan rollback — hapus hanya
+setelah cadangan `pg_dump` untuk Postgres berjalan. Berkas lokal
+yang tidak ada di repo (dev.db, .env.local, .jpg/.mp3 hasil decode,
+.next, node_modules, tsconfig.tsbuildinfo) tidak perlu dihapus dari
+repo karena memang tidak pernah masuk manifest push.
+
+Verifikasi rebrand (1 Nov 2026): tsc bersih + build lolos. Server
+fixture dengan database seed penuh (dasbor-uji/segar.db: 4 template,
+3 paket): beranda, katalog, editor semua 200, logo tampil, favicon
+`rel="icon" href="/logo/betastoria-ikon.png"`, nol string
+"UndanganKita" tersisa. Catatan: fixture lama tamu.db sempat
+menimbulkan 500 di beranda/katalog karena isinya minimal (2 template
+dengan contoh_json hanya judulAcara, 0 paket) — BUKAN regresi
+rebrand; database produksi berisi seed penuh sehingga tidak
+terdampak. Fixture segar (segar.db) dipakai untuk verifikasi ini.

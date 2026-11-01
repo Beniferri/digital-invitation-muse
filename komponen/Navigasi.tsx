@@ -8,6 +8,7 @@
 // jadi dua baris dan terlihat menumpuk (umpan balik pengguna 31 Okt 2026).
 // Drawer ditutup lewat backdrop, tombol Escape, atau setelah memilih menu.
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 
 const MENU_PONSEL = [
@@ -39,11 +40,8 @@ export default function Navigasi() {
           aria-label="Navigasi utama"
           className="kartu-kaca flex items-center justify-between gap-3 rounded-full px-4 py-2 sm:px-6"
         >
-          <Link href="/" className="flex min-w-0 items-center gap-2 font-serif text-lg font-bold text-tanah-700 sm:text-xl">
-            <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-tanah-600 text-lg text-krem-50">
-              ❦
-            </span>
-            <span className="truncate">UndanganKita</span>
+          <Link href="/" className="flex min-w-0 items-center" aria-label="BETA Storia — Beranda">
+            <Image src="/logo/betastoria-web.png" alt="BETA Storia" width={1500} height={500} priority className="h-9 w-auto sm:h-10" />
           </Link>
           <div className="hidden items-center gap-6 text-sm font-semibold text-tintaLembut md:flex">
             <Link href="/" className="hover:text-tanah-600">Beranda</Link>

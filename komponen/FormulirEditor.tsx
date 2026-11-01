@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import type { Templat } from "@/data/templat";
@@ -444,8 +445,8 @@ export default function FormulirEditor({
       {/* Header aplikasi ala referensi: brand | judul + DRAFT |
           tersimpan | Pratinjau | Simpan | Lanjut. */}
       <header className="flex shrink-0 flex-wrap items-center gap-3 border-b border-stone-200 px-4 py-3 sm:px-6">
-        <Link href="/" className="shrink-0 font-serif text-lg font-bold tracking-wide text-tanah-700">
-          UndanganKita
+        <Link href="/" className="shrink-0" aria-label="BETA Storia — Beranda">
+          <Image src="/logo/betastoria-web.png" alt="BETA Storia" width={1500} height={500} className="h-8 w-auto" />
         </Link>
         <p className="min-w-0 flex-1 truncate text-sm font-bold sm:text-[15px]">
           {namaUndangan || "Undangan baru"}{" "}

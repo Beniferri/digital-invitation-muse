@@ -8,7 +8,7 @@ import FilterKatalog from "@/komponen/FilterKatalog";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Katalog Template — UndanganKita",
+  title: "Katalog Template — BETA Storia",
   description:
     "Pilih templat undangan digital untuk pernikahan, aqiqah, wisuda, dan syukuran — semuanya bisa dipakai di paket apa pun.",
 };

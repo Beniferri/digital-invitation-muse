@@ -1020,7 +1020,7 @@ export default function UndanganZamrud({ data }: { data: DataZamrud }) {
           <p className="mt-10 text-xs text-krem-100/70">
             Dibuat dengan{" "}
             <Link href="/" className="font-bold text-emas-300 underline underline-offset-4">
-              UndanganKita
+              BETA Storia
             </Link>
           </p>
         </section>

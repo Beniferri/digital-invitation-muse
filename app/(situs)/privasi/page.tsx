@@ -1,4 +1,4 @@
-// Kebijakan Privasi UndanganKita (Tahap 5). Halaman statis.
+// Kebijakan Privasi BETA Storia (Tahap 5). Halaman statis.
 // Isinya ditulis sesuai data yang benar-benar dikumpulkan produk ini:
 // akun (email, nama, hash kata sandi scrypt), undangan, RSVP, pesanan
 // (tanpa nomor kartu — pembayaran ditangani Midtrans), cookie sesi
@@ -10,9 +10,9 @@ import type { Metadata } from "next";
 import HalamanTeks from "@/komponen/HalamanTeks";
 
 export const metadata: Metadata = {
-  title: "Kebijakan Privasi — UndanganKita",
+  title: "Kebijakan Privasi — BETA Storia",
   description:
-    "Data apa yang dikumpulkan UndanganKita, untuk apa dipakai, kepada siapa dibagikan, dan hakmu atas datamu.",
+    "Data apa yang dikumpulkan BETA Storia, untuk apa dipakai, kepada siapa dibagikan, dan hakmu atas datamu.",
 };
 
 const judulBagian = "font-serif text-xl font-bold text-tanah-900";
@@ -21,7 +21,7 @@ export default function Privasi() {
   return (
     <HalamanTeks judul="Kebijakan Privasi" pembaruan="31 Oktober 2026">
       <p>
-        Halaman ini menjelaskan data apa yang dikumpulkan UndanganKita,
+        Halaman ini menjelaskan data apa yang dikumpulkan BETA Storia,
         untuk apa dipakai, kepada siapa dibagikan, dan apa yang bisa kamu
         lakukan atas datamu. Prinsipnya sederhana: kami mengumpulkan
         sesedikit mungkin yang dibutuhkan agar undanganmu jalan, tidak

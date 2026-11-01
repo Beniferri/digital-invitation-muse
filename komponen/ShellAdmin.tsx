@@ -7,6 +7,7 @@
 // di dalamnya, dan otorisasi tetap diwajibkan tiap halaman.
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { keluarAdmin } from "@/lib/aksiOtentikasi";
@@ -64,8 +65,10 @@ export default function ShellAdmin({
         }`}
       >
         <div className="border-b border-white/10 px-5 py-5">
-          <p className="font-serif text-2xl font-bold text-krem-50">UndanganKita</p>
-          <p className="mt-1 text-sm text-krem-300">Dasbor Admin</p>
+          <div className="inline-flex rounded-xl bg-krem-50 px-3 py-1.5">
+            <Image src="/logo/betastoria-web.png" alt="BETA Storia" width={1500} height={500} className="h-8 w-auto" />
+          </div>
+          <p className="mt-2 text-sm text-krem-300">Dasbor Admin</p>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <ul className="space-y-1">

@@ -24,21 +24,25 @@ const hurufSerif = Fraunces({
 // yang tidak valid.
 export const metadata: Metadata = {
   metadataBase: new URL(urlSitus()),
-  title: "UndanganKita — Undangan Digital untuk Setiap Acara Keluarga",
+  title: "BETA Storia — Undangan Digital untuk Setiap Acara Keluarga",
   description:
     "Pilih templat, isi nama, tanggal, dan lokasi, lalu bagikan undanganmu lewat WhatsApp dalam beberapa menit.",
+  icons: {
+    icon: "/logo/betastoria-ikon.png",
+    apple: "/logo/betastoria-ikon.png",
+  },
   openGraph: {
-    title: "UndanganKita — Undangan Digital untuk Setiap Acara Keluarga",
+    title: "BETA Storia — Undangan Digital untuk Setiap Acara Keluarga",
     description:
       "Pilih templat, isi nama, tanggal, dan lokasi, lalu bagikan undanganmu lewat WhatsApp dalam beberapa menit.",
     url: urlSitus(),
-    siteName: "UndanganKita",
+    siteName: "BETA Storia",
     locale: "id_ID",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "UndanganKita — Undangan Digital untuk Setiap Acara Keluarga",
+    title: "BETA Storia — Undangan Digital untuk Setiap Acara Keluarga",
     description:
       "Pilih templat, isi nama, tanggal, dan lokasi, lalu bagikan undanganmu lewat WhatsApp dalam beberapa menit.",
   },

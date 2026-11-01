@@ -4,8 +4,8 @@ import { masukPengguna } from "@/lib/aksiOtentikasi";
 import { lanjutAman } from "@/lib/lanjut";
 
 export const metadata: Metadata = {
-  title: "Masuk — UndanganKita",
-  description: "Masuk ke akun UndanganKita untuk mengelola undangan dan langgananmu.",
+  title: "Masuk — BETA Storia",
+  description: "Masuk ke akun BETA Storia untuk mengelola undangan dan langgananmu.",
 };
 
 // Halaman masuk untuk pengguna biasa. Akun admin yang masuk lewat sini

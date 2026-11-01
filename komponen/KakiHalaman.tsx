@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 // Kaki halaman yang singkat. Tautan legal (Tahap 5) mengarah ke halaman
@@ -12,7 +13,9 @@ export default function KakiHalaman() {
     <footer className="relative mt-20 overflow-hidden bg-tanah-900 text-krem-100">
       <div className="cahaya-hangat -top-16 right-10 h-56 w-56 bg-emas-500/30" />
       <div className="relative mx-auto max-w-6xl px-4 py-12 sm:px-6">
-        <p className="font-serif text-2xl font-bold">UndanganKita</p>
+        <div className="inline-flex rounded-2xl bg-krem-50 px-4 py-2">
+          <Image src="/logo/betastoria-web.png" alt="BETA Storia" width={1500} height={500} className="h-10 w-auto" />
+        </div>
         <p className="mt-2 max-w-xl text-sm leading-relaxed text-krem-200">
           Undangan digital untuk akad nikah, aqiqah, wisuda, sampai syukuran
           keluarga. Dibuat supaya kamu bisa berbagi kabar bahagia dalam
@@ -27,7 +30,7 @@ export default function KakiHalaman() {
           <Link href="/privasi" className="hover:text-white">Kebijakan Privasi</Link>
         </div>
         <p className="mt-8 border-t border-white/15 pt-6 text-xs text-krem-200">
-          UndanganKita dalam pengembangan aktif. Undangan bisa dibuat dari
+          BETA Storia dalam pengembangan aktif. Undangan bisa dibuat dari
           editor atau dasbor pengguna, lalu dibagikan lewat tautan tamu.
           Pembayaran diproses lewat Midtrans.
         </p>

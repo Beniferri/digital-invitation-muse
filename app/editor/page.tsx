@@ -11,7 +11,7 @@ import { tambahUndanganDariEditor } from "@/lib/aksiPengguna";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Editor Undangan — UndanganKita",
+  title: "Editor Undangan — BETA Storia",
   description:
     "Pilih templat, isi nama, tanggal, dan lokasi, lalu simpan undanganmu. Gratis untuk draf; aktifkan dengan paket saat siap dibagikan.",
 };

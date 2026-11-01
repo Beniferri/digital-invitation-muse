@@ -1,4 +1,4 @@
-// Syarat & Ketentuan UndanganKita (Tahap 5). Halaman statis — tidak
+// Syarat & Ketentuan BETA Storia (Tahap 5). Halaman statis — tidak
 // membaca database, jadi aman diprerender saat build.
 // Isinya ditulis sesuai perilaku produk yang sebenarnya (bukan templat
 // generik): Draft gratis, Aktif butuh langganan, langganan baru
@@ -10,9 +10,9 @@ import type { Metadata } from "next";
 import HalamanTeks from "@/komponen/HalamanTeks";
 
 export const metadata: Metadata = {
-  title: "Syarat & Ketentuan — UndanganKita",
+  title: "Syarat & Ketentuan — BETA Storia",
   description:
-    "Syarat penggunaan UndanganKita: akun, undangan, paket dan masa aktif, pembayaran lewat Midtrans, serta pengembalian dana.",
+    "Syarat penggunaan BETA Storia: akun, undangan, paket dan masa aktif, pembayaran lewat Midtrans, serta pengembalian dana.",
 };
 
 const judulBagian = "font-serif text-xl font-bold text-tanah-900";
@@ -21,8 +21,8 @@ export default function Syarat() {
   return (
     <HalamanTeks judul="Syarat & Ketentuan" pembaruan="31 Oktober 2026">
       <p>
-        Dengan membuat akun atau memakai UndanganKita, kamu menyetujui
-        syarat di halaman ini. UndanganKita adalah layanan undangan digital:
+        Dengan membuat akun atau memakai BETA Storia, kamu menyetujui
+        syarat di halaman ini. BETA Storia adalah layanan undangan digital:
         kamu memilih templat, mengisi data acara, membagikan tautan tamu,
         dan menerima konfirmasi kehadiran (RSVP) dari tamu.
       </p>
@@ -34,7 +34,7 @@ export default function Syarat() {
           menjaga kerahasiaan kata sandimu dan atas semua aktivitas yang
           terjadi lewat akunmu. Kata sandi tidak pernah disimpan dalam
           bentuk yang bisa dibaca — yang disimpan hanya hasil hash-nya.
-          UndanganKita boleh menonaktifkan akun yang dipakai untuk
+          BETA Storia boleh menonaktifkan akun yang dipakai untuk
           menyalahgunakan layanan (misalnya mengirim spam RSVP, mengunggah
           konten yang melanggar hukum, atau mencoba merusak sistem).
         </p>
@@ -81,7 +81,7 @@ export default function Syarat() {
       <section>
         <h2 className={judulBagian}>4. Pembayaran dan pengembalian dana</h2>
         <p className="mt-2">
-          Pembayaran diproses oleh Midtrans. UndanganKita tidak pernah
+          Pembayaran diproses oleh Midtrans. BETA Storia tidak pernah
           menerima atau menyimpan nomor kartu atau rekeningmu — data
           pembayaran sepenuhnya ditangani Midtrans. Status pesanan
           ditentukan dari pemberitahuan resmi Midtrans: pesanan baru
@@ -112,11 +112,11 @@ export default function Syarat() {
       <section>
         <h2 className={judulBagian}>6. Perubahan dan batas tanggung jawab</h2>
         <p className="mt-2">
-          UndanganKita masih dalam pengembangan aktif: fitur, harga, dan
+          BETA Storia masih dalam pengembangan aktif: fitur, harga, dan
           syarat ini bisa berubah, dan perubahan berlaku sejak tanggal
           pembaruan di atas. Pemakaian lanjutan setelah perubahan berarti
           kamu menyetujui syarat yang baru. Layanan diberikan sebagaimana
-          adanya; UndanganKita tidak bertanggung jawab atas tamu yang
+          adanya; BETA Storia tidak bertanggung jawab atas tamu yang
           tidak datang, kesalahan data yang kamu isi sendiri, atau
           gangguan dari pihak ketiga (misalnya jaringan atau layanan
           pembayaran). Kalau ada bagian syarat ini yang tidak bisa

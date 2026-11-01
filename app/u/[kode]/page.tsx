@@ -39,7 +39,7 @@ const pesanGalat: Record<string, string> = {
 // foto picsum cadangan seperti di halaman, supaya pratinjau yang
 // dibagikan tidak menampilkan foto stok acak sebagai foto acara).
 export async function generateMetadata({ params }: { params: { kode: string } }): Promise<Metadata> {
-  const generik: Metadata = { title: "Undangan — UndanganKita" };
+  const generik: Metadata = { title: "Undangan — BETA Storia" };
   let undangan = await cariUndanganOlehKode(params.kode);
   if (!undangan || undangan.status === "Draft") return generik;
   if (undangan.penggunaId) {
@@ -50,7 +50,7 @@ export async function generateMetadata({ params }: { params: { kode: string } })
   const daftarTemplat = await bacaDaftarTemplat();
   const templat = daftarTemplat.find((item) => item.slug === undangan.slugTemplat);
   const nama = undangan.namaKedua ? `${undangan.namaPertama} & ${undangan.namaKedua}` : undangan.namaPertama;
-  const judul = `${nama} — ${undangan.jenisAcara} | UndanganKita`;
+  const judul = `${nama} — ${undangan.jenisAcara} | BETA Storia`;
   const deskripsi =
     undangan.status === "Aktif"
       ? `Undangan ${undangan.jenisAcara} pada ${formatTanggalIndonesia(undangan.tanggal)} di ${undangan.lokasi}. Konfirmasi kehadiranmu lewat formulir RSVP.`
@@ -64,7 +64,7 @@ export async function generateMetadata({ params }: { params: { kode: string } })
       title: judul,
       description: deskripsi,
       url: `${urlSitus()}/u/${undangan.kodeTamu}`,
-      siteName: "UndanganKita",
+      siteName: "BETA Storia",
       locale: "id_ID",
       type: "website",
       images: gambar,
@@ -242,7 +242,7 @@ export default async function HalamanTamu({
       )}
 
       <p className="mt-8 text-center text-xs text-tintaLembut">
-        Dibuat dengan <Link href="/" className="font-bold text-tanah-600 underline underline-offset-4">UndanganKita</Link>
+        Dibuat dengan <Link href="/" className="font-bold text-tanah-600 underline underline-offset-4">BETA Storia</Link>
       </p>
     </div>
   );

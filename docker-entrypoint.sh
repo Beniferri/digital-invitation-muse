@@ -1,5 +1,5 @@
 #!/bin/sh
-# Entrypoint image Docker UndanganKita.
+# Entrypoint image Docker BETA Storia.
 # Alasan ada skrip ini: database SQLite tidak ikut di dalam repo, jadi
 # container pertama selalu mulai dengan database kosong. Entrypoint ini
 # mengisi database contoh SEKALI saja — hanya kalau tabel template masih

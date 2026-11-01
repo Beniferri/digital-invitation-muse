@@ -32,6 +32,6 @@ export const daftarPertanyaanUmum: PertanyaanUmum[] = [
   {
     pertanyaan: "Apakah ada biaya tersembunyi di luar harga paket?",
     jawaban:
-      "Tidak. Harga yang tertera adalah harga yang kamu bayar untuk paket itu. Pembayaran diproses lewat Midtrans, dan UndanganKita tidak menambahkan biaya lain di luar harga paket.",
+      "Tidak. Harga yang tertera adalah harga yang kamu bayar untuk paket itu. Pembayaran diproses lewat Midtrans, dan BETA Storia tidak menambahkan biaya lain di luar harga paket.",
   },
 ];

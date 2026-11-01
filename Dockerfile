@@ -1,4 +1,4 @@
-# Dockerfile UndanganKita — dipakai Coolify dengan Build Pack Dockerfile
+# Dockerfile BETA Storia — dipakai Coolify dengan Build Pack Dockerfile
 # (bukan Railpack), supaya versi Node, proses build, dan proses jalan
 # semuanya eksplisit dan tidak tergantung tebakan builder.
 # Database SQLite tinggal di /data (lihat VOLUME + DATABASE_URL di bawah)
@@ -17,13 +17,13 @@ FROM node:24-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Aset biner Zamrud (gambar + musik) disimpan di repo sebagai .b64
+# Aset biner (gambar + musik + logo) disimpan di repo sebagai .b64
 # karena tool push GitHub di sini hanya menerima berkas teks UTF-8.
 # Di sinilah mereka dikembalikan ke bentuk biner, sebelum disalin ke
-# image runner — jadi /templat/zamrud/*.jpg dan /musik/zamrud.mp3
-# tetap tersaji normal di produksi. Kalau decode gagal, build gagal
-# dengan jelas (bukan menghasilkan berkas kosong).
-RUN for f in public/templat/zamrud/*.jpg.b64 public/musik/*.mp3.b64; do \
+# image runner — jadi /templat/zamrud/*.jpg, /musik/zamrud.mp3, dan
+# /logo/*.png tetap tersaji normal di produksi. Kalau decode gagal,
+# build gagal dengan jelas (bukan menghasilkan berkas kosong).
+RUN for f in public/templat/zamrud/*.jpg.b64 public/musik/*.mp3.b64 public/logo/*.png.b64; do \
       if [ -f "$f" ]; then base64 -d "$f" > "${f%.b64}" || exit 1; rm "$f"; fi; \
     done
 RUN npm run build

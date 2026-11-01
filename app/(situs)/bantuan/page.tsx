@@ -1,4 +1,4 @@
-// Pusat Bantuan UndanganKita (Tahap 5). Halaman ini SENGAJA dinamis
+// Pusat Bantuan BETA Storia (Tahap 5). Halaman ini SENGAJA dinamis
 // (force-dynamic), bukan diprerender: bagian Kontak membaca environment
 // DUKUNGAN_EMAIL / DUKUNGAN_WHATSAPP_URL yang dipasang di server
 // produksi (Coolify), dan nilai itu harus dibaca saat request, bukan
@@ -13,9 +13,9 @@ import HalamanTeks from "@/komponen/HalamanTeks";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Bantuan — UndanganKita",
+  title: "Bantuan — BETA Storia",
   description:
-    "Cara membuat dan membagikan undangan, RSVP, paket dan masa aktif, pembayaran, serta solusi masalah umum di UndanganKita.",
+    "Cara membuat dan membagikan undangan, RSVP, paket dan masa aktif, pembayaran, serta solusi masalah umum di BETA Storia.",
 };
 
 const judulBagian = "font-serif text-xl font-bold text-tanah-900";
@@ -51,7 +51,7 @@ export default function Bantuan() {
   return (
     <HalamanTeks judul="Bantuan" pembaruan="31 Oktober 2026">
       <p>
-        Semua yang perlu kamu ketahui untuk memakai UndanganKita — dari
+        Semua yang perlu kamu ketahui untuk memakai BETA Storia — dari
         membuat undangan pertama sampai mengatasi kendala yang paling
         sering terjadi. Kalau jawabanmu tidak ada di sini, hubungi
         dukungan di bagian bawah halaman.
@@ -114,7 +114,7 @@ export default function Bantuan() {
         <h2 className={judulBagian}>Pembayaran</h2>
         <p className="mt-2">
           Pilih paket di halaman Paket, lalu bayar lewat Midtrans dengan
-          metode yang tersedia di sana. UndanganKita tidak pernah
+          metode yang tersedia di sana. BETA Storia tidak pernah
           menerima nomor kartu atau rekeningmu. Setelah membayar,
           tunggu beberapa menit: status pesanan berubah menjadi Lunas
           begitu pemberitahuan resmi Midtrans diterima, dan langgananmu

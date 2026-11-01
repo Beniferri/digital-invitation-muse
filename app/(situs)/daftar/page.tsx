@@ -4,8 +4,8 @@ import { daftarPengguna } from "@/lib/aksiOtentikasi";
 import { lanjutAman } from "@/lib/lanjut";
 
 export const metadata: Metadata = {
-  title: "Daftar — UndanganKita",
-  description: "Buat akun UndanganKita gratis dan mulai membuat undangan digital pertamamu.",
+  title: "Daftar — BETA Storia",
+  description: "Buat akun BETA Storia gratis dan mulai membuat undangan digital pertamamu.",
 };
 
 // Halaman daftar pengguna biasa. Kata sandi minimal 8 karakter dan
