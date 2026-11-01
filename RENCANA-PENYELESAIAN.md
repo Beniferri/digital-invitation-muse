@@ -742,7 +742,7 @@ Brand tetap UndanganKita (bukan SAVENTIFY/Beta Storia).
   hanya bisa diverifikasi di produksi (POST server action gagal di
   sandbox — batas yang sudah diketahui).
 
-## Perbaikan skrip migrasi Postgres (1 Nov 2026, belum di-push)
+## Perbaikan skrip migrasi Postgres (1 Nov 2026, sudah di-push, head d02d26af)
 
 `scripts/migrasi-ke-postgres.ts` sebelumnya tidak menyalin tabel
 `foto_galeri` (daftar URUTAN_TABEL hanya pengguna, templat,
@@ -755,3 +755,36 @@ sengaja tidak disalin (pengguna login ulang sekali). Skrip ini harus
 sampai ke image produksi (push + redeploy, aplikasi masih di SQLite)
 SEBELUM migrasi dijalankan, supaya yang dieksekusi di terminal
 container adalah versi yang sudah diperbaiki.
+
+## Perbaikan skrip migrasi Postgres, bagian 2: halaman_penuh (1 Nov 2026, belum di-push)
+
+Percobaan migrasi pertama di produksi gagal dengan 42703
+(`column "halaman_penuh" of relation "templat" does not exist`).
+Akar penyebab: `SKEMA` di `lib/db.ts` tidak memuat kolom
+`templat.halaman_penuh` — kolom itu selama ini hanya ditambahkan
+oleh migrasi runtime aplikasi (`migrasiTemplat`), sementara
+`db/skema.sql` (dokumentasi) sudah memuatnya. Skrip migrasi
+mengimpor `SKEMA` dari `lib/db.ts`, jadi tabel target tercipta
+tanpa kolom itu, lalu INSERT baris template sumber (yang punya
+kolom tersebut) gagal. Tabel lain tidak terdampak: semua kolom
+undangan, tabel `foto_galeri`, dan `maks_undangan_aktif` sudah ada
+di `SKEMA`.
+
+Perbaikan dua lapis:
+1. `halaman_penuh` ditambahkan ke `SKEMA` di `lib/db.ts`
+   (perbaikan akar — database baru apa pun kini punya kolom ini
+   sejak awal; `migrasiTemplat` menjadi no-op).
+2. Skrip migrasi menambahkan langkah DDL idempotent setelah
+   pembuatan skema: cek `information_schema.columns`, ALTER hanya
+   kalau kolom belum ada. Ini menangani target dari eksekusi yang
+   sudah gagal (skema dasar sudah tercipta, nol baris) — target
+   TIDAK perlu dihapus sebelum ulang, karena pengecekan target
+   kosong menghitung baris, bukan keberadaan skema.
+
+Observasi dari eksekusi gagal itu: sumber menyalin `pengguna` 0
+baris. Sebelum ulang, verifikasi isi sumber dari terminal container
+(perintah node:sqlite di bawah) — kalau `undangan`/`rsvp` juga 0,
+sumbernya bukan database produksi (volume salah), dan migrasi
+tidak boleh dilanjutkan. Kalau hanya `pengguna` yang 0, produksi
+memang belum punya akun — setelah pindah, buat admin lewat
+`npm run buat-admin` di terminal container.

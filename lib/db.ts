@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS templat (
   nuansa TEXT NOT NULL,
   deskripsi TEXT NOT NULL DEFAULT '',
   aktif INTEGER NOT NULL DEFAULT 1,
+  halaman_penuh INTEGER NOT NULL DEFAULT 0,
   gaya_json TEXT NOT NULL,
   contoh_json TEXT NOT NULL,
   foto_sampul TEXT,

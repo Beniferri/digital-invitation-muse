@@ -21,6 +21,10 @@
 //     kata sandi.
 // Skrip ini TIDAK mengubah aplikasi yang sedang jalan: setelah migrasi,
 // ganti DATABASE_URL di Coolify ke URL Postgres tujuan, lalu redeploy.
+// Kalau eksekusi gagal di tengah jalan (mis. kolom hilang seperti
+// halaman_penuh sebelum perbaikan 1 Nov 2026), target TIDAK perlu
+// dihapus: skema dibuat IF NOT EXISTS, kolom dicek dulu, dan pengecekan
+// target kosong menghitung baris (nol baris = boleh diulang).
 
 import { DatabaseSync } from "node:sqlite";
 import { SKEMA } from "../lib/db";
@@ -74,6 +78,21 @@ async function utama() {
     //    menerima banyak pernyataan sekaligus).
     for (const satu of SKEMA.split(";\n").map((s) => s.trim()).filter((s) => s.length > 0)) {
       await target.query(satu, []);
+    }
+    // 1b. Kolom dari migrasi runtime aplikasi yang sempat tidak masuk
+    //     SKEMA: templat.halaman_penuh (lib/db.ts migrasiTemplat).
+    //     Tanpa ini, salin templat gagal 42703 karena baris sumber punya
+    //     kolom yang tidak ada di target. Pengecekan information_schema
+    //     membuat langkah ini idempotent: aman diulang setelah eksekusi
+    //     yang gagal di tengah jalan (target sudah punya skema dasar
+    //     tapi belum kolom ini) — target TIDAK perlu dihapus dulu.
+    const kolomHalamanPenuh = await target.query(
+      "SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'templat' AND column_name = 'halaman_penuh'",
+      [],
+    );
+    if ((kolomHalamanPenuh.rowCount ?? 0) === 0) {
+      await target.query("ALTER TABLE templat ADD COLUMN halaman_penuh INTEGER NOT NULL DEFAULT 0", []);
+      console.log("templat.halaman_penuh: kolom ditambahkan");
     }
     // 2. Tolak kalau target sudah berisi data.
     for (const tabel of URUTAN_TABEL) {
