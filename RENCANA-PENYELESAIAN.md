@@ -866,7 +866,7 @@ dengan contoh_json hanya judulAcara, 0 paket) — BUKAN regresi
 rebrand; database produksi berisi seed penuh sehingga tidak
 terdampak. Fixture segar (segar.db) dipakai untuk verifikasi ini.
 
-## Pindah ke Postgres LIVE + bersih-bersih repo untuk handoff (1 Nov 2026, belum di-push)
+## Pindah ke Postgres LIVE + bersih-bersih repo untuk handoff (1 Nov 2026, sudah di-push, head 2eeafa1d)
 
 User melaporkan 1 Nov 11:24 WIB: `DATABASE_URL` sudah pindah ke
 Postgres + redeploy + verifikasi di Postgres. Produksi kini resmi

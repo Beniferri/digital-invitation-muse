@@ -82,6 +82,51 @@ perlu dibuat ulang setelah redeploy (akun tersimpan di database);
 `buat-admin` hanya perlu lagi kalau database diganti ke yang kosong
 atau kata sandi lupa — jalankan dari terminal container.
 
+## Deploy di cPanel
+
+Alternatif tanpa Docker, untuk hosting yang sudah punya domain
+(mis. betastoria.com). Prasyarat: fitur **Setup Node.js App**,
+**Node 24** (engines >= 24; impor `node:sqlite` statis di `lib/db.ts`
+membuat aplikasi crash di Node < 24 meski memakai Postgres),
+**PostgreSQL**, dan domain yang diarahkan ke aplikasi Node.
+
+- **Berkas startup:** `server.js` di root repo (server kustom Next.js
+  untuk Passenger). Isi Application startup file dengan `server.js`;
+  Coolify tidak memakai berkas ini (tetap `npm run start`).
+- **Kode:** clone repo ke application root (mis.
+  `/home/<username>/betastoria`) lewat Git Version Control.
+- **Install + build:** set Application mode ke **Development dulu**,
+  karena mode Production membuat `npm install` melewati
+  devDependencies dan build pasti gagal. Jalankan Run NPM Install,
+  lalu `npm run build`, baru ubah mode ke Production dan Start.
+- **Environment variables** (di panel Node App, bukan `.env`):
+  `DATABASE_URL` (Postgres cPanel,
+  `postgres://<user>:<pass>@localhost:5432/<nama-db>`; password
+  sebaiknya huruf+angka saja — karakter `@ # % / ?` merusak URL),
+  `MIDTRANS_SERVER_KEY`, `MIDTRANS_CLIENT_KEY`,
+  `MIDTRANS_IS_PRODUCTION`, `SITUS_URL=https://<domain>`,
+  `UNGGAHAN_DIR` (disarankan di luar folder aplikasi, mis.
+  `/home/<username>/betastoria-data/unggahan`).
+- **Database kosong langsung jalan:** dari Terminal cPanel, jalankan
+  `npm run db:seed` (template + paket dari `data/toko.json`) lalu
+  `npm run buat-admin -- <email> <kata-sandi>`. Tidak perlu restore
+  apa pun untuk instalasi baru.
+- **Mempertahankan data lama (opsional):** dump dari database lama
+  dengan `pg_dump -U <user> -d <nama-db> --no-owner --no-privileges`
+  (format plain, TANPA `--create`), lalu restore ke database cPanel
+  yang masih kosong lewat tab SQL phpPgAdmin (pilih database dulu,
+  upload berkas, Execute) atau `psql -f`. Dump TIDAK BOLEH masuk
+  repo: repo ini publik, dan dump berisi hash kata sandi, data
+  undangan, dan data tamu yang tidak bisa ditarik kembali dari
+  riwayat git.
+- **Setelah pindah domain:** perbarui Payment Notification URL dan
+  Finish Redirect URL di dasbor Midtrans ke domain baru, lalu uji
+  beli Sandbox ulang (ini memvalidasi webhook domain baru).
+- **Update kode:** `git pull` → `npm run build` → Restart aplikasi.
+  Kalau ada template baru dari repo, jalankan manual
+  `node scripts/tambah-templat-baru.mjs` (di cPanel tidak ada
+  entrypoint yang melakukannya otomatis).
+
 ## Migrasi SQLite -> Postgres (selesai 1 Nov 2026)
 
 Migrasi selesai + terverifikasi 1 Nov 2026 (template 4, paket 3,
