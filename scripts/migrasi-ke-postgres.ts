@@ -9,7 +9,9 @@
 //   - Target harus KOSONG (semua tabel utama nol baris) — skrip menolak
 //     menimpa data yang sudah ada.
 //   - Urutan salin mengikuti foreign key: pengguna, templat, paket_harga,
-//     undangan, pesanan, langganan, rsvp, percobaan_rsvp.
+//     undangan, foto_galeri, pesanan, langganan, rsvp, percobaan_rsvp.
+//     (foto_galeri ditambahkan 1 Nov 2026 — sebelumnya tertinggal, jadi
+//     foto galeri tambahan Zamrud v2 akan hilang kalau tidak diperbaiki.)
 //   - Tabel sesi TIDAK ikut disalin (sesuai rencana: sesi lama hangus,
 //     pengguna login ulang sekali). Jumlah sesi yang dilewati dicetak.
 //   - Setelah salin, jumlah baris sumber vs tujuan dibandingkan per tabel
@@ -28,6 +30,7 @@ const URUTAN_TABEL = [
   "templat",
   "paket_harga",
   "undangan",
+  "foto_galeri",
   "pesanan",
   "langganan",
   "rsvp",

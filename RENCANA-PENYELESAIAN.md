@@ -689,7 +689,7 @@ Yang disamakan di komponen/UndanganZamrud.tsx + app/globals.css:
   drawer lama hilang total; fixture zamrud-v2.db — SEND GIFT, Close,
   panel gelap, Salin Alamat tampil.
 
-## Editor tiga kolom gaya SAVENTIFY (1 Nov 2026, belum di-push)
+## Editor tiga kolom gaya SAVENTIFY (1 Nov 2026, sudah di-push, head d4f05d1a)
 
 Referensi: tangkapan editor SAVENTIFY (header + 3 kolom + langkah
 Buat/Periksa/Bagikan + panel kata-kata + pratinjau bingkai ponsel).
@@ -741,3 +741,17 @@ Brand tetap UndanganKita (bukan SAVENTIFY/Beta Storia).
   dalam pengantar ter-escape (tidak dieksekusi). Klik Simpan sungguhan
   hanya bisa diverifikasi di produksi (POST server action gagal di
   sandbox — batas yang sudah diketahui).
+
+## Perbaikan skrip migrasi Postgres (1 Nov 2026, belum di-push)
+
+`scripts/migrasi-ke-postgres.ts` sebelumnya tidak menyalin tabel
+`foto_galeri` (daftar URUTAN_TABEL hanya pengguna, templat,
+paket_harga, undangan, pesanan, langganan, rsvp, percobaan_rsvp).
+Akibatnya, foto galeri tambahan Zamrud v2 akan hilang kaitannya
+(foto-fotonya tetap ada di /data/unggahan, tapi baris penghubungnya
+tidak pindah). Perbaikan: `foto_galeri` ditambahkan tepat setelah
+`undangan` (memenuhi foreign key ke undangan). Tabel `sesi` tetap
+sengaja tidak disalin (pengguna login ulang sekali). Skrip ini harus
+sampai ke image produksi (push + redeploy, aplikasi masih di SQLite)
+SEBELUM migrasi dijalankan, supaya yang dieksekusi di terminal
+container adalah versi yang sudah diperbaiki.
