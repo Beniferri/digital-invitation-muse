@@ -812,7 +812,7 @@ Postgres (yang baru kalau kata sandi diputar), redeploy, verifikasi
 (/api/sehat, katalog, kedua undangan, login admin baru), lalu
 tindak lanjut cadangan pg_dump.
 
-## Rebrand ke BETA Storia + logo (1 Nov 2026, belum di-push)
+## Rebrand ke BETA Storia + logo (1 Nov 2026, sudah di-push, head 0f46e409)
 
 Keputusan user 1 Nov 2026: nama website menjadi **BETA Storia
 Digital Invitation** (sebelumnya UndanganKita; penyebutan "Beta
@@ -848,9 +848,7 @@ disapu (dokumen riwayat — nama lama di sini adalah jejak sejarah,
 bukan merek berjalan).
 
 Beres-beres repo (audit 1 Nov 2026): TIDAK ada berkas kode mati —
-semua komponen/lib/data terimpor minimal satu kali. Yang benar-benar
-tidak perlu: `public/unggahan/.gitkeep` (folder dibuat otomatis
-oleh `lib/penyimpananFoto.ts` mkdir recursive). Skrip cadangan
+semua komponen/lib/data terimpor minimal satu kali. Yang benar-benar tidak perlu: `public/unggahan/.gitkeep` (folder dibuat otomatis oleh `lib/penyimpananFoto.ts` mkdir recursive) — SUDAH DIHAPUS dari repo 1 Nov 2026 (commit ed8834b9). Skrip cadangan
 SQLite (`scripts/cadangkan-db.mjs`, `pulihkan-db.mjs`) masih
 berguna selama berkas SQLite jadi cadangan rollback — hapus hanya
 setelah cadangan `pg_dump` untuk Postgres berjalan. Berkas lokal
@@ -867,3 +865,39 @@ menimbulkan 500 di beranda/katalog karena isinya minimal (2 template
 dengan contoh_json hanya judulAcara, 0 paket) — BUKAN regresi
 rebrand; database produksi berisi seed penuh sehingga tidak
 terdampak. Fixture segar (segar.db) dipakai untuk verifikasi ini.
+
+## Pindah ke Postgres LIVE + bersih-bersih repo untuk handoff (1 Nov 2026, belum di-push)
+
+User melaporkan 1 Nov 11:24 WIB: `DATABASE_URL` sudah pindah ke
+Postgres + redeploy + verifikasi di Postgres. Produksi kini resmi
+jalan di Postgres 18 bawaan Coolify; berkas SQLite lama hanya
+cadangan rollback di volume server (bukan database jalan).
+
+Bersih-bersih repo (disetujui user, dieksekusi 1 Nov 2026):
+- DIHAPUS dari repo (masing-masing commit delete_file terpisah):
+  `scripts/migrasi-ke-postgres.ts` (e4219d85, pekerjaan satu kali
+  selesai + terverifikasi), `scripts/cadangkan-db.mjs` (80d73940)
+  dan `scripts/pulihkan-db.mjs` (a41d7fb6) — keduanya khusus
+  SQLite dan tidak berlaku untuk produksi Postgres. Sebelum hapus
+  dicek: tidak ada referensi kode ke ketiganya (hanya .env.example
+  dan README, yang ikut diperbarui).
+- DIHAPUS juga dari image: variabel `ENV CADANGAN_DIR` di
+  Dockerfile (hanya dipakai skrip cadangan lama; tidak dibaca kode
+  aplikasi).
+- DITAMBAH: `AGENTS.md` di root repo — panduan handoff untuk agen
+  lain (keadaan saat ini, cara verifikasi, aturan keras, perilaku
+  produk yang sering disalahpahami, struktur, operasi).
+- DIPERBARUI: README (migrasi jadi lampau, cadangan jadi pg_dump
+  dari terminal container Postgres dengan retensi 7, daftar scripts
+  tanpa yang dihapus, volume /data tanpa /data/cadangan),
+  `.env.example` (paragraf Postgres + cadangan diperbarui).
+- TETAP DIPERTAHANKAN (bukan sampah): `RENCANA-PENYELESAIAN.md`
+  (log riwayat — agen lanjutan butuh konteks keputusan),
+  `DAFTAR-PELUNCURAN.md` (gerbang peluncuran masih berlaku),
+  `docs/halaman-tamu.md`, `tests/halaman-tamu.tsx`,
+  `data/toko.json` (sumber seed), `db/skema.sql`, semua `.b64`
+  (dibutuhkan build), `scripts/seed.ts`, `buat-admin.ts`,
+  `tambah-templat-baru.mjs`, `perlu-seed.mjs` (dipakai entrypoint).
+- Belum otomatis: cron cadangan pg_dump (didokumentasikan perintah
+  + retensinya, belum dijadwalkan). Berkas SQLite di server belum
+  dihapus (sengaja — hapus setelah Postgres stabil + pg_dump ada).

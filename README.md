@@ -63,8 +63,8 @@ halaman tamu — jalankan `npm run build` dulu).
 
 Build Pack **Dockerfile** (bukan Railpack). Yang perlu dipasang:
 
-- Volume persisten `/data` (foto di `/data/unggahan`, cadangan di
-  `/data/cadangan`).
+- Volume persisten `/data` (foto di `/data/unggahan`; berkas
+  SQLite lama dibiarkan di sini sebagai cadangan rollback).
 - `DATABASE_URL` — produksi memakai Postgres 18 bawaan Coolify, URL
   internal antar container (`postgres://...`). SQLite lama dibiarkan
   sebagai cadangan rollback.
@@ -74,8 +74,7 @@ Build Pack **Dockerfile** (bukan Railpack). Yang perlu dipasang:
   `https://<domain>/api/midtrans/notifikasi`, Finish Redirect URL
   `https://<domain>/akun`.
 - Opsional: `SITUS_URL`, `DUKUNGAN_EMAIL`,
-  `DUKUNGAN_WHATSAPP_URL`, `RSVP_IP_SALT`, `UNGGAHAN_DIR`,
-  `CADANGAN_DIR`. Daftar lengkap + penjelasan ada di `.env.example`.
+  `DUKUNGAN_WHATSAPP_URL`, `RSVP_IP_SALT`, `UNGGAHAN_DIR`. Daftar lengkap + penjelasan ada di `.env.example`.
 
 Entrypoint image menjalankan seed HANYA kalau tabel template kosong,
 dan menyisipkan template baru tanpa menimpa edit admin. Admin TIDAK
@@ -83,28 +82,34 @@ perlu dibuat ulang setelah redeploy (akun tersimpan di database);
 `buat-admin` hanya perlu lagi kalau database diganti ke yang kosong
 atau kata sandi lupa — jalankan dari terminal container.
 
-## Migrasi SQLite -> Postgres
+## Migrasi SQLite -> Postgres (selesai 1 Nov 2026)
+
+Migrasi selesai + terverifikasi 1 Nov 2026 (template 4, paket 3,
+undangan 2; skrip menolak target tidak kosong, menyalin mengikuti
+foreign key, melewati sesi, memverifikasi jumlah baris sumber vs
+tujuan). Skrip migrasi sudah dihapus dari repo setelah verifikasi
+— pekerjaan satu kali yang sudah selesai. Berkas SQLite lama
+dibiarkan di volume server sebagai cadangan rollback; hapus hanya
+setelah Postgres berjalan stabil + cadangan pg_dump sudah ada.
+
+## Cadangan Postgres (pg_dump)
+
+Cadangan SQLite lama (VACUUM INTO, retensi 7) tidak berlaku lagi;
+skripnya sudah dihapus dari repo. Untuk Postgres, jalankan dari
+terminal container Postgres di Coolify (image Postgres sudah
+membawa pg_dump):
 
 ```bash
-SUMBER_DATABASE_URL="file:/data/dev.db" \
-TUJUAN_DATABASE_URL="postgres://pengguna:kata-sandi@host:5432/nama-db" \
-npx tsx scripts/migrasi-ke-postgres.ts
+pg_dump "postgres://pengguna:kata-sandi@host:5432/nama-db" -F c \
+  -f /cadangan/beta-storia-YYYYMMDD.dump
 ```
 
-Urutan wajib: buat Postgres KOSONG → jalankan migrasi dari terminal
-container aplikasi → baru ganti `DATABASE_URL` + redeploy. Jangan
-boot aplikasi ke Postgres kosong dulu (entrypoint men-seed template
-contoh → target tidak kosong → migrasi menolak). Skrip menolak
-target tidak kosong, menyalin mengikuti foreign key
-(pengguna, template, paket, undangan, foto galeri, pesanan,
-langganan, RSVP, percobaan RSVP), melewati sesi (pengguna login
-ulang sekali), dan memverifikasi jumlah baris sumber vs tujuan.
-Kalau eksekusi gagal di tengah jalan, target tidak perlu dihapus —
-skema dibuat `IF NOT EXISTS` dan kolom dicek dulu sebelum ALTER.
-
-Cadangan: skrip `scripts/cadangkan-db.mjs` (VACUUM INTO, retensi 7)
-hanya berlaku untuk SQLite; untuk Postgres pakai `pg_dump` (tindak
-lanjut setelah migrasi stabil).
+Format `-F c` (custom, terkompresi); pulihkan dengan
+`pg_restore -d <nama-db> <berkas.dump>`. Pertahankan 7 berkas
+terbaru, hapus yang lebih lama. Ganti `/cadangan` dengan path
+volume persisten yang dipasang di container Postgres, atau unduh
+berkas dump segera — filesystem container tanpa volume tidak
+persisten. Belum ada cron otomatis untuk ini.
 
 ## Struktur proyek
 
@@ -117,8 +122,7 @@ lib/            Lapisan data & aksi server (db, sesi, kata sandi,
                 aksiAdmin/Pengguna/Rsvp/Pembayaran, midtrans, ...).
 data/           Katalog statis (template, paket, FAQ, jenis acara).
 db/skema.sql    Skema referensi (sama isinya dengan SKEMA lib/db.ts).
-scripts/        seed, buat-admin, migrasi-ke-postgres, cadangan,
-                pulih, tambah-templat-baru, perlu-seed.
+scripts/        seed, buat-admin, tambah-templat-baru, perlu-seed.
 public/logo/    Logo BETA Storia (lihat catatan aset biner di bawah).
 public/templat/ Aset template Zamrud. public/musik/ Musik Zamrud.
 docs/           Dokumentasi teknis (mis. halaman-tamu.md).

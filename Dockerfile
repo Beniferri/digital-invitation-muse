@@ -41,8 +41,6 @@ ENV DATABASE_URL=file:/data/dev.db
 # database, supaya foto tidak hilang saat redeploy. Jalur publiknya tetap
 # /unggahan/<nama> lewat route /api/unggahan (lihat next.config.mjs).
 ENV UNGGAHAN_DIR=/data/unggahan
-# Cadangan database (Tahap 4) default ke folder yang sama persistennya.
-ENV CADANGAN_DIR=/data/cadangan
 # node_modules ikut disalin lengkap (termasuk tsx) supaya perintah
 # `npm run db:seed` dan `npm run buat-admin` tetap bisa jalan dari
 # terminal container setelah deploy.
