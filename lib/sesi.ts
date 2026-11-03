@@ -36,6 +36,10 @@ export async function buatSesi(penggunaId: string): Promise<string> {
   );
   cookies().set(NAMA_COOKIE_SESI, token, {
     httpOnly: true,
+    // Di produksi (HTTPS) cookie sesi tidak boleh dikirim lewat HTTP polos.
+    // Di development (HTTP lokal) flag ini dimatikan supaya login lokal
+    // tetap jalan tanpa HTTPS.
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     maxAge: MASA_BERLAKU_JAM * 60 * 60,

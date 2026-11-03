@@ -9,6 +9,7 @@ import { redirect } from "next/navigation";
 import { idBaru, jalankan, satuBaris, sekarangIso, type Baris } from "./db";
 import { hashKataSandi, periksaKataSandi } from "./kataSandi";
 import { buatSesi, hapusSesiSaatIni } from "./sesi";
+import { catatGagalMasuk, masihBolehMasuk } from "./batasMasuk";
 import { lanjutAman } from "./lanjut";
 
 function teks(formulir: FormData, nama: string): string {
@@ -23,8 +24,12 @@ export async function masukPengguna(formulir: FormData, tujuanSukses = "/akun") 
   const email = teks(formulir, "email").toLowerCase();
   const kataSandi = String(formulir.get("kataSandi") ?? "");
   const lanjut = lanjutAman(teks(formulir, "lanjut"));
+  if (!(await masihBolehMasuk())) {
+    redirect(`/masuk?gagal=1${lanjut ? `&lanjut=${lanjut}` : ""}`);
+  }
   const pengguna = email ? await satuBaris<Baris>("SELECT * FROM pengguna WHERE email = ?", email) : null;
   if (!pengguna || !periksaKataSandi(kataSandi, String(pengguna.kata_sandi_hash))) {
+    await catatGagalMasuk();
     redirect(`/masuk?gagal=1${lanjut ? `&lanjut=${lanjut}` : ""}`);
   }
   await buatSesi(String(pengguna.id));
@@ -34,8 +39,12 @@ export async function masukPengguna(formulir: FormData, tujuanSukses = "/akun") 
 export async function masukAdmin(formulir: FormData) {
   const email = teks(formulir, "email").toLowerCase();
   const kataSandi = String(formulir.get("kataSandi") ?? "");
+  if (!(await masihBolehMasuk())) {
+    redirect("/admin/login?gagal=1");
+  }
   const pengguna = email ? await satuBaris<Baris>("SELECT * FROM pengguna WHERE email = ?", email) : null;
   if (!pengguna || String(pengguna.peran) !== "admin" || !periksaKataSandi(kataSandi, String(pengguna.kata_sandi_hash))) {
+    await catatGagalMasuk();
     redirect("/admin/login?gagal=1");
   }
   await buatSesi(String(pengguna.id));

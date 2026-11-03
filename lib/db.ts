@@ -152,6 +152,12 @@ CREATE TABLE IF NOT EXISTS percobaan_rsvp (
   dibuat_pada TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_percobaan_rsvp ON percobaan_rsvp(undangan_id, ip_hash, dibuat_pada);
+CREATE TABLE IF NOT EXISTS upaya_masuk (
+  id TEXT PRIMARY KEY,
+  ip_hash TEXT NOT NULL,
+  dibuat_pada TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_upaya_masuk ON upaya_masuk(ip_hash, dibuat_pada);
 CREATE TABLE IF NOT EXISTS rsvp (
   id TEXT PRIMARY KEY,
   undangan_id TEXT NOT NULL REFERENCES undangan(id) ON DELETE CASCADE,

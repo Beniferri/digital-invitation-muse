@@ -39,12 +39,24 @@ export const metadata: Metadata = {
     siteName: "BETA Storia",
     locale: "id_ID",
     type: "website",
+    // Gambar pratinjau tautan (penting: undangan dibagikan lewat WhatsApp).
+    // Memakai ikon yang sudah ada (1000x1000); spanduk OG 1200x630 khusus
+    // bisa menggantikannya nanti tanpa mengubah kode ini selain URL-nya.
+    images: [
+      {
+        url: "/logo/betastoria-ikon.png",
+        width: 1000,
+        height: 1000,
+        alt: "BETA Storia",
+      },
+    ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "BETA Storia — Undangan Digital untuk Setiap Acara Keluarga",
     description:
       "Pilih templat, isi nama, tanggal, dan lokasi, lalu bagikan undanganmu lewat WhatsApp dalam beberapa menit.",
+    images: ["/logo/betastoria-ikon.png"],
   },
 };
 
