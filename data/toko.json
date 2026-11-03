@@ -119,11 +119,11 @@
    "aktif": true,
    "halamanPenuh": true,
    "fotoSampul": null,
-   "deskripsi": "Undangan pernikahan halaman penuh bernuansa taman-istana: sampul ketuk-buka, nama script emas, bingkai emas ganda, hitung mundur, jadwal acara, dress code, pra-acara, dan RSVP — dalam palet sage, ivory, dan emas antik.",
+   "deskripsi": "Undangan pernikahan halaman penuh bernuansa taman-istana: sampul belah tengah ketuk-buka, nama script hijau tua, hitung mundur, jadwal acara, dress code, pra-acara, dan RSVP — dalam palet sage, beige linen, dan emas antik.",
    "gaya": {
-    "latar": "bg-[#F7F0E3]",
+    "latar": "bg-[#D4C4AD]",
     "kartu": "rounded-[2rem]",
-    "aksen": "text-[#C9A86A]",
+    "aksen": "text-[#2F4A2E]",
     "aksenLembut": "bg-[#C9A86A]/20",
     "bentuk": "kotak-bulat",
     "pola": "melati"
