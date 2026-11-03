@@ -101,7 +101,13 @@ CREATE TABLE IF NOT EXISTS undangan (
   acara_kedua_waktu TEXT NOT NULL DEFAULT '',
   acara_kedua_lokasi TEXT NOT NULL DEFAULT '',
   teks_pembuka TEXT NOT NULL DEFAULT '',
-  kata_pengantar TEXT NOT NULL DEFAULT ''
+  kata_pengantar TEXT NOT NULL DEFAULT '',
+  jadwal_json TEXT NOT NULL DEFAULT '[]',
+  acara_pra_json TEXT NOT NULL DEFAULT '[]',
+  dress_code TEXT NOT NULL DEFAULT '',
+  dress_code_warna TEXT NOT NULL DEFAULT '[]',
+  transportasi TEXT NOT NULL DEFAULT '',
+  akomodasi TEXT NOT NULL DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS foto_galeri (
   id TEXT PRIMARY KEY,
@@ -382,6 +388,15 @@ async function migrasiUndangan(backend: Backend): Promise<void> {
     // opsional — undangan lama tetap jalan, kosong = pakai teks template.
     ["teks_pembuka", "ALTER TABLE undangan ADD COLUMN teks_pembuka TEXT NOT NULL DEFAULT ''"],
     ["kata_pengantar", "ALTER TABLE undangan ADD COLUMN kata_pengantar TEXT NOT NULL DEFAULT ''"],
+    // Royal Grace — kolom tema halaman penuh kedua (opsional, kosong =
+    // seksi tersembunyi): jadwal acara, pra-acara, dress code, dan
+    // catatan transportasi/akomodasi.
+    ["jadwal_json", "ALTER TABLE undangan ADD COLUMN jadwal_json TEXT NOT NULL DEFAULT '[]'"],
+    ["acara_pra_json", "ALTER TABLE undangan ADD COLUMN acara_pra_json TEXT NOT NULL DEFAULT '[]'"],
+    ["dress_code", "ALTER TABLE undangan ADD COLUMN dress_code TEXT NOT NULL DEFAULT ''"],
+    ["dress_code_warna", "ALTER TABLE undangan ADD COLUMN dress_code_warna TEXT NOT NULL DEFAULT '[]'"],
+    ["transportasi", "ALTER TABLE undangan ADD COLUMN transportasi TEXT NOT NULL DEFAULT ''"],
+    ["akomodasi", "ALTER TABLE undangan ADD COLUMN akomodasi TEXT NOT NULL DEFAULT ''"],
   ];
   for (const [kolom, sql] of kolomBaru) {
     if (!(await backend.kolomAda("undangan", kolom))) {

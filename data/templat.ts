@@ -188,6 +188,38 @@ export const daftarTemplat: Templat[] = [
         "Kehadiranmu sudah jadi hadiah. Kalau mau memberi doa lewat bingkisan, kabari kami dulu ya.",
     },
   },
+  {
+    slug: "royal-grace-pernikahan",
+    nama: "Royal Grace",
+    jenisAcara: "Pernikahan",
+    warna: "Hijau",
+    nuansa: "Tradisional",
+    aktif: true,
+    halamanPenuh: true,
+    fotoSampul: null,
+    deskripsi:
+      "Undangan pernikahan halaman penuh bernuansa taman-istana: sampul ketuk-buka, nama script emas, bingkai emas ganda, hitung mundur, jadwal acara, dress code, pra-acara, dan RSVP — dalam palet sage, ivory, dan emas antik.",
+    gaya: {
+      latar: "bg-[#F7F0E3]",
+      kartu: "rounded-[2rem]",
+      aksen: "text-[#C9A86A]",
+      aksenLembut: "bg-[#C9A86A]/20",
+      bentuk: "kotak-bulat",
+      pola: "melati",
+    },
+    contoh: {
+      judulAcara: "Pernikahan",
+      namaPertama: "Nadia Ayu Lestari",
+      namaKedua: "Bima Aditiya Pratama",
+      tanggal: "2027-06-19",
+      lokasi: "The Royal Garden Hall, Jakarta",
+      salamPembuka:
+        "Dengan penuh syukur dan kebahagiaan, kami mengundang Bapak, Ibu, dan Saudara/i tercinta untuk hadir dan merayakan hari istimewa kami.",
+      kutipan: "Kehadiran dan doa restu Anda adalah hadiah terindah bagi kami.",
+      catatan:
+        "Kehadiranmu sudah jadi hadiah. Kalau mau memberi doa lewat bingkisan, kabari kami dulu ya.",
+    },
+  },
 ];
 
 /** Mencari satu templat berdasarkan slug dari route dinamis. */

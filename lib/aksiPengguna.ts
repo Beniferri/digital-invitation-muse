@@ -12,6 +12,7 @@ import { buatKodeTamu, idBaru, jalankan, satuBaris, sekarangIso, type Baris } fr
 import { simpanFoto } from "./penyimpananFoto";
 import { bolehAktifkanUndangan } from "./langganan";
 import { ambilSesiSaatIni, type SesiPengguna } from "./sesi";
+import { parseJadwalTeks, parsePraAcaraTeks, parseWarnaTeks } from "./royalGrace";
 import type { StatusUndangan } from "./tokoData";
 
 function teks(formulir: FormData, nama: string): string {
@@ -136,7 +137,7 @@ export async function tambahUndanganDariEditor(formulir: FormData) {
   }
   const idUndangan = idBaru();
   await jalankan(
-    "INSERT INTO undangan (id, nama_pertama, nama_kedua, jenis_acara, tanggal, lokasi, slug_templat, status, dibuat_pada, pengguna_id, kode_tamu, foto_undangan, orang_tua_pertama, orang_tua_kedua, kisah_json, video_kisah, rekening_bank, rekening_nomor, rekening_nama, alamat_kirim, acara_waktu, acara_kedua_judul, acara_kedua_waktu, acara_kedua_lokasi, teks_pembuka, kata_pengantar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    "INSERT INTO undangan (id, nama_pertama, nama_kedua, jenis_acara, tanggal, lokasi, slug_templat, status, dibuat_pada, pengguna_id, kode_tamu, foto_undangan, orang_tua_pertama, orang_tua_kedua, kisah_json, video_kisah, rekening_bank, rekening_nomor, rekening_nama, alamat_kirim, acara_waktu, acara_kedua_judul, acara_kedua_waktu, acara_kedua_lokasi, teks_pembuka, kata_pengantar, jadwal_json, acara_pra_json, dress_code, dress_code_warna, transportasi, akomodasi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     idUndangan,
     namaPertama,
     teks(formulir, "namaKedua"),
@@ -163,6 +164,12 @@ export async function tambahUndanganDariEditor(formulir: FormData) {
     teks(formulir, "acaraKeduaLokasi").slice(0, 200),
     teks(formulir, "teksPembuka").slice(0, 200),
     teks(formulir, "kataPengantar").slice(0, 2000),
+    JSON.stringify(parseJadwalTeks(teks(formulir, "jadwalTeks"))),
+    JSON.stringify(parsePraAcaraTeks(teks(formulir, "praAcaraTeks"))),
+    teks(formulir, "dressCode").slice(0, 200),
+    JSON.stringify(parseWarnaTeks(teks(formulir, "dressCodeWarna"))),
+    teks(formulir, "transportasi").slice(0, 500),
+    teks(formulir, "akomodasi").slice(0, 500),
   );
   for (let i = 0; i < jalurGaleri.length; i += 1) {
     await jalankan(

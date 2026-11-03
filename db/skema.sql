@@ -62,7 +62,13 @@ CREATE TABLE IF NOT EXISTS undangan (
   acara_kedua_waktu TEXT NOT NULL DEFAULT '',
   acara_kedua_lokasi TEXT NOT NULL DEFAULT '',
   teks_pembuka TEXT NOT NULL DEFAULT '',
-  kata_pengantar TEXT NOT NULL DEFAULT ''
+  kata_pengantar TEXT NOT NULL DEFAULT '',
+  jadwal_json TEXT NOT NULL DEFAULT '[]',
+  acara_pra_json TEXT NOT NULL DEFAULT '[]',
+  dress_code TEXT NOT NULL DEFAULT '',
+  dress_code_warna TEXT NOT NULL DEFAULT '[]',
+  transportasi TEXT NOT NULL DEFAULT '',
+  akomodasi TEXT NOT NULL DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS foto_galeri (
   id TEXT PRIMARY KEY,

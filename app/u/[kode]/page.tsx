@@ -13,6 +13,7 @@ import FormulirRsvp from "@/komponen/FormulirRsvp";
 import BagikanUndangan from "@/komponen/BagikanUndangan";
 import BarKonfirmasi from "@/komponen/BarKonfirmasi";
 import UndanganZamrud from "@/komponen/UndanganZamrud";
+import UndanganRoyalGrace from "@/komponen/UndanganRoyalGrace";
 
 export const dynamic = "force-dynamic";
 
@@ -114,12 +115,60 @@ export default async function HalamanTamu({
   const protokol = daftarHeader.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
   const tautanTamu = `${protokol}://${host}/u/${undangan.kodeTamu}`;
 
-  // Templat halaman penuh (Zamrud) memakai perendernya sendiri, bukan
-  // kartu pratinjau + formulir standar di bawah. Musik hanya ditawarkan
-  // kalau berkasnya benar-benar ada di public/musik.
+  // Templat halaman penuh memakai perendernya sendiri, bukan kartu
+  // pratinjau + formulir standar di bawah. Royal Grace bercabang dari
+  // Zamrud berdasarkan slug; musiknya hanya ditawarkan kalau berkas
+  // public/musik/royal-grace.mp3 benar-benar ada (saat ini belum ada,
+  // jadi tombol musik tidak dirender sampai operator menambahkannya).
   if (templat.halamanPenuh) {
-    const musikAda = existsSync(path.join(process.cwd(), "public", "musik", "zamrud.mp3"));
     const galeriTambahan = await bacaGaleriUndangan(undangan.id);
+    if (templat.slug === "royal-grace-pernikahan") {
+      const musikAda = existsSync(path.join(process.cwd(), "public", "musik", "royal-grace.mp3"));
+      return (
+        <UndanganRoyalGrace
+          data={{
+            namaPertama: undangan.namaPertama,
+            namaKedua: undangan.namaKedua,
+            jenisAcara: undangan.jenisAcara,
+            tanggal: undangan.tanggal,
+            lokasi: undangan.lokasi,
+            fotoUndangan: undangan.fotoUndangan,
+            fotoSampul: templat.fotoSampul ?? null,
+            orangTuaPertama: undangan.orangTuaPertama,
+            orangTuaKedua: undangan.orangTuaKedua,
+            statusAktif: undangan.status === "Aktif",
+            rsvpTerkirim: searchParams.rsvp === "terkirim",
+            pesanGalat: galat,
+            kodeTamu: undangan.kodeTamu,
+            waktuMuat: Date.now(),
+            tautan: tautanTamu,
+            musikSrc: musikAda ? "/musik/royal-grace.mp3" : null,
+            ringkasan,
+            ucapan,
+            teksPembuka: undangan.teksPembuka,
+            kataPengantar: undangan.kataPengantar,
+            kisah: undangan.kisah,
+            galeriTambahan,
+            rekeningBank: undangan.rekeningBank,
+            rekeningNomor: undangan.rekeningNomor,
+            rekeningNama: undangan.rekeningNama,
+            alamatKirim: undangan.alamatKirim,
+            jadwal: undangan.jadwal,
+            acaraWaktu: undangan.acaraWaktu,
+            acaraKeduaJudul: undangan.acaraKeduaJudul,
+            acaraKeduaWaktu: undangan.acaraKeduaWaktu,
+            acaraKeduaLokasi: undangan.acaraKeduaLokasi,
+            praAcara: undangan.praAcara,
+            dressCode: undangan.dressCode,
+            dressCodeWarna: undangan.dressCodeWarna,
+            transportasi: undangan.transportasi,
+            akomodasi: undangan.akomodasi,
+          }}
+        />
+      );
+    }
+    const musikAda = existsSync(path.join(process.cwd(), "public", "musik", "zamrud.mp3"));
+    const galeriTambahanZamrud = galeriTambahan;
     return (
       <UndanganZamrud
         data={{
@@ -153,7 +202,7 @@ export default async function HalamanTamu({
           acaraKeduaLokasi: undangan.acaraKeduaLokasi,
           teksPembuka: undangan.teksPembuka,
           kataPengantar: undangan.kataPengantar,
-          galeriTambahan,
+          galeriTambahan: galeriTambahanZamrud,
         }}
       />
     );

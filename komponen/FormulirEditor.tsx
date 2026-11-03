@@ -109,6 +109,15 @@ interface DrafEditor {
   // Kata-kata editor (opsional; kosong = teks template).
   teksPembuka?: string;
   kataPengantar?: string;
+  // Royal Grace — kolom tema (opsional; kosong = seksi tersembunyi).
+  // Jadwal/pra-acara disimpan sebagai teks baris ("a | b | c") di draf,
+  // baru diurai server action saat simpan.
+  jadwalTeks?: string;
+  praAcaraTeks?: string;
+  dressCode?: string;
+  dressCodeWarna?: string;
+  transportasi?: string;
+  akomodasi?: string;
 }
 
 export default function FormulirEditor({
@@ -151,6 +160,13 @@ export default function FormulirEditor({
   // Kata-kata editor: sapaan pembuka + kata pengantar (markah ringan).
   const [teksPembuka, setTeksPembuka] = useState("");
   const [kataPengantar, setKataPengantar] = useState("");
+  // Royal Grace — kolom tema (hanya dipakai slug royal-grace-pernikahan).
+  const [jadwalTeks, setJadwalTeks] = useState("");
+  const [praAcaraTeks, setPraAcaraTeks] = useState("");
+  const [dressCode, setDressCode] = useState("");
+  const [dressCodeWarna, setDressCodeWarna] = useState("");
+  const [transportasi, setTransportasi] = useState("");
+  const [akomodasi, setAkomodasi] = useState("");
   const teksPembukaRef = useRef<HTMLTextAreaElement>(null);
   const kataPengantarRef = useRef<HTMLTextAreaElement>(null);
   const [namaBerkasGaleri, setNamaBerkasGaleri] = useState<string[]>([]);
@@ -208,6 +224,12 @@ export default function FormulirEditor({
             setAlamatKirim(draf.alamatKirim ?? "");
             setTeksPembuka(draf.teksPembuka ?? "");
             setKataPengantar(draf.kataPengantar ?? "");
+            setJadwalTeks(draf.jadwalTeks ?? "");
+            setPraAcaraTeks(draf.praAcaraTeks ?? "");
+            setDressCode(draf.dressCode ?? "");
+            setDressCodeWarna(draf.dressCodeWarna ?? "");
+            setTransportasi(draf.transportasi ?? "");
+            setAkomodasi(draf.akomodasi ?? "");
             setFotoUrl(templatDraf.fotoSampul ?? "https://picsum.photos/seed/undangan-editor/800/1000");
             // Catatan hanya tampil kalau draf benar-benar berbeda dari contoh,
             // supaya kunjungan pertama (draf berisi nilai contoh) tidak
@@ -231,7 +253,13 @@ export default function FormulirEditor({
               (draf.rekeningNama ?? "") !== "" ||
               (draf.alamatKirim ?? "") !== "" ||
               (draf.teksPembuka ?? "") !== "" ||
-              (draf.kataPengantar ?? "") !== ""
+              (draf.kataPengantar ?? "") !== "" ||
+              (draf.jadwalTeks ?? "") !== "" ||
+              (draf.praAcaraTeks ?? "") !== "" ||
+              (draf.dressCode ?? "") !== "" ||
+              (draf.dressCodeWarna ?? "") !== "" ||
+              (draf.transportasi ?? "") !== "" ||
+              (draf.akomodasi ?? "") !== ""
             ) {
               setDrafDipulihkan(true);
             }
@@ -270,6 +298,12 @@ export default function FormulirEditor({
         alamatKirim,
         teksPembuka,
         kataPengantar,
+        jadwalTeks,
+        praAcaraTeks,
+        dressCode,
+        dressCodeWarna,
+        transportasi,
+        akomodasi,
       };
       window.localStorage.setItem(KUNCI_DRAF, JSON.stringify(draf));
       setTersimpanPada(
@@ -278,7 +312,7 @@ export default function FormulirEditor({
     } catch {
       // Penyimpanan perangkat penuh atau diblokir: editor tetap jalan.
     }
-  }, [sudahDimuat, templatTerpilih, namaPertama, namaKedua, tanggal, lokasi, orangTuaPertama, orangTuaKedua, acaraWaktu, acaraKeduaJudul, acaraKeduaWaktu, acaraKeduaLokasi, kisahJudul, kisahCerita, videoKisah, rekeningBank, rekeningNomor, rekeningNama, alamatKirim, teksPembuka, kataPengantar]);
+  }, [sudahDimuat, templatTerpilih, namaPertama, namaKedua, tanggal, lokasi, orangTuaPertama, orangTuaKedua, acaraWaktu, acaraKeduaJudul, acaraKeduaWaktu, acaraKeduaLokasi, kisahJudul, kisahCerita, videoKisah, rekeningBank, rekeningNomor, rekeningNama, alamatKirim, teksPembuka, kataPengantar, jadwalTeks, praAcaraTeks, dressCode, dressCodeWarna, transportasi, akomodasi]);
 
   // Scroll-spy sidebar: seksi yang melewati pita atas layar jadi aktif.
   // Root dibiarkan viewport supaya jalan di panel tengah (desktop)
@@ -400,6 +434,9 @@ export default function FormulirEditor({
           { href: "#bagian-kisah", label: "Kisah" },
           { href: "#bagian-tandakasih", label: "Tanda Kasih" },
         ]
+      : []),
+    ...(templatTerpilih.slug === "royal-grace-pernikahan"
+      ? [{ href: "#bagian-royalgrace", label: "Royal Grace" }]
       : []),
   ];
   const tautanOpsi = [{ href: "#bagian-bagikan", label: "Bagikan & Terbitkan" }];
@@ -741,6 +778,102 @@ export default function FormulirEditor({
                     value={acaraKeduaLokasi}
                     onChange={(acara) => setAcaraKeduaLokasi(acara.target.value)}
                     placeholder="Contoh: Gedung Serbaguna"
+                    className={gayaInput}
+                  />
+                </div>
+              </div>
+            </fieldset>
+          )}
+
+          {templatTerpilih.slug === "royal-grace-pernikahan" && (
+            <fieldset id="bagian-royalgrace" data-bagian className="mt-6 scroll-mt-24">
+              <legend className="text-sm font-bold">Royal Grace — jadwal, dress code & info tamu</legend>
+              <p className="mt-1 text-sm leading-relaxed text-tintaLembut">
+                Hanya untuk tema Royal Grace. Kosongkan seksi yang tidak perlu — seksi kosong tidak tampil di undangan.
+                Jadwal dan pra-acara ditulis satu baris per item, kolom dipisah tanda |.
+              </p>
+              <div className="mt-4 space-y-4">
+                <div>
+                  <label htmlFor="jadwal-teks" className="text-sm font-bold">
+                    Jadwal acara <span className="font-semibold text-tintaLembut">(opsional, maks 8 baris)</span>
+                  </label>
+                  <textarea
+                    id="jadwal-teks"
+                    name="jadwalTeks"
+                    rows={4}
+                    value={jadwalTeks}
+                    onChange={(acara) => setJadwalTeks(acara.target.value)}
+                    placeholder={"Contoh:\n08:00 | Kedatangan Tamu | Registrasi dan sambutan keluarga\n09:00 | Akad Nikah | Prosesi sakral bersama keluarga besar"}
+                    className={gayaInput}
+                  />
+                  <p className="mt-1 text-xs text-tintaLembut">Format per baris: waktu | judul | keterangan.</p>
+                </div>
+                <div>
+                  <label htmlFor="pra-acara-teks" className="text-sm font-bold">
+                    Pra-acara <span className="font-semibold text-tintaLembut">(opsional, maks 6 baris)</span>
+                  </label>
+                  <textarea
+                    id="pra-acara-teks"
+                    name="praAcaraTeks"
+                    rows={3}
+                    value={praAcaraTeks}
+                    onChange={(acara) => setPraAcaraTeks(acara.target.value)}
+                    placeholder={"Contoh:\n17 Juni 2027 | 19:00 | Pengajian & Siraman | Kediaman mempelai wanita"}
+                    className={gayaInput}
+                  />
+                  <p className="mt-1 text-xs text-tintaLembut">Format per baris: tanggal | waktu | judul | lokasi.</p>
+                </div>
+                <div>
+                  <label htmlFor="dress-code" className="text-sm font-bold">
+                    Dress code <span className="font-semibold text-tintaLembut">(opsional)</span>
+                  </label>
+                  <input
+                    id="dress-code"
+                    name="dressCode"
+                    value={dressCode}
+                    onChange={(acara) => setDressCode(acara.target.value)}
+                    placeholder="Contoh: Busana formal bernuansa pastel"
+                    className={gayaInput}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="dress-code-warna" className="text-sm font-bold">
+                    Warna dress code <span className="font-semibold text-tintaLembut">(opsional, pisah koma)</span>
+                  </label>
+                  <input
+                    id="dress-code-warna"
+                    name="dressCodeWarna"
+                    value={dressCodeWarna}
+                    onChange={(acara) => setDressCodeWarna(acara.target.value)}
+                    placeholder="Contoh: #7C8B6F, #C9A86A, #F7F0E3"
+                    className={gayaInput}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="transportasi" className="text-sm font-bold">
+                    Transportasi <span className="font-semibold text-tintaLembut">(opsional)</span>
+                  </label>
+                  <textarea
+                    id="transportasi"
+                    name="transportasi"
+                    rows={2}
+                    value={transportasi}
+                    onChange={(acara) => setTransportasi(acara.target.value)}
+                    placeholder="Contoh: Shuttle tersedia dari Stasiun Gambir pukul 07:00 dan 08:00."
+                    className={gayaInput}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="akomodasi" className="text-sm font-bold">
+                    Akomodasi <span className="font-semibold text-tintaLembut">(opsional)</span>
+                  </label>
+                  <textarea
+                    id="akomodasi"
+                    name="akomodasi"
+                    rows={2}
+                    value={akomodasi}
+                    onChange={(acara) => setAkomodasi(acara.target.value)}
+                    placeholder="Contoh: Harga khusus di Hotel Taman Royal dengan kode ROYAL2027."
                     className={gayaInput}
                   />
                 </div>

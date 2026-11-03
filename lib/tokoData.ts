@@ -8,6 +8,13 @@
 import { satuBaris, semuaBaris, type Baris } from "./db";
 import { daftarPaketHarga, type PaketHarga } from "@/data/paketHarga";
 import { daftarTemplat, type ContohUndangan, type Templat } from "@/data/templat";
+import {
+  parseJadwalJson,
+  parsePraAcaraJson,
+  parseWarnaJson,
+  type ItemJadwal,
+  type ItemPraAcara,
+} from "./royalGrace";
 
 export type StatusUndangan = "Draft" | "Aktif" | "Selesai";
 
@@ -46,6 +53,13 @@ export interface UndanganAdmin {
   // kosong = pakai teks template).
   teksPembuka: string;
   kataPengantar: string;
+  // Royal Grace — kolom baru (opsional; kosong = seksi tersembunyi).
+  jadwal: ItemJadwal[];
+  praAcara: ItemPraAcara[];
+  dressCode: string;
+  dressCodeWarna: string[];
+  transportasi: string;
+  akomodasi: string;
 }
 
 /** Parse kisah_json dengan aman: data rusak atau bukan array -> []. */
@@ -146,6 +160,12 @@ function petakanUndangan(baris: Baris): UndanganAdmin {
     acaraKeduaLokasi: String(baris.acara_kedua_lokasi ?? ""),
     teksPembuka: String(baris.teks_pembuka ?? ""),
     kataPengantar: String(baris.kata_pengantar ?? ""),
+    jadwal: parseJadwalJson(baris.jadwal_json),
+    praAcara: parsePraAcaraJson(baris.acara_pra_json),
+    dressCode: String(baris.dress_code ?? ""),
+    dressCodeWarna: parseWarnaJson(baris.dress_code_warna),
+    transportasi: String(baris.transportasi ?? ""),
+    akomodasi: String(baris.akomodasi ?? ""),
   };
 }
 
