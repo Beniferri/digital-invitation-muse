@@ -65,9 +65,7 @@ export default function ShellAdmin({
         }`}
       >
         <div className="border-b border-white/10 px-5 py-5">
-          <div className="inline-flex rounded-xl bg-krem-50 px-4 py-2.5">
-            <Image src="/logo/betastoria-web.png" alt="BETA Storia" width={1500} height={500} className="h-11 w-auto" />
-          </div>
+          <Image src="/logo/betastoria-web-putih.png" alt="BETA Storia" width={1500} height={500} className="h-11 w-auto" />
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <ul className="space-y-1">
