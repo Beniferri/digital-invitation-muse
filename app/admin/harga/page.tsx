@@ -15,50 +15,50 @@ export default async function HargaAdmin({
   const daftar = await bacaDaftarPaketHarga();
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="font-serif text-4xl font-bold">Harga</h1>
-      <p className="mt-2 text-[17px] leading-relaxed text-tintaLembut">
+      <h1 className="text-3xl font-bold tracking-tight text-stone-900">Harga</h1>
+      <p className="mt-2 text-[15px] leading-relaxed text-stone-500">
         Ubah nominal bulanan dan tahunan. Setelah disimpan, harga baru langsung
         tampil di bagian harga landing.
       </p>
       {searchParams?.tersimpan && (
-        <p role="status" className="mt-5 rounded-2xl bg-daun-100 px-4 py-3 text-sm font-bold text-daun-700">
+        <p role="status" className="mt-5 rounded-2xl bg-[#E9F0E9] px-4 py-3 text-sm font-bold text-[#2F4A2E]">
           Harga tersimpan dan sudah diperbarui di landing.
         </p>
       )}
-      <form action={simpanHarga} className="kartu-kaca mt-8 rounded-[2rem] p-5 sm:p-7">
+      <form action={simpanHarga} className="mt-8 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm sm:p-7">
         <div className="space-y-6">
           {daftar.map((paket, indeks) => (
-            <fieldset key={paket.nama} className="rounded-2xl bg-white/70 p-4">
-              <legend className="px-2 font-serif text-xl font-bold">{paket.nama}</legend>
-              <p className="mt-1 text-sm text-tintaLembut">{paket.keterangan}</p>
+            <fieldset key={paket.nama} className="rounded-2xl border border-stone-200 bg-stone-50 p-4">
+              <legend className="px-2 text-xl font-bold text-stone-900">{paket.nama}</legend>
+              <p className="mt-1 text-sm text-stone-500">{paket.keterangan}</p>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label htmlFor={`bulanan-${indeks}`} className="text-sm font-bold">Harga bulanan (Rp)</label>
+                  <label htmlFor={`bulanan-${indeks}`} className="text-sm font-bold text-stone-900">Harga bulanan (Rp)</label>
                   <input
                     id={`bulanan-${indeks}`}
                     name={`bulanan-${indeks}`}
                     type="number"
                     min="1"
                     defaultValue={paket.hargaBulanan}
-                    className="mt-2 min-h-[48px] w-full rounded-2xl border border-tanah-900/15 bg-white/80 px-4 py-3"
+                    className="mt-2 min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 outline-none focus:border-[#2F4A2E]"
                   />
                 </div>
                 <div>
-                  <label htmlFor={`tahunan-${indeks}`} className="text-sm font-bold">Harga tahunan (Rp)</label>
+                  <label htmlFor={`tahunan-${indeks}`} className="text-sm font-bold text-stone-900">Harga tahunan (Rp)</label>
                   <input
                     id={`tahunan-${indeks}`}
                     name={`tahunan-${indeks}`}
                     type="number"
                     min="1"
                     defaultValue={paket.hargaTahunan}
-                    className="mt-2 min-h-[48px] w-full rounded-2xl border border-tanah-900/15 bg-white/80 px-4 py-3"
+                    className="mt-2 min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-4 py-3 outline-none focus:border-[#2F4A2E]"
                   />
                 </div>
               </div>
             </fieldset>
           ))}
         </div>
-        <button type="submit" className="tombol-utama mt-7 w-full bg-tanah-600 text-sm text-white hover:bg-tanah-700">
+        <button type="submit" className="mt-7 min-h-[44px] w-full rounded-full bg-[#2F4A2E] px-5 text-sm font-bold text-white hover:bg-[#243A24]">
           Simpan Semua Harga
         </button>
       </form>

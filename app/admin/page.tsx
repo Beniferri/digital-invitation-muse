@@ -48,10 +48,10 @@ export default async function RingkasanAdmin({
   const totalBalasan = ringkasanRsvp.reduce((jumlah, item) => jumlah + item.totalBalasan, 0);
 
   const kartu = (judul: string, nilai: string, keterangan: string) => (
-    <div className="kartu-kaca rounded-[1.75rem] p-5">
-      <p className="text-sm font-bold text-tintaLembut">{judul}</p>
-      <p className="mt-1 font-serif text-3xl font-bold">{nilai}</p>
-      <p className="mt-1 text-sm text-tintaLembut">{keterangan}</p>
+    <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+      <p className="text-sm font-semibold text-stone-500">{judul}</p>
+      <p className="mt-1 text-3xl font-bold tracking-tight text-stone-900">{nilai}</p>
+      <p className="mt-1 text-sm text-stone-500">{keterangan}</p>
     </div>
   );
 
@@ -63,8 +63,8 @@ export default async function RingkasanAdmin({
 
   return (
     <div>
-      <h1 className="font-serif text-4xl font-bold">Ringkasan</h1>
-      <p className="mt-2 max-w-2xl text-[17px] leading-relaxed text-tintaLembut">
+      <h1 className="text-3xl font-bold tracking-tight text-stone-900">Ringkasan</h1>
+      <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-stone-500">
         Langganan dan pendapatan BETA Storia, dihitung dari database — bukan angka contoh.
         Pendapatan rutin = langganan Aktif (tahunan dihitung nominal/12).
         Angka berhenti 30 hari tidak menghitung langganan yang diganti paket baru.
@@ -92,49 +92,49 @@ export default async function RingkasanAdmin({
       </div>
 
       <div className="mt-10 grid gap-6 lg:grid-cols-3">
-        <section className="kartu-kaca rounded-[2rem] p-5 sm:p-6 lg:col-span-2">
+        <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm sm:p-6 lg:col-span-2">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="font-serif text-2xl font-bold">Pendapatan lunas per bulan</h2>
-            <p className="text-sm text-tintaLembut">Total lunas: {formatRupiah(metrik.totalLunas)}</p>
+            <h2 className="text-xl font-bold text-stone-900">Pendapatan lunas per bulan</h2>
+            <p className="text-sm text-stone-500">Total lunas: {formatRupiah(metrik.totalLunas)}</p>
           </div>
-          <p className="mt-1 text-sm text-tintaLembut">
+          <p className="mt-1 text-sm text-stone-500">
             12 bulan terakhir, sebelum biaya Midtrans dan pajak. Bulan = bulan status pesanan
             terakhir diubah (untuk pesanan Lunas, itu bulan pembayaran dikonfirmasi).
           </p>
           <div className="mt-6 flex h-48 items-end gap-2" role="img" aria-label="Grafik batang pendapatan lunas 12 bulan terakhir">
             {perBulan.map((bulan) => (
               <div key={bulan.kunci} className="flex flex-1 flex-col items-center gap-1">
-                <span className="text-center text-xs font-bold leading-tight">
+                <span className="text-center text-xs font-bold leading-tight text-stone-700">
                   {bulan.total > 0 ? formatRupiah(bulan.total) : ""}
                 </span>
                 <div
-                  className="w-full rounded-t-lg bg-tanah-500"
+                  className="w-full rounded-t-lg bg-[#2F4A2E]"
                   style={{ height: `${Math.max(2, (bulan.total / maksBulan) * 100)}%` }}
                 >
                   <title>
                     {bulan.label}: {formatRupiah(bulan.total)}
                   </title>
                 </div>
-                <span className="text-center text-xs text-tintaLembut">{bulan.label.split(" ")[0]}</span>
+                <span className="text-center text-xs text-stone-500">{bulan.label.split(" ")[0]}</span>
               </div>
             ))}
           </div>
         </section>
 
-        <section className="kartu-kaca rounded-[2rem] p-5 sm:p-6">
-          <h2 className="font-serif text-2xl font-bold">Sebaran paket aktif</h2>
-          <p className="mt-1 text-sm text-tintaLembut">Langganan Aktif per paket dan kontribusi MRR-nya.</p>
+        <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm sm:p-6">
+          <h2 className="text-xl font-bold text-stone-900">Sebaran paket aktif</h2>
+          <p className="mt-1 text-sm text-stone-500">Langganan Aktif per paket dan kontribusi MRR-nya.</p>
           {sebaran.length === 0 ? (
-            <p className="mt-4 text-[15px] text-tintaLembut">Belum ada langganan aktif.</p>
+            <p className="mt-4 text-[15px] text-stone-500">Belum ada langganan aktif.</p>
           ) : (
             <ul className="mt-4 space-y-3">
               {sebaran.map((paket) => (
-                <li key={paket.nama} className="rounded-2xl bg-white/70 px-4 py-3">
-                  <p className="flex items-baseline justify-between gap-2 font-bold">
+                <li key={paket.nama} className="rounded-xl bg-stone-50 px-4 py-3">
+                  <p className="flex items-baseline justify-between gap-2 font-bold text-stone-900">
                     <span>{paket.nama}</span>
                     <span>{paket.jumlah} langganan</span>
                   </p>
-                  <p className="text-sm text-tintaLembut">
+                  <p className="text-sm text-stone-500">
                     {formatRupiah(paket.mrr)} / bulan ·{" "}
                     {metrik.mrr > 0 ? ((paket.mrr / metrik.mrr) * 100).toFixed(0) : 0}% dari MRR
                   </p>
@@ -142,13 +142,13 @@ export default async function RingkasanAdmin({
               ))}
             </ul>
           )}
-          <div className="mt-6 border-t border-krem-200 pt-4 text-sm text-tintaLembut">
+          <div className="mt-6 border-t border-stone-200 pt-4 text-sm text-stone-500">
             <p>
               Undangan: {undanganAktif} aktif · {jumlahDraft} draft · {jumlahSelesai} selesai.
             </p>
             <p className="mt-1">
               {totalBalasan} balasan RSVP ·{" "}
-              <Link href="/admin/rsvp" className="font-bold text-tanah-600 underline underline-offset-4">
+              <Link href="/admin/rsvp" className="font-bold text-[#2F4A2E] underline underline-offset-4">
                 Lihat RSVP
               </Link>
             </p>
@@ -158,8 +158,8 @@ export default async function RingkasanAdmin({
 
       <section className="mt-10">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-serif text-3xl font-bold">Aktivitas terbaru</h2>
-          <a href={tautanCsv} className="min-h-[44px] rounded-full border-2 border-tanah-600 px-4 py-2 text-sm font-bold text-tanah-700">
+          <h2 className="text-2xl font-bold tracking-tight text-stone-900">Aktivitas terbaru</h2>
+          <a href={tautanCsv} className="min-h-[44px] rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-bold text-stone-700 hover:bg-stone-50">
             Unduh CSV
           </a>
         </div>
@@ -173,7 +173,7 @@ export default async function RingkasanAdmin({
             name="cari"
             defaultValue={cari}
             placeholder="Cari email, order ID, paket…"
-            className="min-h-[44px] min-w-0 flex-1 rounded-full border border-krem-300 bg-white/80 px-4 text-[15px] outline-none"
+            className="min-h-[44px] min-w-0 flex-1 rounded-full border border-stone-300 bg-white px-4 text-[15px] outline-none placeholder:text-stone-400 focus:border-[#2F4A2E]"
           />
           <label htmlFor="filter-jenis" className="sr-only">
             Filter jenis aktivitas
@@ -182,43 +182,43 @@ export default async function RingkasanAdmin({
             id="filter-jenis"
             name="jenis"
             defaultValue={jenis ?? ""}
-            className="min-h-[44px] rounded-full border border-krem-300 bg-white/80 px-4 text-[15px] font-bold"
+            className="min-h-[44px] rounded-full border border-stone-300 bg-white px-4 text-[15px] font-bold text-stone-900"
           >
             <option value="">Semua jenis</option>
             <option value="pembayaran">Pembayaran</option>
             <option value="langganan">Langganan</option>
             <option value="akun">Akun</option>
           </select>
-          <button type="submit" className="tombol-utama bg-tanah-600 text-sm text-white">
+          <button type="submit" className="min-h-[44px] rounded-full bg-[#2F4A2E] px-5 text-sm font-bold text-white hover:bg-[#243A24]">
             Cari
           </button>
         </form>
 
         {aktivitas.length === 0 ? (
-          <p className="kartu-kaca mt-4 rounded-[2rem] p-6 text-center text-tintaLembut">
+          <p className="mt-4 rounded-2xl border border-stone-200 bg-white p-6 text-center text-stone-500 shadow-sm">
             {cari || jenis ? "Tidak ada aktivitas yang cocok dengan pencarian." : "Belum ada aktivitas."}
           </p>
         ) : (
           <>
             <div className="mt-4 hidden overflow-x-auto md:block">
-              <table className="kartu-kaca w-full rounded-[1.5rem] text-left text-[15px]">
+              <table className="w-full rounded-2xl border border-stone-200 bg-white text-left text-[15px] shadow-sm">
                 <thead>
-                  <tr className="border-b border-krem-200 text-tintaLembut">
+                  <tr className="border-b border-stone-200 text-xs font-semibold uppercase tracking-wide text-stone-500">
                     <th className="px-4 py-3">Waktu</th>
                     <th className="px-4 py-3">Aktivitas</th>
                     <th className="px-4 py-3">Email</th>
                     <th className="px-4 py-3">Paket</th>
-                    <th className="px-4 py-3">Nominal</th>
+                    <th className="px-4 py-3 text-right">Nominal</th>
                   </tr>
                 </thead>
                 <tbody>
                   {aktivitas.map((item, indeks) => (
-                    <tr key={`${item.waktu}-${item.email}-${indeks}`} className="border-b border-krem-200/70 last:border-0">
-                      <td className="whitespace-nowrap px-4 py-3">{item.waktu}</td>
-                      <td className="px-4 py-3 font-bold">{item.judul}</td>
-                      <td className="px-4 py-3">{item.email}</td>
-                      <td className="px-4 py-3">{item.paket ?? "—"}</td>
-                      <td className="px-4 py-3">{item.nominal === null ? "—" : formatRupiah(item.nominal)}</td>
+                    <tr key={`${item.waktu}-${item.email}-${indeks}`} className="border-b border-stone-100 last:border-0 hover:bg-stone-50">
+                      <td className="whitespace-nowrap px-4 py-3 text-stone-700">{item.waktu}</td>
+                      <td className="px-4 py-3 font-bold text-stone-900">{item.judul}</td>
+                      <td className="px-4 py-3 text-stone-700">{item.email}</td>
+                      <td className="px-4 py-3 text-stone-700">{item.paket ?? "—"}</td>
+                      <td className="px-4 py-3 text-right tabular-nums text-stone-700">{item.nominal === null ? "—" : formatRupiah(item.nominal)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -226,13 +226,13 @@ export default async function RingkasanAdmin({
             </div>
             <div className="mt-4 grid gap-3 md:hidden">
               {aktivitas.map((item, indeks) => (
-                <article key={`${item.waktu}-${item.email}-${indeks}`} className="kartu-kaca rounded-[1.5rem] p-4">
-                  <p className="font-bold">{item.judul}</p>
-                  <p className="mt-1 text-sm text-tintaLembut">
+                <article key={`${item.waktu}-${item.email}-${indeks}`} className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+                  <p className="font-bold text-stone-900">{item.judul}</p>
+                  <p className="mt-1 text-sm text-stone-500">
                     {item.email}
                     {item.paket ? ` · Paket ${item.paket}` : ""}
                   </p>
-                  <p className="text-sm text-tintaLembut">
+                  <p className="text-sm text-stone-500">
                     {item.waktu}
                     {item.nominal !== null ? ` · ${formatRupiah(item.nominal)}` : ""}
                   </p>

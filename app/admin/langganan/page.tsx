@@ -27,7 +27,7 @@ export default async function LanggananAdmin({
       href={nilai ? `/admin/langganan?status=${nilai}` : "/admin/langganan"}
       aria-current={status === (nilai || null) || (!status && !nilai) ? "page" : undefined}
       className={`min-h-[44px] rounded-full px-4 py-2 text-sm font-bold ${
-        (status ?? "") === nilai ? "bg-tanah-600 text-white" : "border border-krem-300 bg-white/80"
+        (status ?? "") === nilai ? "bg-[#2F4A2E] text-white" : "border border-stone-300 bg-white text-stone-700 hover:bg-stone-50"
       }`}
     >
       {label}
@@ -36,8 +36,8 @@ export default async function LanggananAdmin({
 
   return (
     <div>
-      <h1 className="font-serif text-4xl font-bold">Langganan</h1>
-      <p className="mt-2 max-w-2xl text-[17px] leading-relaxed text-tintaLembut">
+      <h1 className="text-3xl font-bold tracking-tight text-stone-900">Langganan</h1>
+      <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-stone-500">
         {semua.length} langganan · {jumlahAktif} aktif · {jumlahSelesai} selesai · {jumlahDiganti} diganti.
         Langganan yang diganti berarti pengguna membeli paket baru — bukan pelanggan yang pergi.
       </p>
@@ -50,17 +50,20 @@ export default async function LanggananAdmin({
       </div>
 
       {daftar.length === 0 ? (
-        <p className="kartu-kaca mt-4 rounded-[2rem] p-6 text-center text-tintaLembut">
+        <p className="mt-4 rounded-2xl border border-stone-200 bg-white p-6 text-center text-stone-500 shadow-sm">
           Tidak ada langganan dengan filter ini.
         </p>
       ) : (
         <div className="mt-4 grid gap-3">
           {daftar.map((langganan) => (
-            <article key={langganan.id} className="kartu-kaca rounded-[1.5rem] p-4">
-              <p className="font-bold">
-                {langganan.email} · Paket {langganan.namaPaket} · {langganan.status}
+            <article key={langganan.id} className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+              <p className="font-bold text-stone-900">
+                {langganan.email} · Paket {langganan.namaPaket} ·{" "}
+                <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${langganan.status === "Aktif" ? "bg-[#E9F0E9] text-[#2F4A2E]" : langganan.status === "Selesai" ? "bg-stone-200 text-stone-700" : "bg-stone-100 text-stone-600"}`}>
+                  {langganan.status}
+                </span>
               </p>
-              <p className="mt-1 text-sm text-tintaLembut">
+              <p className="mt-1 text-sm text-stone-500">
                 {langganan.maksUndanganAktif} slot · mulai {langganan.mulaiPada} · berakhir{" "}
                 {formatTanggalIndonesia(langganan.berakhirPada)}
               </p>

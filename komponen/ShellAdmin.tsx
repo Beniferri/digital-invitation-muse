@@ -48,27 +48,27 @@ export default function ShellAdmin({
     href === "/admin" ? pathname === "/admin" : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-stone-100">
       {terbuka && (
         <button
           type="button"
           aria-label="Tutup menu"
           onClick={() => setTerbuka(false)}
-          className="fixed inset-0 z-40 bg-tinta/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-stone-900/50 lg:hidden"
         />
       )}
 
       <aside
         aria-label="Navigasi admin"
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-tanah-900 text-krem-100 shadow-xl transition-transform duration-200 lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-stone-200 bg-white shadow-xl transition-transform duration-200 lg:translate-x-0 ${
           terbuka ? "translate-x-0 visible" : "-translate-x-full invisible lg:visible"
         }`}
       >
-        <div className="border-b border-white/10 px-5 py-5">
-          <div className="inline-flex rounded-xl bg-krem-50 px-3 py-1.5">
+        <div className="border-b border-stone-200 px-5 py-5">
+          <div className="inline-flex rounded-xl border border-stone-200 bg-white px-3 py-1.5">
             <Image src="/logo/betastoria-web.png" alt="BETA Storia" width={1500} height={500} className="h-8 w-auto" />
           </div>
-          <p className="mt-2 text-sm text-krem-300">Dasbor Admin</p>
+          <p className="mt-2 text-sm font-semibold text-stone-500">Dasbor Admin</p>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <ul className="space-y-1">
@@ -80,8 +80,8 @@ export default function ShellAdmin({
                   aria-current={aktif(item.href) ? "page" : undefined}
                   className={`block min-h-[44px] rounded-xl px-4 py-3 text-[15px] font-bold ${
                     aktif(item.href)
-                      ? "bg-white/15 text-krem-50"
-                      : "text-krem-200 hover:bg-white/10 hover:text-krem-50"
+                      ? "bg-[#2F4A2E] text-white"
+                      : "text-stone-600 hover:bg-stone-100 hover:text-stone-900"
                   }`}
                 >
                   {item.label}
@@ -90,22 +90,22 @@ export default function ShellAdmin({
             ))}
           </ul>
         </nav>
-        <div className="border-t border-white/10 px-5 py-4">
-          <Link href="/" onClick={() => setTerbuka(false)} className="text-sm font-bold text-krem-200 underline underline-offset-4">
+        <div className="border-t border-stone-200 px-5 py-4">
+          <Link href="/" onClick={() => setTerbuka(false)} className="text-sm font-bold text-[#2F4A2E] underline underline-offset-4">
             Lihat Situs
           </Link>
         </div>
       </aside>
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-30 border-b border-krem-200 bg-krem-50/90 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-stone-200 bg-white/90 backdrop-blur">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
             <button
               type="button"
               onClick={() => setTerbuka(true)}
               aria-label="Buka menu"
               aria-expanded={terbuka}
-              className="min-h-[44px] min-w-[44px] rounded-full border border-krem-300 px-3 text-lg font-bold lg:hidden"
+              className="min-h-[44px] min-w-[44px] rounded-full border border-stone-300 px-3 text-lg font-bold text-stone-700 lg:hidden"
             >
               ☰
             </button>
@@ -118,29 +118,29 @@ export default function ShellAdmin({
                 type="search"
                 name="q"
                 placeholder="Cari email, kode undangan, order ID…"
-                className="min-h-[44px] w-full rounded-full border border-krem-300 bg-white/80 px-4 text-[15px] outline-none placeholder:text-tintaLembut/70"
+                className="min-h-[44px] w-full rounded-full border border-stone-300 bg-stone-50 px-4 text-[15px] outline-none placeholder:text-stone-400 focus:border-[#2F4A2E] focus:bg-white"
               />
             </form>
             <Link
               href="/admin/pesanan"
               aria-label={perhatian > 0 ? `${perhatian} pesanan perlu perhatian` : "Tidak ada pesanan perlu perhatian"}
-              className="relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-krem-300 bg-white/80 text-lg"
+              className="relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-stone-300 bg-white text-lg"
             >
               🔔
               {perhatian > 0 && (
-                <span className="absolute -right-1 -top-1 flex min-h-[20px] min-w-[20px] items-center justify-center rounded-full bg-tanah-600 px-1 text-[11px] font-bold text-white">
+                <span className="absolute -right-1 -top-1 flex min-h-[20px] min-w-[20px] items-center justify-center rounded-full bg-[#2F4A2E] px-1 text-[11px] font-bold text-white">
                   {perhatian > 99 ? "99+" : perhatian}
                 </span>
               )}
             </Link>
             <div className="hidden min-w-0 max-w-[220px] sm:block">
-              <p className="truncate text-sm font-bold">{email}</p>
-              <p className="text-xs text-tintaLembut">Admin</p>
+              <p className="truncate text-sm font-bold text-stone-900">{email}</p>
+              <p className="text-xs text-stone-500">Admin</p>
             </div>
             <form action={keluarAdmin}>
               <button
                 type="submit"
-                className="min-h-[44px] rounded-full border-2 border-tanah-600 px-4 text-sm font-bold text-tanah-700"
+                className="min-h-[44px] rounded-full border border-stone-300 bg-white px-4 text-sm font-bold text-stone-700 hover:bg-stone-50"
               >
                 Keluar
               </button>
